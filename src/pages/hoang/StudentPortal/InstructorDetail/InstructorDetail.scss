@@ -1,0 +1,205 @@
+// Instructor Detail Styles
+.instructor-detail {
+  .detail-header {
+    margin-bottom: 24px;
+
+    .ant-typography-title-2 {
+      color: #1890ff;
+    }
+  }
+
+  .main-info-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+    .instructor-header {
+      margin-bottom: 24px;
+
+      .instructor-avatar {
+        .ant-avatar {
+          border: 2px solid #d9d9d9;
+        }
+      }
+
+      .instructor-info {
+        flex: 1;
+
+        .ant-typography-title-3 {
+          color: #262626;
+        }
+
+        .ant-btn-link {
+          color: #1890ff;
+
+          &:hover {
+            color: #40a9ff;
+          }
+        }
+      }
+    }
+
+    .ant-descriptions {
+      .ant-descriptions-item-label {
+        font-weight: 600;
+        color: #595959;
+        background: #fafafa;
+      }
+
+      .ant-descriptions-item-content {
+        background: white;
+        color: #262626;
+
+        .ant-typography {
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  .sidebar-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .ant-card-head-title {
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .course-item,
+    .contact-item {
+      width: 100%;
+
+      .ant-typography {
+        margin: 0;
+
+        &:first-child {
+          color: #595959;
+        }
+      }
+    }
+
+    .course-item {
+      padding: 8px 0;
+      border-bottom: 1px solid #f5f5f5;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+  }
+
+  // Button Styles
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      border: none;
+
+      &:hover {
+        background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+        transform: translateY(-1px);
+      }
+    }
+
+    &.ant-btn-link {
+      color: #1890ff;
+
+      &:hover {
+        color: #40a9ff;
+      }
+    }
+
+    &.ant-btn-block {
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // Typography
+  .ant-typography {
+    &.ant-typography-text {
+      &.ant-typography-copy {
+        .ant-typography-copy-icon {
+          color: #8c8c8c;
+
+          &:hover {
+            color: #1890ff;
+          }
+        }
+      }
+    }
+  }
+
+  // Space
+  .ant-space {
+    &.ant-space-vertical {
+      width: 100%;
+    }
+  }
+
+  // Divider
+  .ant-divider {
+    border-color: #f0f0f0;
+  }
+
+  // Avatar for empty image (like in original)
+  .ant-avatar {
+    &:not(.ant-avatar-image) {
+      background: #f5f5f5;
+      color: #bfbfbf;
+      border: 2px solid #e8e8e8;
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .detail-header {
+      .ant-btn {
+        width: 100%;
+        margin-bottom: 12px;
+      }
+
+      .ant-typography-title-2 {
+        font-size: 24px;
+        text-align: center;
+      }
+    }
+
+    .main-info-card {
+      .instructor-header {
+        .ant-space {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+
+          .instructor-avatar {
+            margin-bottom: 16px;
+          }
+
+          .instructor-info {
+            .ant-typography-title-3 {
+              text-align: center;
+            }
+          }
+        }
+      }
+
+      .ant-descriptions {
+        .ant-descriptions-item {
+          padding-bottom: 12px;
+        }
+      }
+    }
+
+    .sidebar-card {
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+  }
+}

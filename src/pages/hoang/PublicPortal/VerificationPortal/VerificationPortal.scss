@@ -1,0 +1,271 @@
+// Verification Portal Styles
+.verification-portal {
+  .page-header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 24px;
+    background: linear-gradient(135deg, #f9f0ff, #fff0f6);
+    border-radius: 16px;
+
+    .ant-typography-title-2 {
+      color: #722ed1;
+    }
+  }
+
+  .verification-card {
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .ant-card-body {
+      padding: 0;
+    }
+
+    .verification-tabs {
+      .ant-tabs-nav {
+        background: #fafafa;
+        margin: 0;
+        padding: 0 24px;
+
+        .ant-tabs-tab {
+          padding: 16px 24px;
+          font-weight: 600;
+
+          &.ant-tabs-tab-active {
+            background: white;
+
+            .ant-tabs-tab-btn {
+              color: #722ed1;
+            }
+          }
+        }
+      }
+
+      .ant-tabs-content {
+        padding: 32px;
+      }
+    }
+  }
+
+  .verification-method {
+    min-height: 400px;
+
+    .method-header {
+      text-align: center;
+      margin-bottom: 32px;
+
+      .ant-typography-title-3 {
+        color: #262626;
+      }
+    }
+
+    // QR Scanner Styles
+    .qr-scanner-container {
+      max-width: 400px;
+      margin: 0 auto;
+      text-align: center;
+
+      .scanning-state {
+        padding: 40px;
+        background: linear-gradient(135deg, #f9f0ff, #fff0f6);
+        border-radius: 16px;
+        border: 2px dashed #722ed1;
+
+        .camera-preview {
+          .ant-progress {
+            .ant-progress-bg {
+              background: linear-gradient(90deg, #722ed1, #eb2f96);
+            }
+          }
+        }
+      }
+
+      .scan-prompt {
+        padding: 40px;
+        background: #fafafa;
+        border-radius: 16px;
+        border: 2px dashed #d9d9d9;
+        transition: all 0.3s ease;
+
+        &:hover {
+          border-color: #722ed1;
+          background: #f9f0ff;
+        }
+      }
+    }
+
+    // Manual Input Styles
+    .ant-form {
+      .ant-form-item-label {
+        font-weight: 600;
+        color: #262626;
+      }
+
+      .ant-input {
+        border-radius: 8px;
+        border: 2px solid #f0f0f0;
+
+        &:focus,
+        &:hover {
+          border-color: #722ed1;
+        }
+      }
+    }
+
+    .examples-section {
+      background: #fafafa;
+      padding: 24px;
+      border-radius: 12px;
+      margin-top: 24px;
+
+      .example-item {
+        margin-bottom: 8px;
+
+        .ant-typography {
+          &:first-child {
+            margin-right: 12px;
+            color: #595959;
+          }
+        }
+      }
+    }
+
+    // File Upload Styles
+    .upload-section {
+      .credential-uploader {
+        .ant-upload-drag-icon {
+          .anticon {
+            font-size: 48px;
+          }
+        }
+
+        .ant-upload-text {
+          font-size: 16px;
+          font-weight: 600;
+          color: #262626;
+        }
+
+        .ant-upload-hint {
+          color: #8c8c8c;
+        }
+
+        &:hover {
+          border-color: #722ed1;
+
+          .ant-upload-drag-icon .anticon {
+            color: #722ed1;
+          }
+        }
+      }
+
+      .uploaded-file-info {
+        text-align: center;
+      }
+    }
+  }
+
+  // Help Cards
+  .help-card {
+    text-align: center;
+    height: 200px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .ant-card-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .ant-typography-title-4 {
+      margin: 8px 0;
+      color: #262626;
+    }
+  }
+
+  // Button Customizations
+  .ant-btn-primary {
+    background: linear-gradient(135deg, #722ed1, #eb2f96);
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #9254de, #f759ab);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+    }
+
+    &:disabled {
+      background: #f5f5f5;
+      color: #bfbfbf;
+    }
+  }
+
+  // Alert Customizations
+  .ant-alert {
+    border-radius: 8px;
+
+    &.ant-alert-info {
+      border-color: #d6e4ff;
+      background: #e6f7ff;
+
+      .ant-alert-icon {
+        color: #1890ff;
+      }
+    }
+
+    &.ant-alert-success {
+      border-color: #b7eb8f;
+      background: #f6ffed;
+
+      .ant-alert-icon {
+        color: #52c41a;
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 16px;
+      margin: 0 -24px 24px;
+      border-radius: 0;
+    }
+
+    .verification-card {
+      .verification-tabs {
+        .ant-tabs-nav {
+          padding: 0 16px;
+        }
+
+        .ant-tabs-content {
+          padding: 24px 16px;
+        }
+      }
+    }
+
+    .verification-method {
+      .qr-scanner-container,
+      .upload-section {
+        .scan-prompt,
+        .scanning-state {
+          padding: 24px;
+        }
+      }
+    }
+
+    .help-card {
+      height: auto;
+      margin-bottom: 16px;
+    }
+  }
+}

@@ -1,0 +1,213 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #8B4513 0%, #A0522D 100%);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-height: 80px;
+  height: auto;
+
+  .header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+    min-height: 80px;
+  }
+
+  .logo {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+
+    &:hover {
+      transform: scale(1.05);
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+    }
+
+    h2 {
+      color: white;
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      letter-spacing: 1px;
+    }
+  }
+
+  .navigation {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    margin: 0 20px;
+
+    .nav-list {
+      display: flex;
+      list-style: none;
+      gap: 20px;
+      margin: 0;
+      padding: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+
+      .nav-item {
+        .nav-link {
+          background: none;
+          border: none;
+          color: white;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 8px 12px;
+          border-radius: 20px;
+          transition: all 0.3s ease;
+          position: relative;
+          white-space: nowrap;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+          }
+
+          &:active {
+            transform: translateY(0);
+          }
+        }
+      }
+    }
+  }
+
+  .cart-section {
+    flex-shrink: 0;
+
+    .cart-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 50px;
+      padding: 12px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.05);
+      }
+
+      .cart-icon {
+        width: 24px;
+        height: 24px;
+        color: white;
+      }
+
+      .cart-count {
+        background: #ff4757;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+// Responsive design cho tablet
+@media (max-width: 1024px) {
+  .header {
+    .navigation {
+      .nav-list {
+        gap: 15px;
+
+        .nav-item {
+          .nav-link {
+            font-size: 13px;
+            padding: 6px 10px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design cho mobile
+@media (max-width: 768px) {
+  .header {
+    .header-container {
+      padding: 10px 15px;
+      flex-direction: column;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .navigation {
+      order: 2;
+      margin: 0;
+      width: 100%;
+
+      .nav-list {
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+
+        .nav-item {
+          .nav-link {
+            font-size: 12px;
+            padding: 6px 8px;
+          }
+        }
+      }
+    }
+
+    .logo {
+      order: 1;
+      h2 {
+        font-size: 24px;
+      }
+    }
+
+    .cart-section {
+      order: 3;
+      position: absolute;
+      top: 15px;
+      right: 15px;
+    }
+  }
+}
+
+// Responsive design cho mobile nhỏ
+@media (max-width: 480px) {
+  .header {
+    .navigation {
+      .nav-list {
+        gap: 8px;
+
+        .nav-item {
+          .nav-link {
+            font-size: 11px;
+            padding: 5px 6px;
+          }
+        }
+      }
+    }
+
+    .logo {
+      h2 {
+        font-size: 20px;
+      }
+    }
+  }
+}

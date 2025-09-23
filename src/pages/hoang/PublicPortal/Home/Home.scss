@@ -1,0 +1,271 @@
+// Public Home Page Styles
+.public-home {
+  // Hero Section
+  .hero-card {
+    background: linear-gradient(135deg, #f0f5ff, #fff0f6);
+    border: none;
+    border-radius: 16px;
+    margin-bottom: 48px;
+    overflow: hidden;
+
+    .ant-card-body {
+      padding: 48px;
+
+      @media (max-width: 768px) {
+        padding: 32px 24px;
+      }
+    }
+
+    .hero-title {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 24px;
+      color: #262626;
+
+      .highlight {
+        background: linear-gradient(135deg, #722ed1, #eb2f96);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      @media (max-width: 768px) {
+        font-size: 32px;
+        text-align: center;
+      }
+    }
+
+    .hero-description {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #595959;
+      margin-bottom: 32px;
+
+      @media (max-width: 768px) {
+        font-size: 16px;
+        text-align: center;
+      }
+    }
+
+    .cta-button {
+      background: linear-gradient(135deg, #722ed1, #eb2f96);
+      border: none;
+      height: 48px;
+      padding: 0 32px;
+      font-size: 16px;
+
+      &:hover {
+        background: linear-gradient(135deg, #9254de, #f759ab);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(114, 46, 209, 0.3);
+      }
+    }
+
+    .hero-stats {
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid #f0f0f0;
+
+      .stat-item {
+        text-align: center;
+      }
+    }
+
+    .hero-visual {
+      position: relative;
+      text-align: center;
+
+      .ant-avatar {
+        box-shadow: 0 16px 48px rgba(114, 46, 209, 0.3);
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .floating-badges {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+
+        .ant-badge {
+          position: absolute;
+
+          &:nth-child(1) {
+            top: 20px;
+            right: 20px;
+            animation: bounce 2s ease-in-out infinite;
+          }
+
+          &:nth-child(2) {
+            bottom: 60px;
+            left: 20px;
+            animation: bounce 2s ease-in-out infinite 0.5s;
+          }
+
+          &:nth-child(3) {
+            bottom: 20px;
+            right: 40px;
+            animation: bounce 2s ease-in-out infinite 1s;
+          }
+        }
+      }
+    }
+  }
+
+  // Section Cards
+  .section-card {
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+    .ant-card-body {
+      padding: 40px;
+
+      @media (max-width: 768px) {
+        padding: 24px;
+      }
+    }
+
+    .ant-typography-title {
+      color: #262626;
+
+      &.ant-typography-title-2 {
+        font-size: 32px;
+        font-weight: 700;
+      }
+    }
+  }
+
+  // Steps
+  .verification-steps {
+    .ant-steps-item {
+      .ant-steps-item-title {
+        font-weight: 600;
+        font-size: 16px;
+      }
+
+      .ant-steps-item-description {
+        color: #8c8c8c;
+      }
+
+      .ant-steps-item-icon {
+        background: white;
+        border-color: #722ed1;
+
+        .ant-steps-icon {
+          color: #722ed1;
+        }
+      }
+    }
+  }
+
+  // Feature Cards
+  .feature-card {
+    text-align: center;
+    transition: all 0.3s ease;
+    border: none;
+
+    &:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 16px 32px rgba(0, 0, 0, 0.15);
+    }
+
+    .ant-card-body {
+      padding: 32px 24px;
+    }
+
+    .ant-typography-title-4 {
+      color: #262626;
+      margin: 16px 0 8px;
+    }
+  }
+
+  // Institution Cards
+  .institution-card {
+    text-align: center;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    }
+
+    .ant-card-body {
+      padding: 24px;
+    }
+  }
+
+  // Statistics Cards
+  .ant-statistic {
+    .ant-statistic-title {
+      color: #8c8c8c;
+      font-weight: 500;
+    }
+
+    .ant-statistic-content {
+      .ant-statistic-content-value {
+        color: #262626;
+        font-weight: 700;
+      }
+    }
+  }
+
+  // Animations
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes bounce {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .hero-visual {
+      margin-top: 32px;
+
+      .ant-avatar {
+        width: 120px !important;
+        height: 120px !important;
+
+        .anticon {
+          font-size: 48px !important;
+        }
+      }
+    }
+
+    .hero-stats {
+      .ant-space {
+        justify-content: center;
+
+        .ant-space-item {
+          flex: 1;
+        }
+      }
+    }
+
+    .verification-steps {
+      .ant-steps {
+        flex-direction: column;
+
+        .ant-steps-item {
+          text-align: center;
+        }
+      }
+    }
+  }
+}

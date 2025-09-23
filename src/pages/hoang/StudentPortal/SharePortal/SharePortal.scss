@@ -1,0 +1,106 @@
+// Share Portal Page Styles
+.share-portal {
+  .page-header {
+    margin-bottom: 24px;
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #1890ff, #36cfc9);
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(24, 144, 255, 0.3);
+  }
+
+  .coming-soon-card {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+
+    .ant-card-body {
+      padding: 48px 24px;
+    }
+  }
+
+  .feature-card {
+    text-align: center;
+    height: 200px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .ant-card-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .ant-typography-title {
+      margin: 8px 0;
+      font-size: 16px;
+    }
+  }
+
+  // Avatar
+  .ant-avatar {
+    background: linear-gradient(135deg, #f0f5ff, #bae0ff);
+    border: 3px solid white;
+    box-shadow: 0 8px 24px rgba(24, 144, 255, 0.2);
+  }
+
+  // Button
+  .ant-btn-primary {
+    background: linear-gradient(135deg, #1890ff, #36cfc9);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    height: 48px;
+    padding: 0 32px;
+
+    &:hover:not(:disabled) {
+      background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(24, 144, 255, 0.4);
+    }
+
+    &:disabled {
+      background: #f5f5f5;
+      color: #bfbfbf;
+    }
+  }
+
+  // Typography
+  .ant-typography {
+    &.ant-typography-title {
+      &.ant-typography-title-2 {
+        color: #1890ff;
+      }
+    }
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 20px;
+      margin: 0 -24px 24px;
+      border-radius: 0;
+    }
+
+    .coming-soon-card {
+      .ant-card-body {
+        padding: 32px 16px;
+      }
+    }
+
+    .feature-card {
+      height: auto;
+      margin-bottom: 16px;
+    }
+  }
+}

@@ -1,0 +1,199 @@
+// Public Portal Layout Styles
+.public-portal-layout {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #722ed1 0%, #eb2f96 100%);
+
+  .public-sider {
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+
+    .logo-container {
+      padding: 24px 16px;
+      text-align: center;
+      border-bottom: 1px solid #f0f0f0;
+
+      .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 8px;
+
+        .logo-icon {
+          font-size: 32px;
+          color: #722ed1;
+        }
+
+        .logo-text {
+          margin: 0;
+          color: #722ed1;
+          font-weight: 700;
+          font-size: 18px;
+        }
+      }
+
+      .logo-subtitle {
+        font-size: 12px;
+        color: #8c8c8c;
+      }
+    }
+
+    .public-menu {
+      border-right: none;
+      padding: 16px 0;
+
+      .ant-menu-item {
+        margin: 4px 8px;
+        border-radius: 8px;
+        font-weight: 500;
+
+        &.ant-menu-item-selected {
+          background: linear-gradient(135deg, #f9f0ff, #fff0f6);
+          color: #722ed1;
+
+          .anticon {
+            color: #722ed1;
+          }
+        }
+
+        &:hover {
+          color: #722ed1;
+
+          .anticon {
+            color: #722ed1;
+          }
+        }
+      }
+    }
+
+    .sidebar-footer {
+      position: absolute;
+      bottom: 20px;
+      left: 16px;
+      right: 16px;
+      padding: 16px;
+      background: #fafafa;
+      border-radius: 8px;
+
+      .trust-indicators {
+        text-align: center;
+
+        .trust-logos {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 11px;
+        }
+      }
+    }
+  }
+
+  .public-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .trigger {
+        font-size: 18px;
+        padding: 8px;
+        border-radius: 8px;
+
+        &:hover {
+          background: #f0f0f0;
+        }
+      }
+
+      .header-brand {
+        .ant-typography-title {
+          margin: 0;
+          font-size: 20px;
+        }
+      }
+    }
+
+    .header-right {
+      .ant-btn-primary {
+        background: linear-gradient(135deg, #722ed1, #eb2f96);
+        border: none;
+
+        &:hover {
+          background: linear-gradient(135deg, #9254de, #f759ab);
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+
+  .public-content {
+    background: #f8fafc !important;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    // Custom scrollbar
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 3px;
+
+      &:hover {
+        background: #a8a8a8;
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .public-header {
+      .header-left {
+        .header-brand {
+          display: none;
+        }
+      }
+
+      .header-right {
+        .ant-space {
+          gap: 8px;
+        }
+      }
+    }
+
+    .public-sider {
+      .sidebar-footer {
+        display: none;
+      }
+    }
+  }
+
+  // Global Ant Design customizations for Public Portal
+  .ant-layout {
+    background: transparent;
+  }
+
+  .ant-menu-inline {
+    border-right: none;
+  }
+
+  .ant-layout-sider-collapsed {
+    .logo-container {
+      .logo-text,
+      .logo-subtitle {
+        display: none;
+      }
+    }
+  }
+}

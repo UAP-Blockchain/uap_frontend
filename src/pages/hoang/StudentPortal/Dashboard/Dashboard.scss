@@ -1,0 +1,224 @@
+// Antd Dashboard Styles
+.antd-dashboard {
+  // Welcome Card
+  .welcome-card {
+    background: linear-gradient(135deg, #1890ff, #36cfc9);
+    color: white;
+    border: none;
+
+    .ant-typography {
+      color: white !important;
+    }
+
+    .ant-btn {
+      &.ant-btn-primary {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.4);
+          transform: translateY(-2px);
+        }
+      }
+
+      &:not(.ant-btn-primary) {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(255, 255, 255, 0.9);
+        color: #1890ff;
+
+        &:hover {
+          background: white;
+          border-color: white;
+          color: #1890ff;
+          transform: translateY(-2px);
+        }
+      }
+    }
+  }
+
+  // Credential List Items
+  .credential-list-item {
+    &:hover {
+      background: #f0f5ff !important;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(24, 144, 255, 0.1);
+    }
+  }
+
+  // Quick Access Cards
+  .quick-access-card {
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border-radius: 12px;
+
+    &:hover {
+      transform: translateY(-8px) scale(1.02);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      border-color: #1890ff;
+    }
+
+    .ant-avatar {
+      transition: all 0.3s ease;
+    }
+
+    &:hover .ant-avatar {
+      transform: scale(1.1);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  // Custom Card Styles
+  .ant-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+      transform: translateY(-2px);
+    }
+
+    .ant-card-head {
+      border-bottom: 1px solid #f0f2f5;
+      padding: 16px 24px;
+    }
+
+    .ant-card-body {
+      padding: 20px 24px;
+    }
+  }
+
+  // Statistics Cards
+  .ant-statistic {
+    .ant-statistic-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .ant-statistic-content {
+      .ant-statistic-content-value {
+        font-weight: 600;
+      }
+    }
+  }
+
+  // List Customizations
+  .ant-list-item {
+    padding: 12px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: #fafafa;
+    }
+
+    .ant-list-item-meta {
+      .ant-list-item-meta-title {
+        margin-bottom: 4px;
+
+        .ant-typography {
+          font-size: 14px;
+          font-weight: 600;
+        }
+      }
+
+      .ant-list-item-meta-description {
+        color: #8c8c8c;
+        font-size: 12px;
+      }
+    }
+  }
+
+  // Progress Customizations
+  .ant-progress-circle {
+    .ant-progress-text {
+      font-size: 10px !important;
+      font-weight: 600;
+    }
+  }
+
+  // Tag Customizations
+  .ant-tag {
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 0 8px;
+    line-height: 20px;
+  }
+
+  // Button Customizations
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      border: none;
+
+      &:hover {
+        background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
+      }
+    }
+
+    &.ant-btn-lg {
+      padding: 8px 24px;
+      height: 44px;
+      font-size: 15px;
+    }
+  }
+
+  // Avatar Customizations
+  .ant-avatar {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+
+    &.ant-avatar-lg {
+      width: 48px;
+      height: 48px;
+      line-height: 48px;
+      font-size: 20px;
+    }
+  }
+
+  // Typography Customizations
+  .ant-typography {
+    &.ant-typography-title {
+      &.ant-typography-title-4 {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+    }
+  }
+
+  // Space Customizations
+  .ant-space {
+    &.ant-space-horizontal {
+      .ant-space-item {
+        &:not(:last-child) {
+          margin-right: 12px;
+        }
+      }
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .welcome-card {
+      .ant-row {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+      }
+    }
+
+    .quick-access-card {
+      margin-bottom: 16px;
+    }
+  }
+}

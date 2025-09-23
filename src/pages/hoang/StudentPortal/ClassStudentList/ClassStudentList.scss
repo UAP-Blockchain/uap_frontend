@@ -1,0 +1,278 @@
+// Class Student List Styles
+.class-student-list {
+  .list-header {
+    margin-bottom: 24px;
+
+    .ant-typography-title-2 {
+      color: #1890ff;
+    }
+  }
+
+  .student-table-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+    .table-header {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #f0f0f0;
+
+      .ant-typography-title-4 {
+        color: #595959;
+        font-weight: 600;
+      }
+    }
+  }
+
+  // Table Styles
+  .student-list-table {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 2px solid #5a6fd8;
+
+        &:first-child {
+          border-radius: 8px 0 0 0;
+        }
+
+        &:last-child {
+          border-radius: 0 8px 0 0;
+        }
+      }
+
+      .ant-table-tbody > tr > td {
+        text-align: center;
+        vertical-align: middle;
+        border-right: 1px solid #f0f0f0;
+        padding: 12px 8px;
+
+        &:last-child {
+          border-right: none;
+        }
+      }
+
+      // Current user row highlight (SE170117 - our user)
+      .current-user-row {
+        background: #e6f7ff !important;
+
+        &:hover {
+          background: #bae0ff !important;
+        }
+
+        td {
+          border-top: 2px solid #1890ff;
+          border-bottom: 2px solid #1890ff;
+
+          &:first-child {
+            border-left: 2px solid #1890ff;
+          }
+
+          &:last-child {
+            border-right: 2px solid #1890ff;
+          }
+        }
+      }
+
+      // Hover effect for rows
+      .ant-table-tbody > tr:hover > td {
+        background: #f5f5f5;
+      }
+    }
+  }
+
+  // Avatar styling (like in original image)
+  .ant-avatar {
+    border: 1px solid #d9d9d9;
+
+    &:not(.ant-avatar-image) {
+      background: #f5f5f5;
+      color: #bfbfbf;
+    }
+
+    // Make avatars have consistent size and appearance
+    &.ant-avatar-square {
+      border-radius: 4px;
+    }
+  }
+
+  // Statistics Cards
+  .ant-statistic {
+    .ant-statistic-title {
+      color: #8c8c8c;
+      font-weight: 500;
+    }
+
+    .ant-statistic-content {
+      .ant-statistic-content-value {
+        color: #262626;
+        font-weight: 700;
+      }
+
+      .ant-statistic-content-prefix {
+        margin-right: 8px;
+      }
+    }
+  }
+
+  // Search Input
+  .ant-input-search {
+    .ant-input {
+      border-radius: 8px;
+
+      &:focus,
+      &:hover {
+        border-color: #1890ff;
+      }
+    }
+
+    .ant-input-search-button {
+      border-radius: 0 8px 8px 0;
+      background: #1890ff;
+      border-color: #1890ff;
+
+      &:hover {
+        background: #40a9ff;
+        border-color: #40a9ff;
+      }
+    }
+  }
+
+  // Cards
+  .ant-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .ant-card-head-title {
+      font-weight: 600;
+      color: #262626;
+    }
+  }
+
+  // Buttons
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      border: none;
+
+      &:hover {
+        background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  // Typography
+  .ant-typography {
+    &.ant-typography-text {
+      &:not(.ant-typography-secondary) {
+        color: #262626;
+      }
+    }
+  }
+
+  // Pagination
+  .ant-pagination {
+    .ant-pagination-item-active {
+      background: #1890ff;
+      border-color: #1890ff;
+    }
+
+    .ant-pagination-item:hover {
+      border-color: #1890ff;
+
+      a {
+        color: #1890ff;
+      }
+    }
+
+    .ant-pagination-jump-prev
+      .ant-pagination-item-container
+      .ant-pagination-item-link-icon,
+    .ant-pagination-jump-next
+      .ant-pagination-item-container
+      .ant-pagination-item-link-icon {
+      color: #1890ff;
+    }
+
+    .ant-pagination-prev:hover .ant-pagination-item-link,
+    .ant-pagination-next:hover .ant-pagination-item-link {
+      border-color: #1890ff;
+      color: #1890ff;
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 1200px) {
+    .list-header {
+      .ant-row {
+        flex-direction: column;
+        gap: 16px;
+
+        .ant-col {
+          width: 100%;
+
+          &:last-child {
+            text-align: center;
+          }
+        }
+      }
+    }
+
+    .student-list-table {
+      .ant-table-thead > tr > th {
+        padding: 8px 4px;
+        font-size: 12px;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 8px 4px;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    .list-header {
+      .ant-btn {
+        width: 100%;
+        margin-bottom: 12px;
+      }
+
+      .ant-typography-title-2 {
+        font-size: 20px;
+        text-align: center;
+      }
+    }
+
+    .student-table-card {
+      .table-header {
+        text-align: center;
+      }
+    }
+
+    .student-list-table {
+      .ant-table {
+        font-size: 12px;
+
+        .ant-table-thead > tr > th {
+          padding: 6px 2px;
+          font-size: 10px;
+        }
+
+        .ant-table-tbody > tr > td {
+          padding: 6px 2px;
+        }
+      }
+
+      .ant-avatar {
+        width: 40px !important;
+        height: 40px !important;
+      }
+    }
+  }
+}

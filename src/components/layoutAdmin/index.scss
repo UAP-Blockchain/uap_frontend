@@ -1,0 +1,1055 @@
+// @use "@/styles/variables" as vars;
+
+// Header styles
+.site-layout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.85) !important;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .toggle-btn {
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      color: var(--text-color);
+      border: none;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.06);
+        transform: scale(1.05);
+        // color: vars.$primary-color;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .logo-container {
+      margin-left: 8px;
+      font-size: 20px;
+      font-weight: 600;
+      //   color: vars.$primary-color;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: all 0.3s ease;
+
+      .logo-icon {
+        transition: transform 0.4s ease;
+      }
+
+      .logo-text {
+        margin-left: 10px;
+        background: linear-gradient(90deg, #1890ff, #722ed1);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 700;
+      }
+
+      &:hover {
+        transform: translateY(-1px);
+
+        .logo-icon {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+
+  .header-center {
+    flex-grow: 1;
+    max-width: 640px;
+    margin: 0 24px;
+
+    .search-container {
+      display: flex;
+      align-items: center;
+      height: 42px;
+      position: relative;
+      transition: all 0.3s ease;
+      border-radius: 40px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background-color: var(--background-color);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+
+      &.focused {
+        // border-color: vars.$primary-color;
+        box-shadow: 0 3px 8px rgba(24, 144, 255, 0.15);
+        transform: translateY(-1px);
+      }
+
+      .search-input {
+        flex-grow: 1;
+        height: 100%;
+        padding: 0 20px;
+        border: none;
+        border-radius: 40px;
+        font-size: 15px;
+        outline: none;
+        background-color: transparent;
+        color: var(--text-color);
+        width: calc(100% - 50px);
+      }
+
+      .search-button {
+        position: absolute;
+        right: 3px;
+        height: 36px;
+        width: 36px;
+        padding: 0;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(24, 144, 255, 0.2);
+
+        &:hover {
+          transform: scale(1.05);
+          box-shadow: 0 3px 8px rgba(24, 144, 255, 0.3);
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+
+        .anticon {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.06);
+        transform: scale(1.05);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      .anticon {
+        font-size: 20px;
+      }
+    }
+
+    .help-button {
+      color: #52c41a;
+
+      &:hover {
+        color: #73d13d;
+      }
+    }
+
+    .notification-button {
+      color: var(--primary-color);
+
+      &:hover {
+        scale: 1.2;
+        color: var(--primary-color);
+      }
+    }
+
+    .notification-badge {
+      .ant-badge-count {
+        box-shadow: 0 0 0 2px #fff;
+        transition: all 0.3s ease;
+      }
+
+      &:hover .ant-badge-count {
+        transform: scale(1.1);
+      }
+    }
+
+    .divider {
+      height: 24px;
+      width: 1px;
+      background-color: rgba(0, 0, 0, 0.1);
+      margin: 0 4px;
+    }
+
+    .user-profile-container {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      border-radius: 20px;
+      padding: 4px 12px 4px 4px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+
+      .user-avatar {
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+        &:hover {
+          transform: scale(1.05);
+          box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+      }
+
+      .user-name {
+        margin-left: 8px;
+        font-weight: 500;
+        color: var(--text-color);
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+}
+
+.user-dropdown {
+  .ant-dropdown-menu {
+    border-radius: 8px;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+
+  .ant-dropdown-menu-item {
+    padding: 10px 16px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    .anticon {
+      margin-right: 8px;
+    }
+  }
+}
+
+// Sidebar styles
+.sidebar-layout {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
+  transition: width 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+  .sidebar-menu-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-new-post-btn {
+    margin: 16px 16px 8px;
+    padding: 8px 12px;
+    background-color: #1890ff;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+    &:hover {
+      background-color: #40a9ff;
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      background-color: #096dd9;
+      transform: translateY(0);
+    }
+  }
+
+  .menu-divider {
+    height: 1px;
+    margin: 8px 16px;
+    background-color: #f0f0f0;
+  }
+
+  .sidebar-section-title {
+    padding: 12px 24px 4px;
+    color: #8c8c8c;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  // Enhance the menu styling
+  .sidebar-menu {
+    border-right: none;
+
+    .ant-menu-item {
+      position: relative;
+      margin: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+      animation-delay: calc(var(--item-index) * 0.05s);
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background-color: #1890ff;
+        border-radius: 0 2px 2px 0;
+        transform: scaleY(0);
+        opacity: 0;
+        transition: transform 0.3s cubic-bezier(0.645, 0.045, 0.355, 1),
+          opacity 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+      }
+
+      &:hover {
+        background-color: #f0f7ff;
+        transform: translateX(2px);
+      }
+
+      &.ant-menu-item-selected {
+        background-color: #e6f7ff;
+        color: #1890ff;
+        font-weight: 500;
+
+        &::before {
+          transform: scaleY(1);
+          opacity: 1;
+        }
+      }
+
+      .ant-menu-title-content {
+        transition: margin-left 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+      }
+
+      &:hover .ant-menu-title-content {
+        margin-left: 2px;
+      }
+    }
+
+    .ant-menu-submenu-title {
+      margin: 4px 8px;
+      border-radius: 6px;
+      transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+      &:hover {
+        background-color: #f0f7ff;
+      }
+    }
+
+    // Add subtle entrance animation for items
+    .ant-menu-item,
+    .ant-menu-submenu {
+      animation: fadeInRight 0.5s cubic-bezier(0.645, 0.045, 0.355, 1) both;
+      animation-delay: calc(var(--item-index) * 0.05s);
+    }
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px;
+
+    .footer-link {
+      font-size: 12px;
+      color: #8c8c8c;
+      cursor: pointer;
+      margin-bottom: 6px;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #1890ff;
+      }
+    }
+
+    .footer-copyright {
+      font-size: 11px;
+      color: #bfbfbf;
+      margin-top: 8px;
+    }
+  }
+}
+
+// Content styles
+.site-layout-content {
+  margin: 24px 16px;
+  padding: 24px;
+  background-color: var(--background-color);
+  border-radius: 12px;
+  min-height: 200px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+// Footer styles
+.site-footer {
+  background-color: var(--background-color);
+
+  .footer-links {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin-bottom: 24px;
+
+    .footer-section {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      min-width: 160px;
+
+      .section-header {
+        font-weight: 500;
+        margin-bottom: 12px;
+        color: var(--text-color);
+      }
+
+      .footer-link {
+        color: var(--text-color-secondary);
+        margin-bottom: 8px;
+        font-size: 14px;
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: var(--primary-color);
+          transform: translateX(2px);
+        }
+      }
+    }
+  }
+
+  .footer-copyright {
+    color: var(--text-color-secondary);
+    font-size: 12px;
+  }
+}
+
+// // Main layout container
+// .main-layout {
+//   min-height: 100vh;
+//   height: 100vh;
+//   overflow: hidden;
+// }
+
+// // Inner layout
+// .inner-layout {
+//   height: calc(100vh - 64px);
+// }
+
+// // Content layout
+// .content-layout {
+//   margin-left: 80px;
+//   transition: margin 0.2s;
+//   height: calc(100vh - 54px);
+//   overflow: hidden;
+
+//   &.expanded {
+//     margin-left: 240px;
+//   }
+// }
+
+// Admin content wrapper
+.admin-content-wrapper {
+  padding: 16px 24px;
+  overflow: initial;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+
+  .content-header {
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      transform: translateY(-2px);
+    }
+
+    .admin-breadcrumb {
+      margin-bottom: 12px;
+      font-size: 14px;
+
+      a {
+        transition: color 0.2s ease;
+
+        &:hover {
+          //   color: vars.$primary-color;
+        }
+      }
+    }
+
+    .page-title-section {
+      margin-top: 12px;
+
+      .page-title {
+        margin: 0;
+        font-size: 26px;
+        font-weight: 600;
+        color: #212121;
+        line-height: 1.4;
+      }
+
+      .page-subtitle {
+        margin: 6px 0 0;
+        color: #666;
+        font-size: 15px;
+      }
+    }
+  }
+
+  .content-container {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    position: relative;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+    max-height: calc(100vh - 120px);
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// Styles for submenu (Danh mục dropdown)
+.sidebar-menu {
+  // ...existing code...
+
+  .ant-menu-submenu {
+    margin: 4px 12px;
+    border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+
+    .ant-menu-submenu-title {
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      padding-left: 12px !important;
+
+      &:hover {
+        background-color: rgba(24, 144, 255, 0.08);
+
+        .anticon {
+          color: #1890ff;
+          transform: scale(1.1);
+        }
+      }
+
+      .anticon {
+        font-size: 18px;
+        transition: all 0.3s ease;
+        margin-right: 12px;
+      }
+    }
+
+    &.ant-menu-submenu-open {
+      > .ant-menu-submenu-title {
+        color: #1890ff;
+        font-weight: 500;
+
+        .anticon {
+          color: #1890ff;
+          transform: scale(1.1);
+        }
+      }
+    }
+
+    &.ant-menu-submenu-selected {
+      .ant-menu-submenu-title {
+        color: #1890ff;
+      }
+    }
+
+    // Style for submenu items
+    .ant-menu-sub {
+      background-color: transparent;
+      border-radius: 8px;
+
+      .ant-menu-item {
+        padding-left: 48px !important;
+        height: 40px;
+        line-height: 40px;
+
+        .anticon {
+          position: absolute;
+          left: 24px;
+        }
+
+        &.ant-menu-item-selected {
+          &::before {
+            height: 70%;
+            top: 15%;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Dark mode adjustments for submenu
+html.dark {
+  .sidebar-menu {
+    .ant-menu-submenu {
+      .ant-menu-submenu-title {
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.08);
+
+          .anticon {
+            color: #177ddc;
+          }
+        }
+      }
+
+      &.ant-menu-submenu-open {
+        > .ant-menu-submenu-title {
+          color: #40a9ff;
+
+          .anticon {
+            color: #40a9ff;
+          }
+        }
+      }
+
+      .ant-menu-sub {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+}
+
+// Colorful icon for the Danh mục submenu
+.sidebar-menu {
+  .ant-menu-submenu {
+    .ant-menu-submenu-title .anticon {
+      color: #52c41a;
+    }
+
+    // Icon colors for submenu items
+    .ant-menu-sub {
+      // Đơn icon
+      .ant-menu-item:nth-child(1) .anticon {
+        color: #2f54eb;
+      }
+
+      // Chức vụ icon
+      .ant-menu-item:nth-child(2) .anticon {
+        color: #eb2f96;
+      }
+
+      // Ca làm icon
+      .ant-menu-item:nth-child(3) .anticon {
+        color: #fa8c16;
+      }
+
+      // Chi nhánh icon
+      .ant-menu-item:nth-child(4) .anticon {
+        color: #13c2c2;
+      }
+    }
+  }
+}
+
+// Animation for submenu items with delay
+.sidebar-menu .ant-menu-sub .ant-menu-item {
+  animation: fadeIn 0.3s ease forwards;
+  animation-delay: calc(0.05s * var(--item-index, 0) + 0.1s);
+  opacity: 0;
+}
+
+// Dark mode support
+html.dark {
+  .site-layout-header {
+    background-color: rgba(31, 31, 31, 0.85) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+    .logo-container .logo-text {
+      background: linear-gradient(90deg, #40a9ff, #9254de);
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+
+    .search-container {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+
+      .search-input {
+        color: rgba(255, 255, 255, 0.85);
+
+        &::placeholder {
+          color: rgba(255, 255, 255, 0.45);
+        }
+      }
+    }
+
+    .header-right {
+      .divider {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .user-profile-container:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .toggle-btn {
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+
+    .icon-button {
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  .user-dropdown {
+    .ant-dropdown-menu {
+      background-color: #1f1f1f;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ant-dropdown-menu-item {
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+  }
+
+  .sidebar-layout {
+    background-color: #1f1f1f;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+
+    .sidebar-menu-container {
+      .sidebar-new-post-btn {
+        background: linear-gradient(135deg, #177ddc, #0958d9);
+
+        &:hover {
+          background: linear-gradient(135deg, #1e88e5, #177ddc);
+        }
+      }
+    }
+
+    .sidebar-menu {
+      background-color: #1f1f1f;
+
+      .ant-menu-item {
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.08);
+
+          .anticon {
+            color: #177ddc;
+          }
+        }
+
+        &.ant-menu-item-selected {
+          background-color: rgba(24, 144, 255, 0.15);
+          color: #40a9ff;
+
+          &::before {
+            background: linear-gradient(to bottom, #177ddc, #40a9ff);
+          }
+
+          .anticon {
+            color: #40a9ff;
+          }
+        }
+      }
+    }
+
+    .menu-divider {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-section-title {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .sidebar-footer {
+      border-color: rgba(255, 255, 255, 0.06);
+      color: rgba(255, 255, 255, 0.45);
+
+      .footer-link {
+        &:hover {
+          color: #40a9ff;
+        }
+      }
+    }
+  }
+
+  .admin-content-wrapper {
+    .content-header,
+    .content-container {
+      background-color: #1f1f1f;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+    }
+
+    .page-title-section {
+      .page-title {
+        color: #e0e0e0;
+      }
+
+      .page-subtitle {
+        color: #aaa;
+      }
+    }
+  }
+}
+
+// Animation keyframes
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// Animations for menu items
+.sidebar-menu .ant-menu-item {
+  animation: fadeIn 0.3s ease forwards;
+  animation-delay: calc(0.05s * var(--item-index, 0));
+  opacity: 0;
+}
+
+// Colorful icon styles for sidebar and header
+.sidebar-menu {
+  .ant-menu-item {
+    // Home icon
+    &:nth-child(1) .anticon {
+      color: #1890ff;
+    }
+
+    // User management icon
+    &:nth-child(2) .anticon {
+      color: #722ed1;
+    }
+
+    // Department management icon
+    &:nth-child(3) .anticon {
+      color: #13c2c2;
+    }
+
+    // Shift management icon
+    &:nth-child(4) .anticon {
+      color: #eb2f96;
+    }
+
+    // Attendance management icon
+    &:nth-child(5) .anticon {
+      color: #fa8c16;
+    }
+
+    &:hover .anticon {
+      filter: brightness(1.2);
+    }
+  }
+}
+
+// Colorful icons for tools section
+.sidebar-section-title + .sidebar-menu {
+  .ant-menu-item {
+    // Notification icon
+    &:nth-child(1) .anticon {
+      color: #faad14;
+    }
+
+    // Report icon
+    &:nth-child(2) .anticon {
+      color: #52c41a;
+    }
+
+    // Settings icon
+    &:nth-child(3) .anticon {
+      color: #1890ff;
+    }
+
+    &:hover .anticon {
+      filter: brightness(1.2);
+    }
+  }
+}
+
+// Header icon styles
+.header-right {
+  .icon-button {
+    // Help icon
+    &:nth-child(1) .anticon {
+      color: #1890ff;
+    }
+
+    // Notification icon
+    &:nth-child(2) .anticon {
+      color: #faad14;
+    }
+  }
+}
+
+// Enhanced hover effect for all menu items
+.sidebar-menu .ant-menu-item {
+  &:hover {
+    background: linear-gradient(
+      to right,
+      rgba(24, 144, 255, 0.05),
+      rgba(24, 144, 255, 0.12)
+    );
+  }
+
+  &.ant-menu-item-selected {
+    background: linear-gradient(
+      to right,
+      rgba(24, 144, 255, 0.1),
+      rgba(24, 144, 255, 0.18)
+    );
+  }
+}
+
+// Dark mode adjustments for colorful icons
+html.dark {
+  .sidebar-menu {
+    .ant-menu-item {
+      // Home icon
+      &:nth-child(1) .anticon {
+        color: #177ddc;
+      }
+
+      // User management icon
+      &:nth-child(2) .anticon {
+        color: #9254de;
+      }
+
+      // Department management icon
+      &:nth-child(3) .anticon {
+        color: #36cfc9;
+      }
+
+      // Shift management icon
+      &:nth-child(4) .anticon {
+        color: #f759ab;
+      }
+
+      // Attendance management icon
+      &:nth-child(5) .anticon {
+        color: #ffa940;
+      }
+    }
+  }
+
+  // Colorful icons for tools section in dark mode
+  .sidebar-section-title + .sidebar-menu {
+    .ant-menu-item {
+      // Notification icon
+      &:nth-child(1) .anticon {
+        color: #ffc53d;
+      }
+
+      // Report icon
+      &:nth-child(2) .anticon {
+        color: #73d13d;
+      }
+
+      // Settings icon
+      &:nth-child(3) .anticon {
+        color: #40a9ff;
+      }
+    }
+  }
+
+  // Header icon styles for dark mode
+  .header-right {
+    .icon-button {
+      // Help icon
+      &:nth-child(1) .anticon {
+        color: #40a9ff;
+      }
+
+      // Notification icon
+      &:nth-child(2) .anticon {
+        color: #ffc53d;
+      }
+    }
+  }
+
+  // Enhanced hover effect for all menu items in dark mode
+  .sidebar-menu .ant-menu-item {
+    &:hover {
+      background: linear-gradient(
+        to right,
+        rgba(24, 144, 255, 0.08),
+        rgba(24, 144, 255, 0.15)
+      );
+    }
+
+    &.ant-menu-item-selected {
+      background: linear-gradient(
+        to right,
+        rgba(24, 144, 255, 0.15),
+        rgba(24, 144, 255, 0.25)
+      );
+    }
+  }
+}

@@ -1,0 +1,253 @@
+// Verification Results Styles
+.verification-results {
+  .result-header {
+    border-radius: 16px;
+    margin-bottom: 24px;
+    overflow: hidden;
+
+    &.success {
+      background: linear-gradient(135deg, #f6ffed, #e6f7ff);
+      border-color: #52c41a;
+    }
+
+    &.failed {
+      background: linear-gradient(135deg, #fff2f0, #fff1f0);
+      border-color: #ff4d4f;
+    }
+
+    .ant-result-title {
+      .ant-typography-title-2 {
+        color: #262626;
+      }
+    }
+
+    .ant-result-subtitle {
+      color: #595959;
+    }
+  }
+
+  .detail-card {
+    border-radius: 12px;
+
+    .ant-descriptions {
+      .ant-descriptions-item-label {
+        font-weight: 600;
+        color: #595959;
+        background: #fafafa;
+      }
+
+      .ant-descriptions-item-content {
+        background: white;
+        color: #262626;
+      }
+    }
+
+    .ant-typography-title-5 {
+      color: #722ed1;
+      margin: 24px 0 16px;
+    }
+  }
+
+  // Verification Checklist
+  .check-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+
+    .anticon {
+      font-size: 16px;
+    }
+  }
+
+  // Timeline
+  .ant-timeline {
+    .ant-timeline-item {
+      .ant-timeline-item-content {
+        color: #262626;
+        font-weight: 500;
+      }
+    }
+  }
+
+  // Statistics
+  .ant-statistic {
+    .ant-statistic-title {
+      color: #8c8c8c;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+
+    .ant-statistic-content {
+      .ant-statistic-content-value {
+        font-weight: 700;
+        font-size: 32px;
+      }
+    }
+  }
+
+  // Cards
+  .ant-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .ant-card-head-title {
+      font-weight: 600;
+      color: #262626;
+    }
+  }
+
+  // Tags
+  .ant-tag {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 4px 12px;
+
+    &.ant-tag-success {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+      color: #389e0d;
+    }
+
+    &.ant-tag-error {
+      background: #fff2f0;
+      border-color: #ffccc7;
+      color: #cf1322;
+    }
+
+    &.ant-tag-warning {
+      background: #fffbe6;
+      border-color: #ffe58f;
+      color: #d46b08;
+    }
+
+    &.ant-tag-gold {
+      background: #fff7e6;
+      border-color: #ffec8b;
+      color: #d48806;
+      font-weight: 600;
+    }
+  }
+
+  // Code blocks
+  code.ant-typography {
+    background: #f6f8ff;
+    border: 1px solid #d9e5ff;
+    color: #722ed1;
+    font-family: "Monaco", "Menlo", monospace;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    word-break: break-all;
+  }
+
+  // Buttons
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #722ed1, #eb2f96);
+      border: none;
+
+      &:hover {
+        background: linear-gradient(135deg, #9254de, #f759ab);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+      }
+    }
+
+    &.ant-btn-block {
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // Result status icons
+  .ant-result-success {
+    .ant-result-icon {
+      .anticon {
+        color: #52c41a;
+      }
+    }
+  }
+
+  .ant-result-error {
+    .ant-result-icon {
+      .anticon {
+        color: #ff4d4f;
+      }
+    }
+  }
+
+  // Alert customization
+  .ant-alert {
+    border-radius: 8px;
+
+    &.ant-alert-error {
+      background: #fff2f0;
+      border-color: #ffccc7;
+
+      .ant-alert-icon {
+        color: #ff4d4f;
+      }
+
+      ul {
+        margin: 8px 0;
+        padding-left: 20px;
+
+        li {
+          margin-bottom: 4px;
+        }
+      }
+    }
+  }
+
+  // Space customizations
+  .ant-space {
+    &.ant-space-vertical {
+      width: 100%;
+    }
+  }
+
+  // QR Modal
+  .ant-modal {
+    .ant-modal-content {
+      border-radius: 12px;
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    .result-header {
+      .ant-result {
+        .ant-result-extra {
+          .ant-space {
+            flex-direction: column;
+            width: 100%;
+
+            .ant-space-item {
+              width: 100%;
+
+              .ant-btn {
+                width: 100%;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .ant-descriptions {
+      .ant-descriptions-item {
+        padding-bottom: 12px;
+      }
+    }
+
+    .check-item {
+      justify-content: flex-start;
+    }
+  }
+}

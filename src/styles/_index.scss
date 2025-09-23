@@ -1,0 +1,6 @@
+@use "./theme-variables";
+@use "./variables";
+
+// Forward modules with namespaces to avoid naming conflicts
+@forward "./theme-variables" as theme-*;
+@forward "./variables" as vars-*;

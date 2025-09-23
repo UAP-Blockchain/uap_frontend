@@ -1,0 +1,366 @@
+// Profile Page Styles
+.profile-page {
+  .page-header {
+    text-align: center;
+    padding: 24px;
+    background: linear-gradient(135deg, #722ed1, #eb2f96);
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(114, 46, 209, 0.3);
+
+    .ant-typography-title-2 {
+      color: white;
+    }
+  }
+
+  // Profile Overview Card
+  .profile-overview-card {
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+    .profile-header {
+      text-align: center;
+
+      .avatar-section {
+        margin-bottom: 16px;
+
+        .ant-badge {
+          .ant-badge-count {
+            background: #722ed1;
+            color: white;
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(114, 46, 209, 0.3);
+          }
+        }
+
+        .profile-avatar {
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: 4px solid #f0f0f0;
+
+          &:hover {
+            border-color: #722ed1;
+            transform: scale(1.05);
+          }
+        }
+      }
+
+      .profile-info {
+        .ant-typography-title-3 {
+          color: #262626;
+          margin: 16px 0 4px;
+        }
+
+        .ant-tag {
+          margin: 2px 4px;
+          border-radius: 12px;
+          font-weight: 500;
+        }
+      }
+    }
+  }
+
+  // Form and Input Styles
+  .ant-form {
+    .ant-form-item-label > label {
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .ant-input,
+    .ant-picker {
+      border-radius: 8px;
+
+      &:hover,
+      &:focus {
+        border-color: #722ed1;
+      }
+
+      &:disabled {
+        background: #fafafa;
+        border-color: #e0e0e0;
+        color: #8c8c8c;
+      }
+    }
+
+    .ant-input-password {
+      .ant-input {
+        &:hover,
+        &:focus {
+          border-color: #722ed1;
+        }
+      }
+    }
+  }
+
+  // Card Styles
+  .ant-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 24px;
+
+    .ant-card-head {
+      border-bottom: 1px solid #f0f0f0;
+
+      .ant-card-head-title {
+        font-weight: 600;
+        color: #262626;
+      }
+    }
+
+    .ant-card-body {
+      padding: 24px;
+    }
+  }
+
+  // Button Styles
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #722ed1, #eb2f96);
+      border: none;
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #9254de, #f759ab);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(114, 46, 209, 0.3);
+      }
+    }
+
+    &.ant-btn-default {
+      border-color: #d9d9d9;
+
+      &:hover {
+        border-color: #722ed1;
+        color: #722ed1;
+      }
+    }
+
+    &.ant-btn-dangerous {
+      &:hover {
+        background: #ff4d4f;
+        border-color: #ff4d4f;
+      }
+    }
+  }
+
+  // Switch Styles
+  .ant-switch {
+    &.ant-switch-checked {
+      background: #722ed1;
+
+      &:hover:not(.ant-switch-disabled) {
+        background: #9254de;
+      }
+    }
+  }
+
+  // List Styles
+  .ant-list {
+    .ant-list-item {
+      border-bottom: 1px solid #f5f5f5;
+      padding: 16px 0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .ant-list-item-meta {
+        .ant-list-item-meta-title {
+          color: #262626;
+          font-weight: 600;
+        }
+
+        .ant-list-item-meta-description {
+          color: #8c8c8c;
+        }
+      }
+
+      .ant-list-item-action {
+        margin-left: 16px;
+      }
+    }
+  }
+
+  // Descriptions Styles
+  .ant-descriptions {
+    .ant-descriptions-item-label {
+      font-weight: 600;
+      color: #595959;
+    }
+
+    .ant-descriptions-item-content {
+      color: #262626;
+
+      .ant-typography {
+        margin: 0;
+      }
+    }
+  }
+
+  // Tag Styles
+  .ant-tag {
+    border-radius: 6px;
+    font-weight: 500;
+
+    &.ant-tag-blue {
+      background: #e6f7ff;
+      border-color: #91d5ff;
+      color: #0958d9;
+    }
+
+    &.ant-tag-green {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+      color: #389e0d;
+    }
+
+    &.ant-tag-gold {
+      background: #fff7e6;
+      border-color: #ffec8b;
+      color: #d48806;
+      font-weight: 600;
+    }
+  }
+
+  // Modal Styles
+  .ant-modal {
+    .ant-modal-content {
+      border-radius: 12px;
+    }
+
+    .ant-modal-header {
+      border-bottom: 1px solid #f0f0f0;
+      border-radius: 12px 12px 0 0;
+
+      .ant-modal-title {
+        font-weight: 600;
+        color: #262626;
+      }
+    }
+  }
+
+  // Alert Styles
+  .ant-alert {
+    border-radius: 8px;
+
+    &.ant-alert-warning {
+      background: #fffbe6;
+      border-color: #ffe58f;
+
+      .ant-alert-icon {
+        color: #fa541c;
+      }
+    }
+
+    &.ant-alert-error {
+      background: #fff2f0;
+      border-color: #ffccc7;
+
+      .ant-alert-icon {
+        color: #ff4d4f;
+      }
+    }
+  }
+
+  // Upload Styles
+  .ant-upload {
+    &.ant-upload-select-picture-card {
+      border: none;
+      background: transparent;
+
+      &:hover {
+        border-color: #722ed1;
+      }
+    }
+  }
+
+  // Divider
+  .ant-divider {
+    border-color: #f0f0f0;
+    margin: 16px 0;
+  }
+
+  // Typography
+  .ant-typography {
+    &.ant-typography-title {
+      color: #262626;
+    }
+
+    &.ant-typography-text {
+      &.ant-typography-caption {
+        font-size: 12px;
+        color: #8c8c8c;
+      }
+    }
+
+    &.ant-typography-paragraph {
+      color: #595959;
+      margin-bottom: 16px;
+    }
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .page-header {
+      padding: 20px;
+      margin: 0 -24px 24px;
+      border-radius: 0;
+    }
+
+    .profile-overview-card {
+      margin-bottom: 16px;
+
+      .profile-header {
+        .avatar-section {
+          .profile-avatar {
+            width: 80px !important;
+            height: 80px !important;
+          }
+        }
+      }
+    }
+
+    .ant-card {
+      margin-bottom: 16px;
+
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+
+    .ant-descriptions {
+      .ant-descriptions-item {
+        padding-bottom: 12px;
+      }
+    }
+
+    .ant-list {
+      .ant-list-item {
+        .ant-list-item-meta {
+          .ant-list-item-meta-description {
+            font-size: 12px;
+          }
+        }
+
+        .ant-list-item-action {
+          margin-left: 8px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 576px) {
+    .ant-row {
+      .ant-col {
+        margin-bottom: 8px;
+      }
+    }
+
+    .ant-form-item {
+      margin-bottom: 16px;
+    }
+  }
+}

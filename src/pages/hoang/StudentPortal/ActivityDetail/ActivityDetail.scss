@@ -1,0 +1,174 @@
+// Activity Detail Styles
+.activity-detail {
+  .detail-header {
+    margin-bottom: 24px;
+
+    .ant-typography-title-2 {
+      color: #1890ff;
+    }
+  }
+
+  .main-info-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+
+    .ant-descriptions {
+      .ant-descriptions-header {
+        .ant-descriptions-title {
+          font-weight: 600;
+          color: #262626;
+        }
+      }
+
+      .ant-descriptions-item-label {
+        font-weight: 600;
+        color: #595959;
+        background: #fafafa;
+      }
+
+      .ant-descriptions-item-content {
+        background: white;
+        color: #262626;
+      }
+    }
+  }
+
+  .sidebar-card {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    .ant-card-head-title {
+      font-weight: 600;
+      color: #262626;
+    }
+
+    .summary-item {
+      .ant-typography {
+        margin: 0;
+
+        &:first-child {
+          color: #595959;
+        }
+      }
+    }
+  }
+
+  // Button Styles
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+
+    &.ant-btn-primary {
+      background: linear-gradient(135deg, #1890ff, #36cfc9);
+      border: none;
+
+      &:hover {
+        background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+        transform: translateY(-1px);
+      }
+    }
+
+    &.ant-btn-link {
+      color: #1890ff;
+
+      &:hover {
+        color: #40a9ff;
+      }
+    }
+
+    &.ant-btn-block {
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // Tags
+  .ant-tag {
+    border-radius: 6px;
+    font-weight: 500;
+
+    &.ant-tag-success {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+      color: #389e0d;
+    }
+
+    &.ant-tag-error {
+      background: #fff2f0;
+      border-color: #ffccc7;
+      color: #cf1322;
+    }
+
+    &.ant-tag-warning {
+      background: #fffbe6;
+      border-color: #ffe58f;
+      color: #d46b08;
+    }
+
+    &.ant-tag-blue {
+      background: #e6f7ff;
+      border-color: #91d5ff;
+      color: #0958d9;
+    }
+
+    &.ant-tag-green {
+      background: #f6ffed;
+      border-color: #b7eb8f;
+      color: #389e0d;
+    }
+  }
+
+  // Typography
+  .ant-typography {
+    &.ant-typography-text {
+      &[class*="ant-typography-caption"] {
+        font-size: 12px;
+        color: #8c8c8c;
+      }
+    }
+  }
+
+  // Space
+  .ant-space {
+    &.ant-space-vertical {
+      width: 100%;
+    }
+  }
+
+  // Divider
+  .ant-divider {
+    border-color: #f0f0f0;
+  }
+
+  // Responsive Design
+  @media (max-width: 768px) {
+    .detail-header {
+      .ant-btn {
+        width: 100%;
+        margin-bottom: 12px;
+      }
+
+      .ant-typography-title-2 {
+        font-size: 24px;
+        text-align: center;
+      }
+    }
+
+    .main-info-card {
+      .ant-descriptions {
+        .ant-descriptions-item {
+          padding-bottom: 12px;
+        }
+      }
+    }
+
+    .sidebar-card {
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+  }
+}

@@ -1,0 +1,86 @@
+// Theme colors - light mode (default)
+$primary-color: #1890ff; // Primary blue
+$primary-color-light: #40a9ff; // Light blue
+$primary-color-dark: #096dd9; // Dark blue
+
+$secondary-color: #fdae38;
+$secondary-color-light: #ffe0a8;
+$secondary-color-dark: #e09422;
+
+$text-color: #262626;
+$text-color-secondary: #595959;
+$text-color-dark: #ffffff;
+$text-color-secondary-dark: #a6a6a6;
+$heading-color: #262626;
+$heading-color-dark: #ffffff;
+
+$background-color: #ffffff;
+$background-color-light: #f5f5f5;
+$background-color-dark: #1f1f1f; // Updated from #141414
+$background-color-dark-light: #2d2d2d; // Updated from #1f1f1f
+
+$border-color: #e8e8e8;
+$border-color-dark: #434343;
+
+$success-color: #52c41a;
+$warning-color: #faad14;
+$error-color: #f5222d;
+$info-color: #02479c;
+$info-color-dark: #4a9fff;
+
+// Sider specific colors
+$sider-item-bg: #6288d8;
+$sider-item-bg-dark: #143872;
+$sider-item-hover: #8ba7e0;
+$sider-item-hover-dark: #2d3748;
+$sider-active-start: $secondary-color;
+$sider-active-end: $primary-color;
+$sider-active-end-dark: $background-color-dark-light;
+$sider-text-color: $text-color-dark;
+$sider-text-color-dark: #e2e8f0;
+$sider-bubble-color: #4a9fff;
+
+// Button gradient colors
+$button-gradient-light-start: #02479c;
+$button-gradient-light-end: #0258c7;
+$button-gradient-dark-start: #052955;
+$button-gradient-dark-end: #041a35;
+
+// Make these variables accessible in all SCSS files using this mixin
+@mixin themed() {
+  // Light mode (default)
+  #{if(&, "&", "")} {
+    @content;
+  }
+
+  // Dark mode
+  html.dark & {
+    --primary-color: #{$primary-color};
+    --primary-color-light: #{$primary-color-light};
+    --primary-color-dark: #{$primary-color-dark};
+
+    --secondary-color: #{$secondary-color};
+    --secondary-color-light: #{$secondary-color-light};
+    --secondary-color-dark: #{$secondary-color-dark};
+
+    --text-color: #{$text-color-dark};
+    --text-color-secondary: #{$text-color-secondary-dark};
+    --heading-color: #{$heading-color-dark};
+
+    --background-color: #{$background-color-dark};
+    --background-color-light: #{$background-color-dark-light};
+
+    --border-color: #{$border-color-dark};
+
+    --success-color: #{$success-color};
+    --warning-color: #{$warning-color};
+    --error-color: #{$error-color};
+    --info-color: #{$info-color-dark};
+
+    // Add sider variables for dark mode
+    --sider-item-bg: #{$sider-item-bg-dark};
+    --sider-item-hover: #{$sider-item-hover-dark};
+    --sider-active-end: #{$sider-active-end-dark};
+    --sider-text-color: #{$sider-text-color-dark};
+  }
+}
