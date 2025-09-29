@@ -19,6 +19,14 @@ import InstructorDetail from "./pages/hoang/StudentPortal/InstructorDetail";
 import ClassStudentList from "./pages/hoang/StudentPortal/ClassStudentList";
 import AttendanceReport from "./pages/hoang/StudentPortal/AttendanceReport";
 import GradeReport from "./pages/hoang/StudentPortal/GradeReport";
+import StudentsManagement from "./pages/admin/students";
+import TeachersManagement from "./pages/admin/teachers";
+import RolesManagement from "./pages/admin/roles";
+import ClassesManagement from "./pages/admin/classes";
+import CredentialsManagement from "./pages/admin/credentials";
+import ReportsManagement from "./pages/admin/reports";
+import SecurityManagement from "./pages/admin/security";
+
 
 
 function App() {
@@ -33,6 +41,7 @@ function App() {
     //     },
     //   ],
     // },
+
     {
       path: "/student-portal",
       element: <StudentPortal />,
@@ -125,6 +134,42 @@ function App() {
         </AdminLayout>
       ),
       children: [
+        {
+          path: "/admin",
+          element: <Dashboard />,
+        },
+        {
+          path: "/admin/dashboard",
+          element: <Dashboard />,
+        },
+        {
+          path: "/admin/students",
+          element: <StudentsManagement />,
+        },
+        {
+          path: "/admin/teachers",
+          element: <TeachersManagement />,
+        },
+        {
+          path: "/admin/roles",
+          element: <RolesManagement />,
+        },
+        {
+          path: "/admin/classes",
+          element: <ClassesManagement />,
+        },
+        {
+          path: "/admin/credentials",
+          element: <CredentialsManagement />,
+        },
+        {
+          path: "/admin/reports",
+          element: <ReportsManagement />,
+        },
+        {
+          path: "/admin/security",
+          element: <SecurityManagement />,
+        },
         {
           path: "/admin/quan-ly-san-pham",
           element: <ManagerProduct />,

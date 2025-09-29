@@ -1,0 +1,361 @@
+@use '../../../styles/theme-variables' as *;
+
+.reports-management {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+
+  .page-header {
+    margin-bottom: 24px;
+    text-align: center;
+
+    h1 {
+      color: $primary-color;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, $primary-color, $secondary-color);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    p {
+      color: $text-color-secondary;
+      font-size: 16px;
+      margin: 0;
+    }
+  }
+
+  .stats-overview {
+    margin-bottom: 24px;
+
+    .stat-card {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: none;
+
+      .ant-statistic {
+        .ant-statistic-title {
+          color: $text-color-secondary;
+          font-weight: 600;
+        }
+
+        .ant-statistic-content {
+          .ant-statistic-content-prefix {
+            margin-right: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  .activity-distribution {
+    margin-bottom: 24px;
+
+    .distribution-card,
+    .credential-stats-card {
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border: none;
+
+      .ant-card-head {
+        border-bottom: 2px solid $primary-color;
+
+        .ant-card-head-title {
+          color: $text-color;
+          font-weight: 700;
+          font-size: 16px;
+        }
+      }
+
+      .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+
+        .anticon {
+          font-size: 16px;
+        }
+
+        span {
+          font-size: 13px;
+          color: $text-color;
+          font-weight: 500;
+          min-width: 80px;
+        }
+
+        .ant-progress {
+          flex: 1;
+        }
+      }
+
+      .ant-statistic {
+        .ant-statistic-title {
+          color: $text-color-secondary;
+          font-weight: 600;
+          font-size: 12px;
+        }
+
+        .ant-statistic-content {
+          .ant-statistic-content-value {
+            font-size: 20px;
+            font-weight: 700;
+          }
+
+          .ant-statistic-content-prefix {
+            margin-right: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  .logs-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: none;
+
+    .ant-card-body {
+      padding: 0;
+    }
+
+    .ant-tabs {
+      .ant-tabs-nav {
+        margin: 0;
+        padding: 0 24px;
+
+        .ant-tabs-nav-wrap {
+          .ant-tabs-tab {
+            font-weight: 600;
+            font-size: 16px;
+
+            &.ant-tabs-tab-active {
+              .ant-tabs-tab-btn {
+                color: $primary-color;
+              }
+            }
+          }
+
+          .ant-tabs-ink-bar {
+            background: $primary-color;
+          }
+        }
+      }
+
+      .ant-tabs-content-holder {
+        padding: 24px;
+
+        .filters-section {
+          margin-bottom: 16px;
+          padding: 16px;
+          background-color: #fafafa;
+          border-radius: 8px;
+
+          .ant-select,
+          .ant-picker {
+            .ant-select-selector,
+            .ant-picker-input > input {
+              &:hover,
+              &:focus {
+                border-color: $primary-color;
+                box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
+              }
+            }
+          }
+
+          .ant-select-focused .ant-select-selector,
+          .ant-picker-focused {
+            border-color: $primary-color !important;
+            box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2) !important;
+          }
+        }
+
+        .ant-table {
+          .ant-table-thead > tr > th {
+            background-color: #fafafa;
+            border-bottom: 2px solid $primary-color;
+            font-weight: 600;
+            color: $text-color;
+          }
+
+          .ant-table-tbody > tr:hover > td {
+            background-color: rgba(255, 107, 53, 0.05);
+          }
+
+          .timestamp {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: $text-color-secondary;
+          }
+
+          .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .user-details {
+              .user-name {
+                font-weight: 500;
+                color: $text-color;
+                margin-bottom: 2px;
+                font-size: 13px;
+              }
+            }
+          }
+
+          .action-info,
+          .resource-info {
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            font-size: 12px;
+
+            span {
+              color: $text-color;
+            }
+          }
+        }
+
+        .recent-activity-timeline {
+          .ant-timeline-item {
+            .timeline-content {
+              .timeline-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 4px;
+
+                strong {
+                  color: $text-color;
+                }
+
+                .timeline-time {
+                  color: $text-color-secondary;
+                  font-size: 12px;
+                }
+              }
+
+              .timeline-details {
+                color: $text-color-secondary;
+                margin-bottom: 8px;
+                line-height: 1.4;
+              }
+
+              .timeline-meta {
+                display: flex;
+                gap: 4px;
+                flex-wrap: wrap;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .ant-modal {
+    .ant-modal-header {
+      border-bottom: 2px solid $primary-color;
+
+      .ant-modal-title {
+        color: $text-color;
+        font-weight: 700;
+        font-size: 18px;
+      }
+    }
+
+    .ant-form {
+      .ant-form-item-label > label {
+        font-weight: 600;
+        color: $text-color;
+      }
+
+      .ant-input,
+      .ant-select-selector,
+      .ant-picker {
+        border-radius: 6px;
+
+        &:hover,
+        &:focus {
+          border-color: $primary-color;
+          box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
+        }
+      }
+
+      .ant-select-focused .ant-select-selector,
+      .ant-picker-focused {
+        border-color: $primary-color !important;
+        box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2) !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-management {
+    padding: 16px;
+
+    .page-header {
+      h1 {
+        font-size: 24px;
+      }
+
+      p {
+        font-size: 14px;
+      }
+    }
+
+    .stats-overview,
+    .activity-distribution {
+      .ant-col {
+        margin-bottom: 16px;
+      }
+    }
+
+    .logs-card {
+      .ant-tabs-content-holder {
+        padding: 16px;
+
+        .filters-section {
+          .ant-space {
+            width: 100%;
+
+            .ant-space-item {
+              width: 100%;
+
+              .ant-select,
+              .ant-picker {
+                width: 100%;
+              }
+            }
+          }
+        }
+
+        .ant-table {
+          .ant-table-container {
+            .ant-table-body {
+              .user-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+              }
+            }
+          }
+        }
+
+        .recent-activity-timeline {
+          .timeline-content {
+            .timeline-header {
+              flex-direction: column;
+              align-items: flex-start;
+              gap: 4px;
+            }
+          }
+        }
+      }
+    }
+  }
+}

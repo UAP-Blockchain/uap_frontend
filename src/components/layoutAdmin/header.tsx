@@ -72,7 +72,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             aria-label={collapsed ? "Mở rộng menu" : "Thu gọn menu"}
           />
         </Tooltip>
-        <Link to="/" className="logo-container">
+        <Link to="/admin/dashboard" className="logo-container">
           <svg
             width="32"
             height="32"
@@ -82,15 +82,11 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             className="logo-icon"
           >
             <path
-              d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z"
-              fill="currentColor"
-            />
-            <path
-              d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z"
+              d="M12 2L2 7V10C2 16.37 6.4 22.16 12 23C17.6 22.16 22 16.37 22 10V7L12 2ZM12 9C13.1 9 14 9.9 14 11S13.1 13 12 13S10 12.1 10 11S10.9 9 12 9ZM18 17H6V16C6 14 10 12.9 12 12.9S18 14 18 16V17Z"
               fill="currentColor"
             />
           </svg>
-          <span className="logo-text">AttendEase</span>
+          <span className="logo-text">FAP Blockchain</span>
         </Link>
       </div>
 
@@ -98,7 +94,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
         <div className={`search-container ${searchFocused ? "focused" : ""}`}>
           <input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder="Tìm kiếm sinh viên, giảng viên, lớp học..."
             className="search-input"
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}

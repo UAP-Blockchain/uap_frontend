@@ -6,6 +6,10 @@ import {
   FileTextOutlined,
   SettingOutlined,
   UserOutlined,
+  TeamOutlined,
+  BookOutlined,
+  SecurityScanOutlined,
+  TrophyOutlined,
 } from "@ant-design/icons";
 import { Layout, Menu } from "antd";
 import { useEffect, useState } from "react";
@@ -28,8 +32,8 @@ const SiderComponent: React.FC<SiderProps> = ({ collapsed }) => {
   useEffect(() => {
     if (pathname) {
       // For the home page
-      if (pathname === "/admin") {
-        setSelectedKeys(["/admin"]);
+      if (pathname === "/admin" || pathname === "/admin/") {
+        setSelectedKeys(["/admin/dashboard"]);
       }
       // For specific admin pages, match with the second path segment
       else if (pathname.startsWith("/admin/")) {
@@ -71,16 +75,34 @@ const SiderComponent: React.FC<SiderProps> = ({ collapsed }) => {
   // Main navigation items with modern icons
   const mainNavItems = [
     {
-      key: "/admin",
+      key: "/admin/dashboard",
       icon: <DashboardOutlined />,
-      label: "Trang chủ",
+      label: "Dashboard",
       "data-index": 0,
     },
     {
-      key: "/admin/quan-ly-san-pham",
+      key: "/admin/students",
       icon: <UserOutlined />,
-      label: "Quản lý sản phẩm",
+      label: "Quản lý Sinh viên",
       "data-index": 1,
+    },
+    {
+      key: "/admin/teachers",
+      icon: <TeamOutlined />,
+      label: "Quản lý Giảng viên",
+      "data-index": 2,
+    },
+    {
+      key: "/admin/classes",
+      icon: <BookOutlined />,
+      label: "Quản lý Lớp học",
+      "data-index": 3,
+    },
+    {
+      key: "/admin/roles",
+      icon: <SecurityScanOutlined />,
+      label: "Quản lý Vai trò",
+      "data-index": 4,
     },
     // {
     //   key: "/admin/quan-ly-don",
@@ -127,23 +149,29 @@ const SiderComponent: React.FC<SiderProps> = ({ collapsed }) => {
   // Tools navigation items
   const toolsNavItems = [
     {
-      key: "/admin/thong-bao",
-      icon: <BellOutlined />,
-      label: "Thông báo",
+      key: "/admin/credentials",
+      icon: <TrophyOutlined />,
+      label: "Quản lý Chứng chỉ",
       "data-index": 0,
     },
     {
-      key: "/admin/bao-cao",
-      icon: <FileTextOutlined />,
-      label: "Báo cáo",
+      key: "/admin/blockchain",
+      icon: <BellOutlined />,
+      label: "Blockchain Monitor",
       "data-index": 1,
     },
     {
-      key: "/admin/cai-dat",
-      icon: <SettingOutlined />,
-      label: "Cài đặt hệ thống",
+      key: "/admin/reports",
+      icon: <FileTextOutlined />,
+      label: "Báo cáo & Thống kê",
       "data-index": 2,
     },
+        {
+          key: "/admin/security",
+          icon: <SettingOutlined />,
+          label: "Bảo mật & Xác thực",
+          "data-index": 3,
+        },
   ];
 
   return (
@@ -182,7 +210,7 @@ const SiderComponent: React.FC<SiderProps> = ({ collapsed }) => {
         {!collapsed && (
           <>
             <div className="menu-divider" />
-            <div className="sidebar-section-title">Công cụ</div>
+            <div className="sidebar-section-title">Blockchain & Báo cáo</div>
             <Menu
               theme="light"
               mode="inline"
@@ -209,7 +237,9 @@ const SiderComponent: React.FC<SiderProps> = ({ collapsed }) => {
               <div className="footer-link">Liên hệ</div>
               <div className="footer-link">Điều khoản</div>
               <div className="footer-link">Chính sách</div>
-              <div className="footer-copyright">© 2024 Hệ thống chấm công</div>
+              <div className="footer-copyright">
+                © 2024 FAP Blockchain System
+              </div>
             </div>
           </>
         )}
