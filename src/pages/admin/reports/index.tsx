@@ -39,7 +39,7 @@ import {
   EditOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { ActivityLog, SystemLog } from "../../../models/ActivityLog";
+import type { ActivityLog, SystemLog } from "../../../types/ActivityLog";
 import "./index.scss";
 
 const { RangePicker } = DatePicker;
@@ -77,7 +77,8 @@ const ReportsManagement: React.FC = () => {
       resource: "grade",
       resourceId: "student1_course1",
       resourceName: "Blockchain Programming - SE170107",
-      details: "Cập nhật điểm môn Blockchain Programming cho sinh viên SE170107",
+      details:
+        "Cập nhật điểm môn Blockchain Programming cho sinh viên SE170107",
       metadata: {
         ipAddress: "192.168.1.101",
         oldValue: { grade: "B" },
@@ -130,7 +131,8 @@ const ReportsManagement: React.FC = () => {
       resource: "class",
       resourceId: "class5",
       resourceName: "Advanced Database Systems",
-      details: "Tạo lớp học mới Advanced Database Systems cho học kỳ Spring 2024",
+      details:
+        "Tạo lớp học mới Advanced Database Systems cho học kỳ Spring 2024",
       metadata: {
         ipAddress: "192.168.1.103",
       },
@@ -182,7 +184,8 @@ const ReportsManagement: React.FC = () => {
   ]);
 
   const [filteredLogs, setFilteredLogs] = useState<ActivityLog[]>(activityLogs);
-  const [filteredSystemLogs, setFilteredSystemLogs] = useState<SystemLog[]>(systemLogs);
+  const [filteredSystemLogs, setFilteredSystemLogs] =
+    useState<SystemLog[]>(systemLogs);
   const [isExportModalVisible, setIsExportModalVisible] = useState(false);
   const [exportForm] = Form.useForm();
   const [selectedDateRange, setSelectedDateRange] = useState<any>(null);
@@ -195,29 +198,33 @@ const ReportsManagement: React.FC = () => {
   // Statistics
   const stats = {
     totalLogs: activityLogs.length,
-    todayLogs: activityLogs.filter(log => 
-      new Date(log.timestamp).toDateString() === new Date().toDateString()
+    todayLogs: activityLogs.filter(
+      (log) =>
+        new Date(log.timestamp).toDateString() === new Date().toDateString()
     ).length,
-    criticalAlerts: activityLogs.filter(log => log.severity === "critical").length,
-    systemErrors: systemLogs.filter(log => log.level === "error").length,
-    credentialsIssued: activityLogs.filter(log => 
-      log.action === "issue" && log.resource === "credential"
+    criticalAlerts: activityLogs.filter((log) => log.severity === "critical")
+      .length,
+    systemErrors: systemLogs.filter((log) => log.level === "error").length,
+    credentialsIssued: activityLogs.filter(
+      (log) => log.action === "issue" && log.resource === "credential"
     ).length,
-    credentialsRevoked: activityLogs.filter(log => 
-      log.action === "revoke" && log.resource === "credential"
+    credentialsRevoked: activityLogs.filter(
+      (log) => log.action === "revoke" && log.resource === "credential"
     ).length,
-    activeUsers: new Set(activityLogs.map(log => log.userId)).size,
-    blockchainTxs: activityLogs.filter(log => log.blockchainHash).length,
+    activeUsers: new Set(activityLogs.map((log) => log.userId)).size,
+    blockchainTxs: activityLogs.filter((log) => log.blockchainHash).length,
   };
 
   // Activity distribution
   const activityDistribution = {
-    credential: activityLogs.filter(log => log.resource === "credential").length,
-    grade: activityLogs.filter(log => log.resource === "grade").length,
-    student: activityLogs.filter(log => log.resource === "student").length,
-    teacher: activityLogs.filter(log => log.resource === "teacher").length,
-    class: activityLogs.filter(log => log.resource === "class").length,
-    attendance: activityLogs.filter(log => log.resource === "attendance").length,
+    credential: activityLogs.filter((log) => log.resource === "credential")
+      .length,
+    grade: activityLogs.filter((log) => log.resource === "grade").length,
+    student: activityLogs.filter((log) => log.resource === "student").length,
+    teacher: activityLogs.filter((log) => log.resource === "teacher").length,
+    class: activityLogs.filter((log) => log.resource === "class").length,
+    attendance: activityLogs.filter((log) => log.resource === "attendance")
+      .length,
   };
 
   const handleDateRangeChange = (dates: any) => {
@@ -243,42 +250,47 @@ const ReportsManagement: React.FC = () => {
   const handleSystemLogFilters = (level: string, service: string) => {
     setSelectedLogLevel(level);
     setSelectedService(service);
-    
+
     let filtered = systemLogs;
-    
+
     if (level !== "all") {
-      filtered = filtered.filter(log => log.level === level);
+      filtered = filtered.filter((log) => log.level === level);
     }
-    
+
     if (service !== "all") {
-      filtered = filtered.filter(log => log.service === service);
+      filtered = filtered.filter((log) => log.service === service);
     }
-    
+
     setFilteredSystemLogs(filtered);
   };
 
-  const applyFilters = (dateRange: any, action: string, resource: string, severity: string) => {
+  const applyFilters = (
+    dateRange: any,
+    action: string,
+    resource: string,
+    severity: string
+  ) => {
     let filtered = activityLogs;
 
     if (dateRange && dateRange[0] && dateRange[1]) {
-      const startDate = dateRange[0].startOf('day');
-      const endDate = dateRange[1].endOf('day');
-      filtered = filtered.filter(log => {
+      const startDate = dateRange[0].startOf("day");
+      const endDate = dateRange[1].endOf("day");
+      filtered = filtered.filter((log) => {
         const logDate = new Date(log.timestamp);
         return logDate >= startDate.toDate() && logDate <= endDate.toDate();
       });
     }
 
     if (action !== "all") {
-      filtered = filtered.filter(log => log.action === action);
+      filtered = filtered.filter((log) => log.action === action);
     }
 
     if (resource !== "all") {
-      filtered = filtered.filter(log => log.resource === resource);
+      filtered = filtered.filter((log) => log.resource === resource);
     }
 
     if (severity !== "all") {
-      filtered = filtered.filter(log => log.severity === severity);
+      filtered = filtered.filter((log) => log.severity === severity);
     }
 
     setFilteredLogs(filtered);
@@ -286,47 +298,73 @@ const ReportsManagement: React.FC = () => {
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "low": return "green";
-      case "medium": return "orange";
-      case "high": return "red";
-      case "critical": return "purple";
-      default: return "default";
+      case "low":
+        return "green";
+      case "medium":
+        return "orange";
+      case "high":
+        return "red";
+      case "critical":
+        return "purple";
+      default:
+        return "default";
     }
   };
 
   const getLogLevelColor = (level: string) => {
     switch (level) {
-      case "info": return "blue";
-      case "warn": return "orange";
-      case "error": return "red";
-      case "debug": return "gray";
-      default: return "default";
+      case "info":
+        return "blue";
+      case "warn":
+        return "orange";
+      case "error":
+        return "red";
+      case "debug":
+        return "gray";
+      default:
+        return "default";
     }
   };
 
   const getActionIcon = (action: string) => {
     switch (action) {
-      case "create": return <CheckCircleOutlined style={{ color: "#52c41a" }} />;
-      case "update": return <EditOutlined style={{ color: "#1890ff" }} />;
-      case "delete": return <CloseCircleOutlined style={{ color: "#ff4d4f" }} />;
-      case "issue": return <TrophyOutlined style={{ color: "#faad14" }} />;
-      case "revoke": return <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />;
-      case "view": return <EyeOutlined style={{ color: "#722ed1" }} />;
-      case "login": return <UserOutlined style={{ color: "#52c41a" }} />;
-      case "logout": return <UserOutlined style={{ color: "#ff4d4f" }} />;
-      default: return <FileTextOutlined style={{ color: "#8c8c8c" }} />;
+      case "create":
+        return <CheckCircleOutlined style={{ color: "#52c41a" }} />;
+      case "update":
+        return <EditOutlined style={{ color: "#1890ff" }} />;
+      case "delete":
+        return <CloseCircleOutlined style={{ color: "#ff4d4f" }} />;
+      case "issue":
+        return <TrophyOutlined style={{ color: "#faad14" }} />;
+      case "revoke":
+        return <ExclamationCircleOutlined style={{ color: "#ff4d4f" }} />;
+      case "view":
+        return <EyeOutlined style={{ color: "#722ed1" }} />;
+      case "login":
+        return <UserOutlined style={{ color: "#52c41a" }} />;
+      case "logout":
+        return <UserOutlined style={{ color: "#ff4d4f" }} />;
+      default:
+        return <FileTextOutlined style={{ color: "#8c8c8c" }} />;
     }
   };
 
   const getResourceIcon = (resource: string) => {
     switch (resource) {
-      case "student": return <UserOutlined />;
-      case "teacher": return <TeamOutlined />;
-      case "class": return <BookOutlined />;
-      case "credential": return <SafetyOutlined />;
-      case "grade": return <FileTextOutlined />;
-      case "attendance": return <CheckCircleOutlined />;
-      default: return <FileTextOutlined />;
+      case "student":
+        return <UserOutlined />;
+      case "teacher":
+        return <TeamOutlined />;
+      case "class":
+        return <BookOutlined />;
+      case "credential":
+        return <SafetyOutlined />;
+      case "grade":
+        return <FileTextOutlined />;
+      case "attendance":
+        return <CheckCircleOutlined />;
+      default:
+        return <FileTextOutlined />;
     }
   };
 
@@ -335,7 +373,7 @@ const ReportsManagement: React.FC = () => {
       // Mock export functionality
       message.success(`Đang xuất báo cáo ${values.reportType}...`);
       setIsExportModalVisible(false);
-      
+
       // Simulate file generation
       setTimeout(() => {
         message.success("Báo cáo đã được tạo thành công!");
@@ -355,7 +393,8 @@ const ReportsManagement: React.FC = () => {
           {new Date(timestamp).toLocaleString("vi-VN")}
         </div>
       ),
-      sorter: (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      sorter: (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     },
     {
       title: "Người dùng",
@@ -366,7 +405,15 @@ const ReportsManagement: React.FC = () => {
           <Avatar size="small" icon={<UserOutlined />} />
           <div className="user-details">
             <div className="user-name">{record.userName}</div>
-            <Tag color={record.userRole === "admin" ? "red" : record.userRole === "teacher" ? "blue" : "green"}>
+            <Tag
+              color={
+                record.userRole === "admin"
+                  ? "red"
+                  : record.userRole === "teacher"
+                  ? "blue"
+                  : "green"
+              }
+            >
               {record.userRole.toUpperCase()}
             </Tag>
           </div>
@@ -400,11 +447,7 @@ const ReportsManagement: React.FC = () => {
       dataIndex: "details",
       key: "details",
       ellipsis: true,
-      render: (details) => (
-        <Tooltip title={details}>
-          {details}
-        </Tooltip>
-      ),
+      render: (details) => <Tooltip title={details}>{details}</Tooltip>,
     },
     {
       title: "Mức độ",
@@ -412,9 +455,7 @@ const ReportsManagement: React.FC = () => {
       key: "severity",
       width: 100,
       render: (severity) => (
-        <Tag color={getSeverityColor(severity)}>
-          {severity.toUpperCase()}
-        </Tag>
+        <Tag color={getSeverityColor(severity)}>{severity.toUpperCase()}</Tag>
       ),
     },
     {
@@ -422,7 +463,7 @@ const ReportsManagement: React.FC = () => {
       dataIndex: "blockchainHash",
       key: "blockchainHash",
       width: 100,
-      render: (hash) => (
+      render: (hash) =>
         hash ? (
           <Tooltip title={hash}>
             <Tag color="blue" icon={<SafetyOutlined />}>
@@ -431,8 +472,7 @@ const ReportsManagement: React.FC = () => {
           </Tooltip>
         ) : (
           <Tag color="default">OFF-CHAIN</Tag>
-        )
-      ),
+        ),
     },
   ];
 
@@ -448,7 +488,8 @@ const ReportsManagement: React.FC = () => {
           {new Date(timestamp).toLocaleString("vi-VN")}
         </div>
       ),
-      sorter: (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
+      sorter: (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
     },
     {
       title: "Mức độ",
@@ -456,9 +497,7 @@ const ReportsManagement: React.FC = () => {
       key: "level",
       width: 80,
       render: (level) => (
-        <Tag color={getLogLevelColor(level)}>
-          {level.toUpperCase()}
-        </Tag>
+        <Tag color={getLogLevelColor(level)}>{level.toUpperCase()}</Tag>
       ),
     },
     {
@@ -466,11 +505,7 @@ const ReportsManagement: React.FC = () => {
       dataIndex: "service",
       key: "service",
       width: 100,
-      render: (service) => (
-        <Tag color="cyan">
-          {service.toUpperCase()}
-        </Tag>
-      ),
+      render: (service) => <Tag color="cyan">{service.toUpperCase()}</Tag>,
     },
     {
       title: "Thông điệp",
@@ -483,15 +518,14 @@ const ReportsManagement: React.FC = () => {
       dataIndex: "details",
       key: "details",
       width: 150,
-      render: (details) => (
+      render: (details) =>
         details ? (
           <Tooltip title={JSON.stringify(details, null, 2)}>
             <Button type="link" size="small" icon={<EyeOutlined />}>
               Xem chi tiết
             </Button>
           </Tooltip>
-        ) : null
-      ),
+        ) : null,
     },
   ];
 
@@ -549,14 +583,19 @@ const ReportsManagement: React.FC = () => {
       {/* Activity Distribution */}
       <Row gutter={[16, 16]} className="activity-distribution">
         <Col xs={24} lg={12}>
-          <Card title="Phân bố hoạt động theo tài nguyên" className="distribution-card">
+          <Card
+            title="Phân bố hoạt động theo tài nguyên"
+            className="distribution-card"
+          >
             <Row gutter={[8, 8]}>
               <Col span={12}>
                 <div className="activity-item">
                   <SafetyOutlined style={{ color: "#ff6b35" }} />
                   <span>Chứng chỉ: {activityDistribution.credential}</span>
                   <Progress
-                    percent={(activityDistribution.credential / stats.totalLogs) * 100}
+                    percent={
+                      (activityDistribution.credential / stats.totalLogs) * 100
+                    }
                     size="small"
                     strokeColor="#ff6b35"
                     showInfo={false}
@@ -568,7 +607,9 @@ const ReportsManagement: React.FC = () => {
                   <FileTextOutlined style={{ color: "#52c41a" }} />
                   <span>Điểm: {activityDistribution.grade}</span>
                   <Progress
-                    percent={(activityDistribution.grade / stats.totalLogs) * 100}
+                    percent={
+                      (activityDistribution.grade / stats.totalLogs) * 100
+                    }
                     size="small"
                     strokeColor="#52c41a"
                     showInfo={false}
@@ -580,7 +621,9 @@ const ReportsManagement: React.FC = () => {
                   <UserOutlined style={{ color: "#1890ff" }} />
                   <span>Sinh viên: {activityDistribution.student}</span>
                   <Progress
-                    percent={(activityDistribution.student / stats.totalLogs) * 100}
+                    percent={
+                      (activityDistribution.student / stats.totalLogs) * 100
+                    }
                     size="small"
                     strokeColor="#1890ff"
                     showInfo={false}
@@ -592,7 +635,9 @@ const ReportsManagement: React.FC = () => {
                   <TeamOutlined style={{ color: "#722ed1" }} />
                   <span>Giảng viên: {activityDistribution.teacher}</span>
                   <Progress
-                    percent={(activityDistribution.teacher / stats.totalLogs) * 100}
+                    percent={
+                      (activityDistribution.teacher / stats.totalLogs) * 100
+                    }
                     size="small"
                     strokeColor="#722ed1"
                     showInfo={false}
@@ -604,7 +649,9 @@ const ReportsManagement: React.FC = () => {
                   <BookOutlined style={{ color: "#faad14" }} />
                   <span>Lớp học: {activityDistribution.class}</span>
                   <Progress
-                    percent={(activityDistribution.class / stats.totalLogs) * 100}
+                    percent={
+                      (activityDistribution.class / stats.totalLogs) * 100
+                    }
                     size="small"
                     strokeColor="#faad14"
                     showInfo={false}
@@ -616,7 +663,9 @@ const ReportsManagement: React.FC = () => {
                   <CheckCircleOutlined style={{ color: "#13c2c2" }} />
                   <span>Điểm danh: {activityDistribution.attendance}</span>
                   <Progress
-                    percent={(activityDistribution.attendance / stats.totalLogs) * 100}
+                    percent={
+                      (activityDistribution.attendance / stats.totalLogs) * 100
+                    }
                     size="small"
                     strokeColor="#13c2c2"
                     showInfo={false}
@@ -749,7 +798,9 @@ const ReportsManagement: React.FC = () => {
                   placeholder="Mức độ"
                   style={{ width: 120 }}
                   value={selectedLogLevel}
-                  onChange={(value) => handleSystemLogFilters(value, selectedService)}
+                  onChange={(value) =>
+                    handleSystemLogFilters(value, selectedService)
+                  }
                 >
                   <Option value="all">Tất cả</Option>
                   <Option value="info">Info</Option>
@@ -761,7 +812,9 @@ const ReportsManagement: React.FC = () => {
                   placeholder="Dịch vụ"
                   style={{ width: 120 }}
                   value={selectedService}
-                  onChange={(value) => handleSystemLogFilters(selectedLogLevel, value)}
+                  onChange={(value) =>
+                    handleSystemLogFilters(selectedLogLevel, value)
+                  }
                 >
                   <Option value="all">Tất cả</Option>
                   <Option value="auth">Auth</Option>
@@ -802,19 +855,13 @@ const ReportsManagement: React.FC = () => {
                         {new Date(log.timestamp).toLocaleString("vi-VN")}
                       </span>
                     </div>
-                    <div className="timeline-details">
-                      {log.details}
-                    </div>
+                    <div className="timeline-details">{log.details}</div>
                     <div className="timeline-meta">
-                    <Tag color={getSeverityColor(log.severity)}>
-                      {log.severity}
-                    </Tag>
-                    <Tag>{log.resource}</Tag>
-                    {log.blockchainHash && (
-                      <Tag color="blue">
-                        Blockchain
+                      <Tag color={getSeverityColor(log.severity)}>
+                        {log.severity}
                       </Tag>
-                    )}
+                      <Tag>{log.resource}</Tag>
+                      {log.blockchainHash && <Tag color="blue">Blockchain</Tag>}
                     </div>
                   </div>
                 </Timeline.Item>
@@ -850,7 +897,9 @@ const ReportsManagement: React.FC = () => {
           <Form.Item
             name="dateRange"
             label="Khoảng thời gian"
-            rules={[{ required: true, message: "Vui lòng chọn khoảng thời gian!" }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn khoảng thời gian!" },
+            ]}
           >
             <RangePicker style={{ width: "100%" }} />
           </Form.Item>

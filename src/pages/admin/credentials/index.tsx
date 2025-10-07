@@ -26,7 +26,6 @@ import {
 import {
   PlusOutlined,
   EditOutlined,
-  
   SearchOutlined,
   TrophyOutlined,
   UserOutlined,
@@ -34,7 +33,6 @@ import {
   FilterOutlined,
   EyeOutlined,
   QrcodeOutlined,
- 
   CheckCircleOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
@@ -42,7 +40,11 @@ import {
   BlockOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { Credential, CredentialFormData, CredentialStats } from "../../../models/Credential";
+import type {
+  Credential,
+  CredentialFormData,
+  CredentialStats,
+} from "../../../types/Credential";
 import "./index.scss";
 
 const { Search } = Input;
@@ -153,13 +155,19 @@ const CredentialsManagement: React.FC = () => {
     },
   ]);
 
-  const [filteredCredentials, setFilteredCredentials] = useState<Credential[]>(credentials);
+  const [filteredCredentials, setFilteredCredentials] =
+    useState<Credential[]>(credentials);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [isRevokeModalVisible, setIsRevokeModalVisible] = useState(false);
-  const [editingCredential, setEditingCredential] = useState<Credential | null>(null);
-  const [viewingCredential, setViewingCredential] = useState<Credential | null>(null);
-  const [revokingCredential, setRevokingCredential] = useState<Credential | null>(null);
+  const [editingCredential, setEditingCredential] = useState<Credential | null>(
+    null
+  );
+  const [viewingCredential, setViewingCredential] = useState<Credential | null>(
+    null
+  );
+  const [revokingCredential, setRevokingCredential] =
+    useState<Credential | null>(null);
   const [form] = Form.useForm();
   const [revokeForm] = Form.useForm();
   const [searchText, setSearchText] = useState("");
@@ -177,17 +185,20 @@ const CredentialsManagement: React.FC = () => {
   // Statistics
   const stats: CredentialStats = {
     total: credentials.length,
-    active: credentials.filter(c => c.status === "active").length,
-    revoked: credentials.filter(c => c.status === "revoked").length,
-    expired: credentials.filter(c => c.status === "expired").length,
-    thisMonth: credentials.filter(c => 
-      new Date(c.issueDate).getMonth() === new Date().getMonth()
+    active: credentials.filter((c) => c.status === "active").length,
+    revoked: credentials.filter((c) => c.status === "revoked").length,
+    expired: credentials.filter((c) => c.status === "expired").length,
+    thisMonth: credentials.filter(
+      (c) => new Date(c.issueDate).getMonth() === new Date().getMonth()
     ).length,
     byType: {
-      degree: credentials.filter(c => c.credentialType === "degree").length,
-      certificate: credentials.filter(c => c.credentialType === "certificate").length,
-      transcript: credentials.filter(c => c.credentialType === "transcript").length,
-      achievement: credentials.filter(c => c.credentialType === "achievement").length,
+      degree: credentials.filter((c) => c.credentialType === "degree").length,
+      certificate: credentials.filter((c) => c.credentialType === "certificate")
+        .length,
+      transcript: credentials.filter((c) => c.credentialType === "transcript")
+        .length,
+      achievement: credentials.filter((c) => c.credentialType === "achievement")
+        .length,
     },
   };
 
@@ -210,19 +221,22 @@ const CredentialsManagement: React.FC = () => {
     let filtered = credentials;
 
     if (search) {
-      filtered = filtered.filter(credential =>
-        credential.title.toLowerCase().includes(search.toLowerCase()) ||
-        credential.studentName.toLowerCase().includes(search.toLowerCase()) ||
-        credential.studentCode.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter(
+        (credential) =>
+          credential.title.toLowerCase().includes(search.toLowerCase()) ||
+          credential.studentName.toLowerCase().includes(search.toLowerCase()) ||
+          credential.studentCode.toLowerCase().includes(search.toLowerCase())
       );
     }
 
     if (status !== "all") {
-      filtered = filtered.filter(credential => credential.status === status);
+      filtered = filtered.filter((credential) => credential.status === status);
     }
 
     if (type !== "all") {
-      filtered = filtered.filter(credential => credential.credentialType === type);
+      filtered = filtered.filter(
+        (credential) => credential.credentialType === type
+      );
     }
 
     setFilteredCredentials(filtered);
@@ -233,7 +247,9 @@ const CredentialsManagement: React.FC = () => {
       setEditingCredential(credential);
       form.setFieldsValue({
         ...credential,
-        expiryDate: credential.expiryDate ? new Date(credential.expiryDate) : undefined,
+        expiryDate: credential.expiryDate
+          ? new Date(credential.expiryDate)
+          : undefined,
       });
     } else {
       setEditingCredential(null);
@@ -255,7 +271,7 @@ const CredentialsManagement: React.FC = () => {
 
   const handleOk = () => {
     form.validateFields().then((values: CredentialFormData) => {
-      const student = students.find(s => s.id === values.studentId);
+      const student = students.find((s) => s.id === values.studentId);
       const credentialData: Credential = {
         id: editingCredential?.id || Date.now().toString(),
         ...values,
@@ -263,21 +279,31 @@ const CredentialsManagement: React.FC = () => {
         studentCode: student?.code || "",
         issuerId: "admin1",
         issuerName: "Current Admin",
-        issueDate: editingCredential?.issueDate || new Date().toISOString().split('T')[0],
-        expiryDate: values.expiryDate?.toISOString().split('T')[0],
+        issueDate:
+          editingCredential?.issueDate ||
+          new Date().toISOString().split("T")[0],
+        expiryDate: values.expiryDate?.toISOString().split("T")[0],
         status: editingCredential?.status || "active",
-        blockchainHash: editingCredential?.blockchainHash || `0x${Math.random().toString(16).substr(2, 20)}...`,
-        transactionHash: editingCredential?.transactionHash || `0x${Math.random().toString(16).substr(2, 20)}...`,
-        verificationUrl: `https://verify.fap-blockchain.edu.vn/credential/${editingCredential?.id || Date.now()}`,
+        blockchainHash:
+          editingCredential?.blockchainHash ||
+          `0x${Math.random().toString(16).substr(2, 20)}...`,
+        transactionHash:
+          editingCredential?.transactionHash ||
+          `0x${Math.random().toString(16).substr(2, 20)}...`,
+        verificationUrl: `https://verify.fap-blockchain.edu.vn/credential/${
+          editingCredential?.id || Date.now()
+        }`,
         createdAt: editingCredential?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
       if (editingCredential) {
-        setCredentials(prev => prev.map(c => c.id === editingCredential.id ? credentialData : c));
+        setCredentials((prev) =>
+          prev.map((c) => (c.id === editingCredential.id ? credentialData : c))
+        );
         message.success("Cập nhật chứng chỉ thành công!");
       } else {
-        setCredentials(prev => [...prev, credentialData]);
+        setCredentials((prev) => [...prev, credentialData]);
         message.success("Cấp chứng chỉ thành công! Đã ghi lên blockchain.");
       }
 
@@ -298,8 +324,14 @@ const CredentialsManagement: React.FC = () => {
           updatedAt: new Date().toISOString(),
         };
 
-        setCredentials(prev => prev.map(c => c.id === revokingCredential.id ? updatedCredential : c));
-        message.success("Thu hồi chứng chỉ thành công! Đã cập nhật trên blockchain.");
+        setCredentials((prev) =>
+          prev.map((c) =>
+            c.id === revokingCredential.id ? updatedCredential : c
+          )
+        );
+        message.success(
+          "Thu hồi chứng chỉ thành công! Đã cập nhật trên blockchain."
+        );
         setIsRevokeModalVisible(false);
         filterCredentials(searchText, statusFilter, typeFilter);
       }
@@ -308,49 +340,72 @@ const CredentialsManagement: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active": return "success";
-      case "revoked": return "error";
-      case "expired": return "warning";
-      default: return "default";
+      case "active":
+        return "success";
+      case "revoked":
+        return "error";
+      case "expired":
+        return "warning";
+      default:
+        return "default";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "active": return "Có hiệu lực";
-      case "revoked": return "Đã thu hồi";
-      case "expired": return "Hết hạn";
-      default: return status;
+      case "active":
+        return "Có hiệu lực";
+      case "revoked":
+        return "Đã thu hồi";
+      case "expired":
+        return "Hết hạn";
+      default:
+        return status;
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "degree": return <TrophyOutlined />;
-      case "certificate": return <SafetyOutlined />;
-      case "transcript": return <FileTextOutlined />;
-      case "achievement": return <CheckCircleOutlined />;
-      default: return <FileTextOutlined />;
+      case "degree":
+        return <TrophyOutlined />;
+      case "certificate":
+        return <SafetyOutlined />;
+      case "transcript":
+        return <FileTextOutlined />;
+      case "achievement":
+        return <CheckCircleOutlined />;
+      default:
+        return <FileTextOutlined />;
     }
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case "degree": return "gold";
-      case "certificate": return "blue";
-      case "transcript": return "green";
-      case "achievement": return "purple";
-      default: return "default";
+      case "degree":
+        return "gold";
+      case "certificate":
+        return "blue";
+      case "transcript":
+        return "green";
+      case "achievement":
+        return "purple";
+      default:
+        return "default";
     }
   };
 
   const getTypeText = (type: string) => {
     switch (type) {
-      case "degree": return "Bằng cấp";
-      case "certificate": return "Chứng chỉ";
-      case "transcript": return "Bảng điểm";
-      case "achievement": return "Thành tích";
-      default: return type;
+      case "degree":
+        return "Bằng cấp";
+      case "certificate":
+        return "Chứng chỉ";
+      case "transcript":
+        return "Bảng điểm";
+      case "achievement":
+        return "Thành tích";
+      default:
+        return type;
     }
   };
 
@@ -377,7 +432,7 @@ const CredentialsManagement: React.FC = () => {
             </div>
           </div>
         </div>
-      )
+      ),
     },
     {
       title: "Sinh viên",
@@ -391,7 +446,7 @@ const CredentialsManagement: React.FC = () => {
             <div className="student-code">{record.studentCode}</div>
           </div>
         </div>
-      )
+      ),
     },
     {
       title: "Người cấp",
@@ -409,7 +464,7 @@ const CredentialsManagement: React.FC = () => {
           <CalendarOutlined className="date-icon" />
           {new Date(date).toLocaleDateString("vi-VN")}
         </div>
-      )
+      ),
     },
     {
       title: "Trạng thái",
@@ -418,7 +473,7 @@ const CredentialsManagement: React.FC = () => {
       width: 120,
       render: (status) => (
         <Badge status={getStatusColor(status)} text={getStatusText(status)} />
-      )
+      ),
     },
     {
       title: "Blockchain",
@@ -443,7 +498,7 @@ const CredentialsManagement: React.FC = () => {
             />
           </Tooltip>
         </div>
-      )
+      ),
     },
     {
       title: "Thao tác",
@@ -478,8 +533,8 @@ const CredentialsManagement: React.FC = () => {
             </Tooltip>
           )}
         </Space>
-      )
-    }
+      ),
+    },
   ];
 
   return (
@@ -655,13 +710,19 @@ const CredentialsManagement: React.FC = () => {
           showIcon
           style={{ marginBottom: 16 }}
         />
-        <Form form={form} layout="vertical" initialValues={{ credentialType: "certificate" }}>
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={{ credentialType: "certificate" }}
+        >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="credentialType"
                 label="Loại chứng chỉ"
-                rules={[{ required: true, message: "Vui lòng chọn loại chứng chỉ!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn loại chứng chỉ!" },
+                ]}
               >
                 <Select placeholder="Chọn loại chứng chỉ">
                   <Option value="degree">Bằng cấp</Option>
@@ -675,10 +736,12 @@ const CredentialsManagement: React.FC = () => {
               <Form.Item
                 name="studentId"
                 label="Sinh viên"
-                rules={[{ required: true, message: "Vui lòng chọn sinh viên!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn sinh viên!" },
+                ]}
               >
                 <Select placeholder="Chọn sinh viên" showSearch>
-                  {students.map(student => (
+                  {students.map((student) => (
                     <Option key={student.id} value={student.id}>
                       {student.code} - {student.name}
                     </Option>
@@ -701,7 +764,10 @@ const CredentialsManagement: React.FC = () => {
           </Form.Item>
 
           <Form.Item name="expiryDate" label="Ngày hết hạn">
-            <DatePicker placeholder="Chọn ngày hết hạn" style={{ width: "100%" }} />
+            <DatePicker
+              placeholder="Chọn ngày hết hạn"
+              style={{ width: "100%" }}
+            />
           </Form.Item>
 
           <Row gutter={16}>
@@ -718,7 +784,11 @@ const CredentialsManagement: React.FC = () => {
             </Col>
             <Col span={8}>
               <Form.Item name={["metadata", "credits"]} label="Số tín chỉ">
-                <InputNumber min={0} placeholder="Số tín chỉ" style={{ width: "100%" }} />
+                <InputNumber
+                  min={0}
+                  placeholder="Số tín chỉ"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
             </Col>
             <Col span={8}>
@@ -761,7 +831,10 @@ const CredentialsManagement: React.FC = () => {
               <Col span={16}>
                 <Descriptions title="Thông tin chứng chỉ" column={2} bordered>
                   <Descriptions.Item label="Loại" span={2}>
-                    <Tag color={getTypeColor(viewingCredential.credentialType)} icon={getTypeIcon(viewingCredential.credentialType)}>
+                    <Tag
+                      color={getTypeColor(viewingCredential.credentialType)}
+                      icon={getTypeIcon(viewingCredential.credentialType)}
+                    >
                       {getTypeText(viewingCredential.credentialType)}
                     </Tag>
                   </Descriptions.Item>
@@ -781,10 +854,15 @@ const CredentialsManagement: React.FC = () => {
                     {viewingCredential.issuerName}
                   </Descriptions.Item>
                   <Descriptions.Item label="Ngày cấp">
-                    {new Date(viewingCredential.issueDate).toLocaleDateString("vi-VN")}
+                    {new Date(viewingCredential.issueDate).toLocaleDateString(
+                      "vi-VN"
+                    )}
                   </Descriptions.Item>
                   <Descriptions.Item label="Trạng thái" span={2}>
-                    <Badge status={getStatusColor(viewingCredential.status)} text={getStatusText(viewingCredential.status)} />
+                    <Badge
+                      status={getStatusColor(viewingCredential.status)}
+                      text={getStatusText(viewingCredential.status)}
+                    />
                   </Descriptions.Item>
                   <Descriptions.Item label="Blockchain Hash" span={2}>
                     <Text copyable={{ text: viewingCredential.blockchainHash }}>
@@ -792,7 +870,10 @@ const CredentialsManagement: React.FC = () => {
                     </Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="URL xác thực" span={2}>
-                    <Link href={viewingCredential.verificationUrl} target="_blank">
+                    <Link
+                      href={viewingCredential.verificationUrl}
+                      target="_blank"
+                    >
                       {viewingCredential.verificationUrl}
                     </Link>
                   </Descriptions.Item>
@@ -802,7 +883,10 @@ const CredentialsManagement: React.FC = () => {
                         {viewingCredential.revokedReason}
                       </Descriptions.Item>
                       <Descriptions.Item label="Ngày thu hồi">
-                        {viewingCredential.revokedAt && new Date(viewingCredential.revokedAt).toLocaleDateString("vi-VN")}
+                        {viewingCredential.revokedAt &&
+                          new Date(
+                            viewingCredential.revokedAt
+                          ).toLocaleDateString("vi-VN")}
                       </Descriptions.Item>
                       <Descriptions.Item label="Người thu hồi">
                         {viewingCredential.revokedBy}
@@ -812,7 +896,12 @@ const CredentialsManagement: React.FC = () => {
                 </Descriptions>
 
                 {viewingCredential.metadata && (
-                  <Descriptions title="Thông tin học tập" column={2} bordered style={{ marginTop: 16 }}>
+                  <Descriptions
+                    title="Thông tin học tập"
+                    column={2}
+                    bordered
+                    style={{ marginTop: 16 }}
+                  >
                     {viewingCredential.metadata.gpa && (
                       <Descriptions.Item label="GPA">
                         {viewingCredential.metadata.gpa}
@@ -853,7 +942,13 @@ const CredentialsManagement: React.FC = () => {
                     value={viewingCredential.verificationUrl || ""}
                     size={200}
                   />
-                  <p style={{ textAlign: "center", marginTop: 8, fontSize: "12px" }}>
+                  <p
+                    style={{
+                      textAlign: "center",
+                      marginTop: 8,
+                      fontSize: "12px",
+                    }}
+                  >
                     Quét để xác thực chứng chỉ
                   </p>
                 </div>
@@ -884,7 +979,9 @@ const CredentialsManagement: React.FC = () => {
           <Form.Item
             name="reason"
             label="Lý do thu hồi"
-            rules={[{ required: true, message: "Vui lòng nhập lý do thu hồi!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập lý do thu hồi!" },
+            ]}
           >
             <TextArea
               placeholder="Nhập lý do thu hồi chứng chỉ..."

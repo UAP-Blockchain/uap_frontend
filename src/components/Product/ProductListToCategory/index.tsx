@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ProductCard from "../ProductCard";
-import type { Product } from "../../../models/Product";
+import type { Product } from "../../../types/Product";
 import { getProducts } from "../../../services/customer/home/api";
 import "./ProductListToCategory.scss";
 

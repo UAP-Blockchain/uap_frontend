@@ -29,7 +29,6 @@ import {
 import {
   SecurityScanOutlined,
   UserOutlined,
- 
   WarningOutlined,
   LockOutlined,
   UnlockOutlined,
@@ -49,7 +48,12 @@ import {
   BellOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { User, LoginSession, SecuritySettings, SecurityAlert } from "../../../models/Security";
+import type {
+  User,
+  LoginSession,
+  SecuritySettings,
+  SecurityAlert,
+} from "../../../types/Security";
 import "./index.scss";
 
 const { TabPane } = Tabs;
@@ -140,7 +144,8 @@ const SecurityManagement: React.FC = () => {
       userName: "Nguyễn Ngọc Lâm",
       userRole: "teacher",
       ipAddress: "192.168.1.101",
-      userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
       location: "Ho Chi Minh City, Vietnam",
       loginTime: "2024-12-22T09:15:00Z",
       lastActivity: "2024-12-22T11:30:00Z",
@@ -154,7 +159,8 @@ const SecurityManagement: React.FC = () => {
       userName: "Nguyễn Phi Hùng",
       userRole: "student",
       ipAddress: "192.168.1.102",
-      userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15",
       location: "Ho Chi Minh City, Vietnam",
       loginTime: "2024-12-22T08:00:00Z",
       lastActivity: "2024-12-22T10:00:00Z",
@@ -171,7 +177,8 @@ const SecurityManagement: React.FC = () => {
       type: "failed_login",
       severity: "medium",
       title: "Nhiều lần đăng nhập thất bại",
-      description: "Người dùng namnt.se170246 đã thử đăng nhập sai 5 lần liên tiếp",
+      description:
+        "Người dùng namnt.se170246 đã thử đăng nhập sai 5 lần liên tiếp",
       userId: "4",
       userName: "Nguyễn Trung Nam",
       ipAddress: "192.168.1.200",
@@ -189,7 +196,10 @@ const SecurityManagement: React.FC = () => {
       userId: "1",
       userName: "System Administrator",
       ipAddress: "203.113.XXX.XXX",
-      metadata: { location: "Unknown Location", previousIPs: ["192.168.1.100"] },
+      metadata: {
+        location: "Unknown Location",
+        previousIPs: ["192.168.1.100"],
+      },
       status: "investigating",
       assignedTo: "security_team",
       createdAt: "2024-12-22T07:00:00Z",
@@ -200,7 +210,8 @@ const SecurityManagement: React.FC = () => {
       type: "policy_violation",
       severity: "low",
       title: "Mật khẩu yếu được phát hiện",
-      description: "Sinh viên hungnp.se170107 đang sử dụng mật khẩu không đáp ứng chính sách bảo mật",
+      description:
+        "Sinh viên hungnp.se170107 đang sử dụng mật khẩu không đáp ứng chính sách bảo mật",
       userId: "3",
       userName: "Nguyễn Phi Hùng",
       metadata: { passwordStrength: "weak", lastChanged: "2024-09-01" },
@@ -251,21 +262,26 @@ const SecurityManagement: React.FC = () => {
 
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
   const [isAlertModalVisible, setIsAlertModalVisible] = useState(false);
-  const [selectedAlert, setSelectedAlert] = useState<SecurityAlert | null>(null);
+  const [selectedAlert, setSelectedAlert] = useState<SecurityAlert | null>(
+    null
+  );
   const [settingsForm] = Form.useForm();
   const [alertForm] = Form.useForm();
 
   // Statistics
   const stats = {
     totalUsers: users.length,
-    activeUsers: users.filter(u => u.status === "active").length,
-    lockedUsers: users.filter(u => u.status === "locked").length,
-    mfaEnabled: users.filter(u => u.mfaEnabled).length,
-    activeSessions: loginSessions.filter(s => s.status === "active").length,
-    newAlerts: securityAlerts.filter(a => a.status === "new").length,
-    criticalAlerts: securityAlerts.filter(a => a.severity === "critical").length,
-    passwordExpired: users.filter(u => {
-      const passwordAge = (new Date().getTime() - new Date(u.passwordChangedAt).getTime()) / (1000 * 60 * 60 * 24);
+    activeUsers: users.filter((u) => u.status === "active").length,
+    lockedUsers: users.filter((u) => u.status === "locked").length,
+    mfaEnabled: users.filter((u) => u.mfaEnabled).length,
+    activeSessions: loginSessions.filter((s) => s.status === "active").length,
+    newAlerts: securityAlerts.filter((a) => a.status === "new").length,
+    criticalAlerts: securityAlerts.filter((a) => a.severity === "critical")
+      .length,
+    passwordExpired: users.filter((u) => {
+      const passwordAge =
+        (new Date().getTime() - new Date(u.passwordChangedAt).getTime()) /
+        (1000 * 60 * 60 * 24);
       return passwordAge > securitySettings.passwordPolicy.maxAge;
     }).length,
   };
@@ -295,13 +311,16 @@ const SecurityManagement: React.FC = () => {
           assignedTo: values.assignedTo,
           notes: values.notes,
           resolvedBy: values.status === "resolved" ? "admin" : undefined,
-          resolvedAt: values.status === "resolved" ? new Date().toISOString() : undefined,
+          resolvedAt:
+            values.status === "resolved" ? new Date().toISOString() : undefined,
           updatedAt: new Date().toISOString(),
         };
 
-        setSecurityAlerts(prev => prev.map(alert => 
-          alert.id === selectedAlert.id ? updatedAlert : alert
-        ));
+        setSecurityAlerts((prev) =>
+          prev.map((alert) =>
+            alert.id === selectedAlert.id ? updatedAlert : alert
+          )
+        );
 
         message.success("Cập nhật cảnh báo thành công!");
         setIsAlertModalVisible(false);
@@ -311,52 +330,78 @@ const SecurityManagement: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active": return "success";
-      case "inactive": return "default";
-      case "suspended": return "warning";
-      case "locked": return "error";
-      default: return "default";
+      case "active":
+        return "success";
+      case "inactive":
+        return "default";
+      case "suspended":
+        return "warning";
+      case "locked":
+        return "error";
+      default:
+        return "default";
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "active": return "Hoạt động";
-      case "inactive": return "Không hoạt động";
-      case "suspended": return "Tạm ngưng";
-      case "locked": return "Bị khóa";
-      default: return status;
+      case "active":
+        return "Hoạt động";
+      case "inactive":
+        return "Không hoạt động";
+      case "suspended":
+        return "Tạm ngưng";
+      case "locked":
+        return "Bị khóa";
+      default:
+        return status;
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "low": return "green";
-      case "medium": return "orange";
-      case "high": return "red";
-      case "critical": return "purple";
-      default: return "default";
+      case "low":
+        return "green";
+      case "medium":
+        return "orange";
+      case "high":
+        return "red";
+      case "critical":
+        return "purple";
+      default:
+        return "default";
     }
   };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity) {
-      case "low": return <CheckCircleOutlined />;
-      case "medium": return <ExclamationCircleOutlined />;
-      case "high": return <WarningOutlined />;
-      case "critical": return <CloseCircleOutlined />;
-      default: return <ExclamationCircleOutlined />;
+      case "low":
+        return <CheckCircleOutlined />;
+      case "medium":
+        return <ExclamationCircleOutlined />;
+      case "high":
+        return <WarningOutlined />;
+      case "critical":
+        return <CloseCircleOutlined />;
+      default:
+        return <ExclamationCircleOutlined />;
     }
   };
 
   const getAlertTypeIcon = (type: string) => {
     switch (type) {
-      case "failed_login": return <LockOutlined />;
-      case "suspicious_activity": return <EyeOutlined />;
-      case "data_breach": return <SecurityScanOutlined />;
-      case "system_error": return <ExclamationCircleOutlined />;
-      case "policy_violation": return <WarningOutlined />;
-      default: return <ExclamationCircleOutlined />;
+      case "failed_login":
+        return <LockOutlined />;
+      case "suspicious_activity":
+        return <EyeOutlined />;
+      case "data_breach":
+        return <SecurityScanOutlined />;
+      case "system_error":
+        return <ExclamationCircleOutlined />;
+      case "policy_violation":
+        return <WarningOutlined />;
+      default:
+        return <ExclamationCircleOutlined />;
     }
   };
 
@@ -392,7 +437,11 @@ const SecurityManagement: React.FC = () => {
       key: "role",
       width: 100,
       render: (role) => (
-        <Tag color={role === "admin" ? "red" : role === "teacher" ? "blue" : "green"}>
+        <Tag
+          color={
+            role === "admin" ? "red" : role === "teacher" ? "blue" : "green"
+          }
+        >
           {role.toUpperCase()}
         </Tag>
       ),
@@ -412,7 +461,10 @@ const SecurityManagement: React.FC = () => {
       key: "mfaEnabled",
       width: 80,
       render: (enabled) => (
-        <Tag color={enabled ? "green" : "red"} icon={enabled ? <CheckCircleOutlined /> : <WarningOutlined />}>
+        <Tag
+          color={enabled ? "green" : "red"}
+          icon={enabled ? <CheckCircleOutlined /> : <WarningOutlined />}
+        >
           {enabled ? "Bật" : "Tắt"}
         </Tag>
       ),
@@ -422,7 +474,7 @@ const SecurityManagement: React.FC = () => {
       dataIndex: "lastLogin",
       key: "lastLogin",
       width: 150,
-      render: (lastLogin) => (
+      render: (lastLogin) =>
         lastLogin ? (
           <div className="last-login">
             <ClockCircleOutlined style={{ marginRight: 4 }} />
@@ -430,8 +482,7 @@ const SecurityManagement: React.FC = () => {
           </div>
         ) : (
           <span style={{ color: "#999" }}>Chưa đăng nhập</span>
-        )
-      ),
+        ),
     },
     {
       title: "Thao tác",
@@ -450,10 +501,7 @@ const SecurityManagement: React.FC = () => {
             </Tooltip>
           )}
           <Tooltip title="Xem chi tiết">
-            <Button
-              size="small"
-              icon={<EyeOutlined />}
-            />
+            <Button size="small" icon={<EyeOutlined />} />
           </Tooltip>
         </Space>
       ),
@@ -470,7 +518,16 @@ const SecurityManagement: React.FC = () => {
           <Avatar size="small" icon={<UserOutlined />} />
           <div>
             <div className="user-name">{record.userName}</div>
-            <Tag size="small" color={record.userRole === "admin" ? "red" : record.userRole === "teacher" ? "blue" : "green"}>
+            <Tag
+              size="small"
+              color={
+                record.userRole === "admin"
+                  ? "red"
+                  : record.userRole === "teacher"
+                  ? "blue"
+                  : "green"
+              }
+            >
               {record.userRole.toUpperCase()}
             </Tag>
           </div>
@@ -527,9 +584,21 @@ const SecurityManagement: React.FC = () => {
       key: "status",
       width: 100,
       render: (status) => (
-        <Badge 
-          status={status === "active" ? "success" : status === "expired" ? "warning" : "error"} 
-          text={status === "active" ? "Hoạt động" : status === "expired" ? "Hết hạn" : "Kết thúc"} 
+        <Badge
+          status={
+            status === "active"
+              ? "success"
+              : status === "expired"
+              ? "warning"
+              : "error"
+          }
+          text={
+            status === "active"
+              ? "Hoạt động"
+              : status === "expired"
+              ? "Hết hạn"
+              : "Kết thúc"
+          }
         />
       ),
     },
@@ -537,7 +606,7 @@ const SecurityManagement: React.FC = () => {
       title: "Thao tác",
       key: "actions",
       width: 100,
-      render: (_, record) => (
+      render: (_, record) =>
         record.status === "active" && (
           <Popconfirm
             title="Kết thúc phiên đăng nhập?"
@@ -545,16 +614,11 @@ const SecurityManagement: React.FC = () => {
             okText="Đồng ý"
             cancelText="Hủy"
           >
-            <Button
-              danger
-              size="small"
-              icon={<CloseCircleOutlined />}
-            >
+            <Button danger size="small" icon={<CloseCircleOutlined />}>
               Kết thúc
             </Button>
           </Popconfirm>
-        )
-      ),
+        ),
     },
   ];
 
@@ -576,7 +640,10 @@ const SecurityManagement: React.FC = () => {
       key: "severity",
       width: 100,
       render: (severity) => (
-        <Tag color={getSeverityColor(severity)} icon={getSeverityIcon(severity)}>
+        <Tag
+          color={getSeverityColor(severity)}
+          icon={getSeverityIcon(severity)}
+        >
           {severity.toUpperCase()}
         </Tag>
       ),
@@ -623,7 +690,11 @@ const SecurityManagement: React.FC = () => {
           resolved: "Đã giải quyết",
           false_positive: "Báo động giả",
         };
-        return <Tag color={colors[status as keyof typeof colors]}>{texts[status as keyof typeof texts]}</Tag>;
+        return (
+          <Tag color={colors[status as keyof typeof colors]}>
+            {texts[status as keyof typeof texts]}
+          </Tag>
+        );
       },
     },
     {
@@ -815,16 +886,24 @@ const SecurityManagement: React.FC = () => {
                       {securitySettings.passwordPolicy.minLength} ký tự
                     </Descriptions.Item>
                     <Descriptions.Item label="Yêu cầu chữ hoa">
-                      {securitySettings.passwordPolicy.requireUppercase ? "Có" : "Không"}
+                      {securitySettings.passwordPolicy.requireUppercase
+                        ? "Có"
+                        : "Không"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Yêu cầu chữ thường">
-                      {securitySettings.passwordPolicy.requireLowercase ? "Có" : "Không"}
+                      {securitySettings.passwordPolicy.requireLowercase
+                        ? "Có"
+                        : "Không"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Yêu cầu số">
-                      {securitySettings.passwordPolicy.requireNumbers ? "Có" : "Không"}
+                      {securitySettings.passwordPolicy.requireNumbers
+                        ? "Có"
+                        : "Không"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Yêu cầu ký tự đặc biệt">
-                      {securitySettings.passwordPolicy.requireSpecialChars ? "Có" : "Không"}
+                      {securitySettings.passwordPolicy.requireSpecialChars
+                        ? "Có"
+                        : "Không"}
                     </Descriptions.Item>
                     <Descriptions.Item label="Thời hạn mật khẩu">
                       {securitySettings.passwordPolicy.maxAge} ngày
@@ -1005,12 +1084,22 @@ const SecurityManagement: React.FC = () => {
             <Alert
               message={selectedAlert.title}
               description={selectedAlert.description}
-              type={selectedAlert.severity === "critical" || selectedAlert.severity === "high" ? "error" : "warning"}
+              type={
+                selectedAlert.severity === "critical" ||
+                selectedAlert.severity === "high"
+                  ? "error"
+                  : "warning"
+              }
               showIcon
               style={{ marginBottom: 16 }}
             />
-            
-            <Descriptions column={2} bordered size="small" style={{ marginBottom: 16 }}>
+
+            <Descriptions
+              column={2}
+              bordered
+              size="small"
+              style={{ marginBottom: 16 }}
+            >
               <Descriptions.Item label="Loại cảnh báo">
                 {selectedAlert.type}
               </Descriptions.Item>

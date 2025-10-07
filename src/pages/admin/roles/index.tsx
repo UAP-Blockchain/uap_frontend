@@ -37,7 +37,7 @@ import type {
   RoleFormData,
   DEFAULT_PERMISSIONS,
   Permission,
-} from "../../../models/Role";
+} from "../../../types/Role";
 import "./index.scss";
 
 const { Search } = Input;

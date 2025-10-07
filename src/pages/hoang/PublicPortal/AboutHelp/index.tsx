@@ -24,10 +24,9 @@ import {
   SafetyCertificateOutlined,
   RocketOutlined,
   TeamOutlined,
-  ClockCircleOutlined,
+ 
   CheckCircleOutlined,
-  FileTextOutlined,
-  LinkOutlined,
+  
 } from "@ant-design/icons";
 import "./AboutHelp.scss";
 

@@ -1,0 +1,151 @@
+.teacher-schedule {
+  // Header giống WeeklyTimetable
+  .timetable-header {
+    margin-bottom: 24px;
+
+    .week-nav-card {
+      background: linear-gradient(135deg, #e6f7ff, #f0f5ff);
+      border: none;
+      border-radius: 12px;
+
+      .ant-card-body {
+        padding: 20px 24px;
+      }
+
+      .week-info {
+        text-align: center;
+
+        .ant-typography-title-4 {
+          color: #1890ff;
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  // Card
+  .timetable-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .ant-card-body {
+      padding: 0;
+    }
+  }
+
+  // Bảng thời khóa biểu
+  .timetable-table {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #1890ff, #36cfc9);
+        color: white;
+        font-weight: 600;
+        text-align: center;
+        padding: 12px 8px;
+        border-bottom: 2px solid #0050b3;
+
+        .day-header {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+
+          .anticon { font-size: 16px; }
+          span { font-weight: 700; font-size: 14px; }
+          .date-number { font-size: 12px; opacity: .9; }
+        }
+
+        &:first-child {
+          background: linear-gradient(135deg, #722ed1, #eb2f96);
+
+          .time-slot-header {
+            .slot-number { font-weight: 700; font-size: 14px; }
+            .slot-time { font-size: 11px; opacity: .9; margin-top: 4px; }
+          }
+        }
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 12px 8px;
+        vertical-align: top;
+        border-right: 1px solid #f0f0f0;
+
+        &:first-child {
+          background: #fafafa;
+          text-align: center;
+          font-weight: 600;
+          color: #722ed1;
+        }
+
+        .empty-slot { text-align: center; color: #bfbfbf; font-size: 16px; padding: 20px 0; }
+
+        .class-slot {
+          min-height: 100px;
+          padding: 8px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border-left: 4px solid #1890ff;
+          transition: all .3s ease;
+          cursor: pointer;
+
+          &:hover { background: #e6f7ff; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(24,144,255,.2); }
+
+          .course-code {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+            .ant-typography { color: #1890ff; font-size: 14px; }
+            .ant-btn { padding: 0 4px; height: auto; font-size: 10px; background: #ffa940; color: #fff; border: none; border-radius: 4px; }
+            .ant-btn:hover { background: #ff7a00; }
+          }
+
+          .course-info { margin-bottom: 8px; .ant-typography { color: #595959; } }
+          .attendance-status { margin-bottom: 4px; .ant-tag { font-size: 10px; padding: 2px 6px; border-radius: 12px; } }
+          .time-info { .ant-typography { font-size: 10px; color: #8c8c8c; } }
+        }
+      }
+
+      .ant-table-tbody > tr:hover > td { background: #f5f5f5; .class-slot { background: #e6f7ff; } }
+    }
+  }
+
+  // Responsive
+  @media (max-width: 1200px) {
+    .timetable-header .week-nav-card .ant-row { flex-direction: column; gap: 16px; }
+    .timetable-header .week-nav-card .ant-col { width: 100%; text-align: center; }
+
+    .timetable-table .ant-table-thead > tr > th { padding: 8px 4px; }
+    .timetable-table .ant-table-thead > tr > th .day-header span { font-size: 12px; }
+    .timetable-table .ant-table-thead > tr > th .day-header .date-number { font-size: 10px; }
+
+    .timetable-table .ant-table-tbody > tr > td { padding: 8px 4px; }
+    .timetable-table .class-slot { min-height: 80px; padding: 6px; }
+    .timetable-table .class-slot .course-code .ant-typography { font-size: 12px; }
+    .timetable-table .class-slot .course-code .ant-btn { font-size: 9px; }
+    .timetable-table .class-slot .course-info .ant-typography { font-size: 11px; }
+  }
+
+  @media (max-width: 768px) {
+    .timetable-header .ant-row { flex-direction: column; gap: 16px; }
+    .timetable-header .ant-col { width: 100%; }
+    .timetable-header .week-nav-card .ant-space { flex-direction: column; width: 100%; }
+    .timetable-header .week-nav-card .ant-btn { width: 100%; }
+    .timetable-header .week-nav-card .week-info { margin: 16px 0; }
+
+    .timetable-table .ant-table-thead > tr > th { padding: 6px 2px; }
+    .timetable-table .ant-table-thead > tr > th .day-header .anticon { font-size: 12px; }
+    .timetable-table .ant-table-thead > tr > th .day-header span { font-size: 10px; }
+    .timetable-table .ant-table-thead > tr > th .day-header .date-number { font-size: 9px; }
+    .timetable-table .time-slot-header .slot-number { font-size: 12px; }
+    .timetable-table .time-slot-header .slot-time { font-size: 9px; }
+
+    .timetable-table .ant-table-tbody > tr > td { padding: 4px 2px; }
+    .timetable-table .empty-slot { padding: 10px 0; font-size: 14px; }
+    .timetable-table .class-slot { min-height: 60px; padding: 4px; }
+    .timetable-table .class-slot .course-code { margin-bottom: 4px; }
+    .timetable-table .class-slot .course-code .ant-typography { font-size: 11px; }
+    .timetable-table .class-slot .course-code .ant-btn { font-size: 8px; padding: 0 2px; }
+    .timetable-table .class-slot .course-info .ant-typography { font-size: 9px; }
+    .timetable-table .class-slot .attendance-status .ant-tag { font-size: 8px; padding: 1px 4px; }
+    .timetable-table .class-slot .time-info .ant-typography { font-size: 8px; }
+  }
+}

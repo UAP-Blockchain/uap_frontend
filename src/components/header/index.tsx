@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./header.scss";
 import { useSelector } from "react-redux";
 import { selectCart } from "../../redux/features/cartSlice";
-import type { CartItem } from "../../models/CartItem";
+import type { CartItem } from "../../types/CartItem";
 
 function Header() {
   const navigate = useNavigate();

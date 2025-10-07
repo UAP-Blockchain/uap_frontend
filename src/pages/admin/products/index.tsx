@@ -1,7 +1,7 @@
 import type { ColumnsType } from "antd/es/table";
 import { useEffect, useState } from "react";
 import CTable from "../../../components/Ctable";
-import type { Product } from "../../../models/Product";
+import type { Product } from "../../../types/Product";
 import { getProductsMain } from "../../../services/customer/home/api";
 
 function ManagerProduct() {

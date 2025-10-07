@@ -33,7 +33,7 @@ import {
   TrophyOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { Teacher, TeacherFormData } from "../../../models/Teacher";
+import type { Teacher, TeacherFormData } from "../../../types/Teacher";
 import "./index.scss";
 
 const { Search } = Input;

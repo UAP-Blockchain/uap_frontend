@@ -30,7 +30,7 @@ import {
   FilterOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { Student, StudentFormData } from "../../../models/Student";
+import type { Student, StudentFormData } from "../../../types/Student";
 import "./index.scss";
 
 const { Search } = Input;

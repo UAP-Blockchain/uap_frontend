@@ -1,5 +1,6 @@
 import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import AdminLayout from "./components/layoutAdmin";
+import TeacherLayout from "./components/layoutTeacher";
 import ManagerProduct from "./pages/admin/products";
 import StudentPortal from "./pages/hoang/StudentPortal";
 import PublicPortal from "./pages/hoang/PublicPortal";
@@ -26,8 +27,11 @@ import ClassesManagement from "./pages/admin/classes";
 import CredentialsManagement from "./pages/admin/credentials";
 import ReportsManagement from "./pages/admin/reports";
 import SecurityManagement from "./pages/admin/security";
-
-
+import TeacherDashboard from "./pages/teacher/dashboard";
+import TeacherSchedule from "./pages/teacher/schedule";
+import TeacherAttendance from "./pages/teacher/attendance";
+import TeacherGrading from "./pages/teacher/grading";
+import TeacherResults from "./pages/teacher/results";
 
 function App() {
   const router = createBrowserRouter([
@@ -173,6 +177,40 @@ function App() {
         {
           path: "/admin/quan-ly-san-pham",
           element: <ManagerProduct />,
+        },
+      ],
+    },
+    {
+      path: "/teacher",
+      element: (
+        <TeacherLayout>
+          <Outlet />
+        </TeacherLayout>
+      ),
+      children: [
+        {
+          path: "/teacher",
+          element: <TeacherDashboard />,
+        },
+        {
+          path: "/teacher/dashboard",
+          element: <TeacherDashboard />,
+        },
+        {
+          path: "/teacher/schedule",
+          element: <TeacherSchedule />,
+        },
+        {
+          path: "/teacher/attendance",
+          element: <TeacherAttendance />,
+        },
+        {
+          path: "/teacher/grading",
+          element: <TeacherGrading />,
+        },
+        {
+          path: "/teacher/results",
+          element: <TeacherResults />,
         },
       ],
     },

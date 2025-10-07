@@ -19,7 +19,6 @@ import {
   InputNumber,
   Badge,
   Progress,
-  
 } from "antd";
 import {
   PlusOutlined,
@@ -31,13 +30,12 @@ import {
   CalendarOutlined,
   FilterOutlined,
   TeamOutlined,
-  
   CheckCircleOutlined,
   HomeOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type { Class, ClassSchedule } from "../../../models/Class";
+import type { Class, ClassSchedule } from "../../../types/Class";
 import dayjs from "dayjs";
 import "./index.scss";
 

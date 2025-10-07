@@ -2,7 +2,7 @@ import { HeartIcon, ShoppingCartIcon } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import "./ProductCard.scss";
-import type { Product } from "../../../models/Product";
+import type { Product } from "../../../types/Product";
 import { formatPrice } from "../../../utils/formatPrice";
 
 interface ProductCardProps {
