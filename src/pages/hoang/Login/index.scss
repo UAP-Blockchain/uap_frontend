@@ -1,0 +1,284 @@
+@use "../../../styles/variables" as *;
+
+.login-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: $background-color;
+}
+
+.login-left {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: $background-color;
+}
+
+.login-right {
+  flex: 1;
+  background: linear-gradient(135deg, #1777ff 0%, #0d5bc9 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.image-container {
+  width: 70vw;
+  max-width: 70%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: -80px;
+}
+
+.background-image {
+  object-fit: contain !important;
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+.fap-logo {
+  color: white;
+  font-size: 100px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.login-title {
+  font-size: 32px !important;
+  font-weight: 600 !important;
+  margin-bottom: 8px !important;
+  color: $text-color !important;
+}
+
+.login-subtitle {
+  margin-bottom: 40px;
+  color: $text-color-secondary;
+}
+
+.login-form {
+  width: 100%;
+  max-width: 450px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0 auto;
+}
+
+.login-form-container {
+  width: 100%;
+}
+
+.login-form-button {
+  height: 50px !important;
+  background-color: #1777ff !important;
+  border-color: #1777ff !important;
+  font-weight: 500;
+  margin-top: 24px;
+  border-radius: 10px !important;
+}
+
+.login-form-button:hover {
+  background-color: #0d5bc9 !important;
+  border-color: #0d5bc9 !important;
+}
+
+.login-divider {
+  margin: 24px 0;
+  color: #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-links {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: $text-color;
+}
+
+.login-checkbox {
+  display: flex;
+  align-items: center;
+  color: $text-color;
+
+  .ant-checkbox-wrapper {
+    color: $text-color;
+  }
+}
+
+.ant-input,
+.ant-input-password {
+  height: 50px !important;
+  border-radius: 10px !important;
+  background-color: $background-color !important;
+  border-color: $border-color !important;
+  color: $text-color !important;
+}
+
+.ant-input-affix-wrapper {
+  height: 50px !important;
+  border-radius: 10px !important;
+  padding: 0 11px;
+  background-color: $background-color !important;
+  border-color: $border-color !important;
+
+  .ant-input {
+    background-color: transparent !important;
+  }
+
+  .anticon {
+    color: $text-color-secondary;
+  }
+}
+
+.ant-input-affix-wrapper > input.ant-input {
+  height: 48px !important;
+}
+
+.ant-form-item {
+  margin-bottom: 20px;
+}
+
+.ant-form-item-label {
+  font-weight: 500;
+
+  > label {
+    color: $text-color !important;
+  }
+}
+
+// Dark mode styles
+html.dark {
+  .login-container {
+    background-color: $background-color-dark;
+  }
+
+  .login-left {
+    background-color: $background-color-dark;
+  }
+
+  .login-title {
+    color: $text-color-dark !important;
+  }
+
+  .login-subtitle {
+    color: $text-color-secondary-dark;
+  }
+
+  .login-links {
+    color: $text-color-dark;
+  }
+
+  .login-checkbox {
+    color: $text-color-dark;
+
+    .ant-checkbox-wrapper {
+      color: $text-color-dark;
+    }
+
+    .ant-checkbox-inner {
+      background-color: $background-color-dark-light;
+      border-color: $border-color-dark;
+    }
+
+    .ant-checkbox-checked .ant-checkbox-inner {
+      background-color: #1777ff;
+      border-color: #1777ff;
+    }
+  }
+
+  .ant-input,
+  .ant-input-password {
+    background-color: $background-color-dark-light !important;
+    border-color: $border-color-dark !important;
+    color: $text-color-dark !important;
+
+    &::placeholder {
+      color: $text-color-secondary-dark;
+    }
+  }
+
+  .ant-input-affix-wrapper {
+    background-color: $background-color-dark-light !important;
+    border-color: $border-color-dark !important;
+
+    .anticon {
+      color: $text-color-secondary-dark;
+    }
+  }
+
+  .ant-form-item-label > label {
+    color: $text-color-dark !important;
+  }
+
+  // Keep the login button color the same for recognition
+  .login-form-button {
+    background-color: #1777ff !important;
+    border-color: #1777ff !important;
+
+    &:hover {
+      background-color: #0d5bc9 !important;
+      border-color: #0d5bc9 !important;
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 992px) {
+  .login-container {
+    flex-direction: column-reverse;
+  }
+
+  .login-left {
+    flex: 1;
+    padding: 24px;
+  }
+
+  .login-form {
+    width: 80%;
+    max-width: 400px;
+  }
+
+  .login-right {
+    flex: 1;
+    min-height: 200px;
+  }
+
+  .fap-logo {
+    font-size: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 0;
+  }
+
+  .login-form {
+    width: 90%;
+  }
+
+  .login-links {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
