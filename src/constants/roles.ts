@@ -11,6 +11,24 @@ export const ROLE_CODES = {
   GUEST: "GUEST",
 } as const;
 
+/**
+ * Map backend role names to frontend role codes
+ * Backend returns: "Admin", "Teacher", "Student", "Employer"
+ */
+export const BACKEND_ROLE_MAP: Record<string, typeof ROLE_CODES[keyof typeof ROLE_CODES]> = {
+  Admin: ROLE_CODES.ADMIN,
+  Teacher: ROLE_CODES.TEACHER,
+  Student: ROLE_CODES.STUDENT,
+  Employer: ROLE_CODES.GUEST, // Employer maps to GUEST for now
+};
+
+/**
+ * Convert backend role name to frontend role code
+ */
+export const mapBackendRoleToCode = (backendRole: string): typeof ROLE_CODES[keyof typeof ROLE_CODES] => {
+  return BACKEND_ROLE_MAP[backendRole] || ROLE_CODES.GUEST;
+};
+
 export type RoleCode = typeof ROLE_CODES[keyof typeof ROLE_CODES];
 
 /**
@@ -99,18 +117,11 @@ export const ROLE_PERMISSIONS: Record<RoleCode, Permission[]> = {
     PERMISSIONS.VIEW_BLOCKCHAIN,
   ],
   [ROLE_CODES.STUDENT]: [
-     PERMISSIONS.MANAGE_STUDENTS,
-    PERMISSIONS.MANAGE_TEACHERS,
-    PERMISSIONS.MANAGE_CLASSES,
-    PERMISSIONS.MANAGE_CREDENTIALS,
-    PERMISSIONS.MANAGE_GRADES,
-    PERMISSIONS.MANAGE_ATTENDANCE,
-    PERMISSIONS.VIEW_REPORTS,
-    PERMISSIONS.EXPORT_REPORTS,
-    PERMISSIONS.VIEW_BLOCKCHAIN,
-    PERMISSIONS.MANAGE_BLOCKCHAIN,
-    PERMISSIONS.MANAGE_SECURITY,
-    PERMISSIONS.MANAGE_ROLES,
+    PERMISSIONS.VIEW_STUDENTS,
+    PERMISSIONS.VIEW_CLASSES,
+    PERMISSIONS.VIEW_CREDENTIALS,
+    PERMISSIONS.VIEW_GRADES,
+    PERMISSIONS.VIEW_ATTENDANCE,
   ],
   [ROLE_CODES.GUEST]: [],
 };

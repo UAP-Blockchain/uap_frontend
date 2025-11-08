@@ -26,6 +26,7 @@ import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../redux/store";
 import { logout } from "../redux/features/authSlice";
 import { clearAllCookies } from "../utils/cookie";
+import AuthServices from "../services/auth/api.service";
 import "./index.scss";
 const { Header } = Layout;
 const { Text } = Typography;
@@ -49,17 +50,29 @@ const HeaderComponent: React.FC<HeaderProps> = ({
   const userProfile = useSelector(
     (state: RootState) => state.auth?.userProfile
   );
-  const username = userProfile?.username || "hoangnvse170117";
-  const email = `${username}@fpt.edu.vn`;
+  const email = userProfile?.email || "user@fpt.edu.vn";
+  const username = email.split("@")[0] || "user";
+  const fullName = userProfile?.fullName || username;
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    clearAllCookies();
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      // Call logout API to invalidate refresh token
+      await AuthServices.logout();
+    } catch (error) {
+      console.error("Logout API error:", error);
+      // Continue with logout even if API call fails
+    } finally {
+      // Clear local state
+      dispatch(logout());
+      localStorage.removeItem("token");
+      localStorage.removeItem("refreshToken");
+      clearAllCookies();
+      navigate("/login");
+    }
   };
 
   // Generate avatar color based on username
@@ -92,7 +105,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
           </Avatar>
           <div className="user-info-text">
             <Text strong className="user-username">
-              {username}
+              {fullName}
             </Text>
             <Text type="secondary" className="user-email">
               {email}
@@ -301,7 +314,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             >
               {username.charAt(0).toUpperCase()}
             </Avatar>
-            <Text className="user-profile-username">{username}</Text>
+            <Text className="user-profile-username">{fullName}</Text>
             <RightOutlined className="user-profile-chevron" />
           </div>
         </Dropdown>
