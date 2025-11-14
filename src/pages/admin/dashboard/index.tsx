@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
   const recentActivities = [
     {
       key: "1",
-      action: "Cấp chứng chỉ",
+      action: "Cấp chứng chỉ  alo alo 1234",
       student: "Nguyễn Phi Hùng",
       time: "2 giờ trước",
       status: "success",

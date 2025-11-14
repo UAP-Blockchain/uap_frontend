@@ -1,381 +1,366 @@
-@use '../../../styles/theme-variables' as *;
+@use "../../../styles/theme-variables" as *;
 
 .classes-management {
-  padding: 24px;
-  background-color: #f5f5f5;
-  min-height: 100vh;
+ 
+  
 
-  .page-header {
-    margin-bottom: 24px;
-    text-align: center;
-
-    h1 {
-      color: $primary-color;
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, $primary-color, $secondary-color);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    p {
-      color: $text-color-secondary;
-      font-size: 16px;
-      margin: 0;
-    }
-  }
-
-  .stats-row {
-    margin-bottom: 24px;
-
-    .stat-card {
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      border: none;
-
-      .ant-statistic {
-        .ant-statistic-title {
-          color: $text-color-secondary;
-          font-weight: 600;
-        }
-
-        .ant-statistic-content {
-          .ant-statistic-content-prefix {
-            margin-right: 8px;
-          }
-        }
-      }
-    }
-  }
-
-  .classes-table-card {
+  .classes-panel {
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    border: none;
+    border: 1px solid #e4e9f2;
+    box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+    display: flex;
+    flex-direction: column;
 
-    .table-header {
+    .ant-card-body {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-      gap: 16px;
-
-      .filters {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
+      flex-direction: column;
+      padding: 14px 18px;
     }
+  }
 
-    .ant-table {
-      .ant-table-thead > tr > th {
-        background-color: #fafafa;
-        border-bottom: 2px solid $primary-color;
-        font-weight: 600;
-        color: $text-color;
-      }
+  .overview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 10px;
 
-      .ant-table-tbody > tr:hover > td {
-        background-color: rgba(255, 107, 53, 0.05);
-      }
+    .title-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
 
-      .class-info {
-        .class-header {
-          display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          margin-bottom: 8px;
-
-          .class-icon {
-            color: $primary-color;
-            font-size: 16px;
-            margin-top: 2px;
-            flex-shrink: 0;
-          }
-
-          .class-details {
-            min-width: 0;
-
-            .class-name {
-              font-weight: 600;
-              color: $text-color;
-              margin-bottom: 2px;
-              font-size: 14px;
-            }
-
-            .class-code {
-              color: $primary-color;
-              font-size: 12px;
-              font-weight: 500;
-              margin-bottom: 2px;
-            }
-
-            .course-code {
-              color: $text-color-secondary;
-              font-size: 11px;
-            }
-          }
-        }
-
-        .class-description {
-          color: $text-color-secondary;
-          font-size: 12px;
-          line-height: 1.4;
-          display: -webkit-box;
-          -webkit-line-clamp: 2;
-          -webkit-box-orient: vertical;
-          overflow: hidden;
-        }
-      }
-
-      .teacher-info {
+      .title-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1a94fc, #0d73c9);
+        color: white;
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: 0 6px 16px rgba(26, 148, 252, 0.3);
+      }
 
-        .teacher-icon {
-          color: $secondary-color;
-          flex-shrink: 0;
-        }
+      .eyebrow {
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        margin-bottom: 2px;
+        color: #8c8c8c;
+      }
 
-        span {
-          font-size: 13px;
-          font-weight: 500;
+      h2 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+
+      .toggle-details-btn {
+        border-radius: 8px;
+        background: #edf2ff;
+        border-color: transparent;
+        color: #2f54eb;
+        font-weight: 500;
+        padding: 0 12px;
+        height: 36px;
+
+        &:hover {
+          background: #d6e4ff;
+          color: #1d39c4;
         }
       }
 
-      .schedule-info {
-        .schedule-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-bottom: 6px;
+      .primary-action {
+        height: 36px;
+        padding: 0 18px;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 8px 16px rgba(0, 85, 255, 0.15);
+      }
+    }
+  }
+
+  .stats-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .stat-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f5f7fb;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475467;
+
+      .value {
+        font-size: 13px;
+        color: #111827;
+        font-weight: 700;
+      }
+
+      .label {
+        font-size: 11px;
+      }
+
+      &.total {
+        background: #fff7e6;
+        color: #ad6800;
+      }
+      &.students {
+        background: #f6ffed;
+        color: #389e0d;
+      }
+      &.enrollments {
+        background: #e6f4ff;
+        color: #0958d9;
+      }
+      &.slots {
+        background: #fef3ff;
+        color: #a61bff;
+      }
+    }
+  }
+
+  .stats-inline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 16px;
+
+    .stat-item {
+      border: 1px solid #edf1f7;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+
+      .stat-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        color: #fff;
+        background: linear-gradient(135deg, #6157ff, #ee49fd);
+      }
+
+      .stat-content {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .stat-value {
+          font-size: 20px;
+          font-weight: 700;
+          color: #111827;
+        }
+
+        .stat-label {
           font-size: 12px;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .time {
-            color: $text-color;
-            font-weight: 500;
-          }
-
-          .room {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            color: $text-color-secondary;
-
-            .room-icon {
-              font-size: 10px;
-            }
-          }
+          color: #8c8c8c;
         }
       }
+    }
+  }
 
-      .student-capacity {
-        .capacity-numbers {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-bottom: 6px;
-          font-size: 13px;
-          font-weight: 500;
+  .filters-row {
+    border-top: 1px solid #eef1f7;
+    padding-top: 12px;
+    margin-bottom: 8px;
 
-          .capacity-icon {
-            color: $primary-color;
-          }
-        }
+    .filter-row-expanded {
+      .filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
 
-        .ant-progress {
-          margin: 0;
-        }
-      }
-
-      .semester-info {
-        text-align: center;
-
-        .semester {
-          font-weight: 600;
-          color: $text-color;
-          font-size: 13px;
-          margin-bottom: 2px;
-        }
-
-        .academic-year {
-          color: $text-color-secondary;
-          font-size: 11px;
-        }
-      }
-
-      .duration-info {
-        .date-item {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          margin-bottom: 4px;
+        label {
           font-size: 12px;
+          color: #6b7280;
+        }
 
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .date-icon {
-            color: $primary-color;
-            font-size: 10px;
-          }
-
-          span {
-            color: $text-color-secondary;
-          }
+        .ant-input-affix-wrapper,
+        .ant-select-selector {
+          border-radius: 8px;
+          border: 1px solid #d9dce3;
+          min-height: 40px;
         }
       }
+
+      .filter-meta {
+        display: flex;
+        align-items: flex-end;
+        font-size: 12px;
+        color: #6b7280;
+        padding-bottom: 8px;
+
+        strong {
+          color: #111827;
+        }
+      }
+    }
+  }
+
+  .filters-row.compact-layout {
+    border-top: none;
+    padding-top: 6px;
+
+    .filter-row-compact {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .ant-col {
+        flex: 1;
+      }
+
+      .semester-select-compact {
+        .ant-select-selector {
+          min-height: 32px;
+          border-radius: 8px;
+        }
+      }
+
+      .filter-meta-compact {
+        display: flex;
+        font-size: 12px;
+        color: #6b7280;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .table-section {
+    display: flex;
+    flex-direction: column;
+    margin-top: 8px;
+
+    .ant-table-thead > tr > th {
+      background: #f8fafc;
+      color: #4b5563;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 11px;
+      border-bottom: 1px solid #e4e9f2;
+      padding: 10px 12px;
+    }
+
+    .ant-table-tbody > tr > td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: #f0f5ff;
+    }
+
+    .class-info {
+      .class-info__code {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 2px;
+        line-height: 1.3;
+      }
+
+      .class-info__subject {
+        font-size: 12px;
+        color: #6b7280;
+        line-height: 1.3;
+      }
+    }
+
+    .teacher-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #4b5563;
+      font-size: 13px;
+
+      .teacher-icon {
+        color: #6b7280;
+        font-size: 12px;
+      }
+    }
+
+    .semester-tag {
+      border-radius: 999px;
+      border: none;
+      font-size: 11px;
+      padding: 2px 10px;
+    }
+
+    .credit-value,
+    .number-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .action-btn-edit,
+    .action-btn-delete {
+      color: #6b7280;
+      padding: 4px 8px;
+
+      &:hover {
+        color: #1890ff;
+        background: #e6f7ff;
+      }
+    }
+
+    .action-btn-delete:hover {
+      color: #ff4d4f;
+      background: #fff1f0;
     }
   }
 
   .ant-modal {
-    .ant-modal-header {
-      border-bottom: 2px solid $primary-color;
-
-      .ant-modal-title {
-        color: $text-color;
-        font-weight: 700;
-        font-size: 18px;
-      }
+    .ant-modal-title {
+      font-weight: 600;
     }
 
-    .ant-form {
-      .ant-form-item-label > label {
-        font-weight: 600;
-        color: $text-color;
-      }
-
-      .ant-input,
-      .ant-select-selector,
-      .ant-picker,
-      .ant-input-number {
-        border-radius: 6px;
-
-        &:hover,
-        &:focus {
-          border-color: $primary-color;
-          box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
-        }
-      }
-
-      .ant-select-focused .ant-select-selector,
-      .ant-picker-focused {
-        border-color: $primary-color !important;
-        box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2) !important;
-      }
-
-      .schedule-form {
-        .schedule-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 16px;
-
-          label {
-            font-weight: 600;
-            color: $text-color;
-            font-size: 14px;
-          }
-        }
-
-        .schedule-item-form {
-          background-color: #fafafa;
-          border: 1px solid #e8e8e8;
-          border-radius: 8px;
-          padding: 16px;
-          margin-bottom: 12px;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .ant-form-item {
-            margin-bottom: 0;
-          }
-        }
-      }
+    .ant-form-item-label > label {
+      font-weight: 500;
     }
   }
-}
 
-@media (max-width: 768px) {
-  .classes-management {
+  @media (max-width: 768px) {
     padding: 16px;
 
-    .page-header {
-      h1 {
-        font-size: 24px;
-      }
+    .overview-header {
+      flex-direction: column;
+    }
 
-      p {
-        font-size: 14px;
+    .header-actions {
+      width: 100%;
+
+      .ant-btn {
+        flex: 1;
       }
     }
 
-    .classes-table-card {
-      .table-header {
-        flex-direction: column;
-        align-items: stretch;
-
-        .filters {
-          justify-content: center;
-        }
-      }
-    }
-
-    .stats-row {
-      .ant-col {
-        margin-bottom: 16px;
-      }
-    }
-
-    .ant-table {
-      .class-info {
-        .class-header {
-          .class-details {
-            .class-name {
-              font-size: 13px;
-            }
-          }
-        }
-
-        .class-description {
-          -webkit-line-clamp: 1;
-        }
-      }
-
-      .schedule-info {
-        .schedule-item {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 2px;
-        }
-      }
-    }
-
-    .ant-modal {
-      .schedule-form {
-        .schedule-item-form {
-          .ant-row {
-            .ant-col {
-              margin-bottom: 12px;
-
-              &:last-child {
-                margin-bottom: 0;
-              }
-            }
-          }
-        }
-      }
+    .filters-row .ant-row {
+      flex-direction: column;
     }
   }
 }
+

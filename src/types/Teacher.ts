@@ -36,4 +36,10 @@ interface TeacherFormData {
   status: 'active' | 'inactive' | 'retired';
 }
 
-export type { Teacher, TeacherFormData };
+export interface TeacherOption {
+  id: string;
+  teacherCode: string;
+  fullName: string;
+}
+
+export type { Teacher, TeacherFormData, TeacherOption };

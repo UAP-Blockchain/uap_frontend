@@ -1,4 +1,4 @@
-interface Class {
+export interface Class {
   id: string;
   classCode: string;
   className: string;
@@ -15,21 +15,28 @@ interface Class {
   endDate: string;
   semester: string;
   academicYear: string;
-  status: 'active' | 'inactive' | 'completed' | 'cancelled';
+  status: "active" | "inactive" | "completed" | "cancelled";
   room?: string;
   department: string;
   createdAt: string;
   updatedAt: string;
 }
 
-interface ClassSchedule {
-  dayOfWeek: 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+export interface ClassSchedule {
+  dayOfWeek:
+    | "monday"
+    | "tuesday"
+    | "wednesday"
+    | "thursday"
+    | "friday"
+    | "saturday"
+    | "sunday";
   startTime: string;
   endTime: string;
   room?: string;
 }
 
-interface ClassFormData {
+export interface ClassFormData {
   classCode: string;
   className: string;
   courseCode: string;
@@ -45,26 +52,57 @@ interface ClassFormData {
   academicYear: string;
   room?: string;
   department: string;
-  status: 'active' | 'inactive' | 'completed' | 'cancelled';
+  status: "active" | "inactive" | "completed" | "cancelled";
 }
 
-interface Attendance {
+export interface ClassSummary {
+  id: string;
+  classCode: string;
+  subjectName: string;
+  subjectCode: string;
+  credits: number;
+  teacherName: string;
+  teacherCode: string;
+  semesterName: string;
+  totalStudents: number;
+  totalEnrollments: number;
+  totalSlots: number;
+}
+
+export interface ClassesApiResponse {
+  items?: ClassSummary[];
+  data?: ClassSummary[];
+}
+
+export interface CreateClassRequest {
+  classCode: string;
+  subjectId: string;
+  teacherId: string;
+}
+
+export interface UpdateClassRequest {
+  classCode: string;
+  subjectId: string;
+  teacherId: string;
+}
+
+export interface Attendance {
   id: string;
   studentId: string;
   classId: string;
   date: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: "present" | "absent" | "late" | "excused";
   note?: string;
   markedBy: string;
   markedAt: string;
 }
 
-interface Grade {
+export interface Grade {
   id: string;
   studentId: string;
   classId: string;
   courseCode: string;
-  gradeType: 'midterm' | 'final' | 'assignment' | 'quiz' | 'project';
+  gradeType: "midterm" | "final" | "assignment" | "quiz" | "project";
   score: number;
   maxScore: number;
   weight: number;
@@ -74,4 +112,3 @@ interface Grade {
   gradedAt: string;
 }
 
-export type { Class, ClassSchedule, ClassFormData, Attendance, Grade };

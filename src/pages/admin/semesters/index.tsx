@@ -20,7 +20,6 @@ import {
 import {
   PlusOutlined,
   EditOutlined,
-  DeleteOutlined,
   SearchOutlined,
   CalendarOutlined,
   FilterOutlined,
@@ -39,7 +38,6 @@ import "./index.scss";
 import {
   closeSemesterApi,
   createSemesterApi,
-  deleteSemesterApi,
   fetchSemestersApi,
   updateSemesterApi,
 } from "../../../services/admin/semesters/api";
@@ -66,6 +64,7 @@ const SemestersManagement: React.FC = () => {
   const [form] = Form.useForm<SemesterFormValues>();
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [yearFilter, setYearFilter] = useState<string>("all");
   const [loading, setLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [pagination, setPagination] = useState({
@@ -83,6 +82,13 @@ const SemestersManagement: React.FC = () => {
     }),
     [pagination.totalCount, semesters]
   );
+
+  const yearOptions = useMemo(() => {
+    const years = new Set(
+      semesters.map((sem) => dayjs(sem.startDate).year().toString())
+    );
+    return Array.from(years).sort((a, b) => Number(b) - Number(a));
+  }, [semesters]);
 
   const buildStatusParams = (status: string) => {
     if (status === "active") return { isActive: true, isClosed: false };
@@ -133,6 +139,10 @@ const SemestersManagement: React.FC = () => {
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value);
     fetchData(1, pagination.pageSize, searchText, value);
+  };
+
+  const handleYearFilter = (value: string) => {
+    setYearFilter(value);
   };
 
   const showModal = (semester?: SemesterDto) => {
@@ -186,16 +196,6 @@ const SemestersManagement: React.FC = () => {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteSemesterApi(id);
-      message.success("Xóa học kì thành công!");
-      fetchData(pagination.pageNumber, pagination.pageSize);
-    } catch {
-      message.error("Không thể xóa học kì");
-    }
-  };
-
   const handleToggleStatus = async (
     record: SemesterDto,
     field: "isActive" | "isClosed"
@@ -228,6 +228,15 @@ const SemestersManagement: React.FC = () => {
     const days = end.diff(start, "day");
     return `${days} ngày`;
   };
+
+  const filteredSemesters = useMemo(() => {
+    if (yearFilter === "all") {
+      return semesters;
+    }
+    return semesters.filter(
+      (sem) => dayjs(sem.startDate).year().toString() === yearFilter
+    );
+  }, [semesters, yearFilter]);
 
   const columns: ColumnsType<SemesterDto> = [
     {
@@ -369,14 +378,6 @@ const SemestersManagement: React.FC = () => {
               />
             </Popconfirm>
           </Tooltip>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa học kì này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <Button danger icon={<DeleteOutlined />} size="small" />
-          </Popconfirm>
         </Space>
       ),
     },
@@ -411,7 +412,7 @@ const SemestersManagement: React.FC = () => {
 
   return (
     <div className="semesters-management">
-      <Card className="overview-card">
+      <Card className="semesters-panel">
         <div className="overview-header">
           <div className="title-block">
             <div className="title-icon">
@@ -472,66 +473,109 @@ const SemestersManagement: React.FC = () => {
             showDetails ? "expanded" : "compact-layout"
           }`}
         >
-          <div className="filter-field">
-            {showDetails && <label>Tìm kiếm học kì</label>}
-            <Search
-              placeholder="Nhập tên học kì..."
-              allowClear
-              value={searchText}
-              onChange={(e) => handleSearch(e.target.value)}
-              onSearch={handleSearch}
-              prefix={<SearchOutlined />}
-              size={showDetails ? "middle" : "large"}
-            />
-          </div>
-          <div className="filter-field">
-            {showDetails && <label>Trạng thái</label>}
-            <Select
-              value={statusFilter}
-              onChange={handleStatusFilter}
-              suffixIcon={<FilterOutlined />}
-              size={showDetails ? "middle" : "large"}
+          <Row gutter={showDetails ? 16 : 12} align="middle">
+            {showDetails && (
+              <Col xs={24} md={12} className="filter-field search-field">
+                <label>Tìm kiếm học kì</label>
+                <Search
+                  placeholder="Nhập tên học kì..."
+                  allowClear
+                  value={searchText}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onSearch={handleSearch}
+                  prefix={<SearchOutlined />}
+                  size="large"
+                />
+              </Col>
+            )}
+            <Col
+              xs={showDetails ? 12 : 12}
+              md={showDetails ? 6 : 12}
+              className="filter-field status-field"
             >
-              <Option value="all">Tất cả</Option>
-              <Option value="active">Đang hoạt động</Option>
-              <Option value="inactive">Chưa kích hoạt</Option>
-              <Option value="closed">Đã đóng</Option>
-            </Select>
-          </div>
-          {showDetails && (
-            <div className="filter-summary">
-              <span>
-                Hoạt động: <strong>{stats.active}</strong>
-              </span>
-              <span>
-                Đã đóng: <strong>{stats.closed}</strong>
-              </span>
-            </div>
-          )}
-        </div>
-      </Card>
+              {showDetails && <label>Trạng thái</label>}
+              <Select
+                value={statusFilter}
+                onChange={handleStatusFilter}
+                suffixIcon={<FilterOutlined />}
+                size={showDetails ? "large" : "middle"}
+                className="status-select"
+              >
+                <Option value="all">Tất cả</Option>
+                <Option value="active">Đang hoạt động</Option>
+                <Option value="inactive">Chưa kích hoạt</Option>
+                <Option value="closed">Đã đóng</Option>
+              </Select>
+            </Col>
+            <Col
+              xs={showDetails ? 12 : 12}
+              md={showDetails ? 6 : 12}
+              className="filter-field year-field"
+            >
+              {showDetails && <label>Năm</label>}
+              <Select
+                value={yearFilter}
+                onChange={handleYearFilter}
+                placeholder="Chọn năm"
+                size={showDetails ? "large" : "middle"}
+                allowClear={false}
+              >
+                <Option value="all">Tất cả năm</Option>
+                {yearOptions.map((year) => (
+                  <Option key={year} value={year}>
+                    {year}
+                  </Option>
+                ))}
+              </Select>
+            </Col>
 
-      <Card className="semesters-table-card" bordered={false}>
-        <Table
-          columns={columns}
-          dataSource={semesters}
-          loading={loading}
-          rowKey="id"
-          className="semesters-table"
-          pagination={{
-            current: pagination.pageNumber,
-            pageSize: pagination.pageSize,
-            total: pagination.totalCount,
-            showSizeChanger: false,
-            showQuickJumper: false,
-            showTotal: (total, range) => `${range[0]}-${range[1]} của ${total}`,
-            size: "small",
-            onChange: (page) =>
-              fetchData(page, pagination.pageSize, searchText, statusFilter),
-          }}
-          scroll={{ x: 1000, y: "calc(100vh - 420px)" }}
-          size="small"
-        />
+            {showDetails && (
+              <Col xs={24} className="filter-summary">
+                <span>
+                  Hoạt động: <strong>{stats.active}</strong>
+                </span>
+                <span>
+                  Đã đóng: <strong>{stats.closed}</strong>
+                </span>
+              </Col>
+            )}
+
+            {!showDetails && (
+              <>
+                <Col xs={12} className="filter-meta">
+                  Hoạt động: <strong>{stats.active}</strong>
+                </Col>
+                <Col xs={12} className="filter-meta text-right">
+                  Đã đóng: <strong>{stats.closed}</strong>
+                </Col>
+              </>
+            )}
+          </Row>
+        </div>
+
+        <div className="table-section">
+          <Table
+            columns={columns}
+            dataSource={filteredSemesters}
+            loading={loading}
+            rowKey="id"
+            className="semesters-table"
+            pagination={{
+              current: pagination.pageNumber,
+              pageSize: pagination.pageSize,
+              total: pagination.totalCount,
+              showSizeChanger: false,
+              showQuickJumper: false,
+              showTotal: (total, range) =>
+                `${range[0]}-${range[1]} của ${total}`,
+              size: "small",
+              onChange: (page) =>
+                fetchData(page, pagination.pageSize, searchText, statusFilter),
+            }}
+            scroll={{ x: 1000 }}
+            size="small"
+          />
+        </div>
       </Card>
 
       <Modal
