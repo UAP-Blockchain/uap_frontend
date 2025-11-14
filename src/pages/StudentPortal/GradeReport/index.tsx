@@ -15,10 +15,9 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
-import { getUserIdFromToken } from "../../../utils/jwt";
 import GradeServices from "../../../services/grade/api.service";
+import StudentServices from "../../../services/student/api.service";
 import type { SemesterDto } from "../../../Types/Semester";
-import type { SubjectDto } from "../../../Types/Subject";
 import type { ComponentGradeDto, SubjectGradeDto } from "../../../Types/Grade";
 import "./GradeReport.scss";
 
@@ -38,30 +37,47 @@ interface GradeRecord {
 const GradeReport: React.FC = () => {
   const [semesters, setSemesters] = useState<SemesterDto[]>([]);
   const [subjectsBySemester, setSubjectsBySemester] = useState<
-    Record<string, SubjectDto[]>
+    Record<string, SubjectGradeDto[]>
   >({});
-  const [selectedSemesterId, setSelectedSemesterId] = useState<string | null>(
-    null
+  const [activeSemesterKey, setActiveSemesterKey] = useState<string | string[]>(
+    []
   );
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(
     null
   );
   const [gradeData, setGradeData] = useState<GradeRecord[]>([]);
   const [isLoadingSemesters, setIsLoadingSemesters] = useState(false);
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
-  const [isLoadingGrades, setIsLoadingGrades] = useState(false);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState<Record<string, boolean>>({});
+  const [isLoadingStudent, setIsLoadingStudent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [studentId, setStudentId] = useState<string | null>(null);
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 
-  // Get studentId from JWT token
-  const studentId = useMemo(() => {
-    if (!accessToken) return null;
-    const userId = getUserIdFromToken(accessToken);
-    // Debug: Log to check if userId is correct
-    console.log("Decoded userId from token:", userId);
-    return userId;
+  // Load current student profile to get studentId
+  useEffect(() => {
+    const loadStudentProfile = async () => {
+      if (!accessToken) return;
+
+      setIsLoadingStudent(true);
+      try {
+        const student = await StudentServices.getCurrentStudentProfile();
+        setStudentId(student.id);
+        console.log("Loaded studentId from /api/Students/me:", student.id);
+      } catch (err: any) {
+        const errorMessage =
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to load student profile";
+        setError(errorMessage);
+        message.error(errorMessage);
+      } finally {
+        setIsLoadingStudent(false);
+      }
+    };
+
+    loadStudentProfile();
   }, [accessToken]);
 
   // Load semesters on mount
@@ -76,10 +92,6 @@ const GradeReport: React.FC = () => {
           isDescending: true,
         });
         setSemesters(response.data);
-        // Set first semester as default if available
-        if (response.data.length > 0 && !selectedSemesterId) {
-          setSelectedSemesterId(response.data[0].id);
-        }
       } catch (err: any) {
         const errorMessage =
           err.response?.data?.message ||
@@ -95,77 +107,87 @@ const GradeReport: React.FC = () => {
     loadSemesters();
   }, []);
 
-  // Load subjects when semester is selected
+  // Load subjects when semester is opened (activeSemesterKey changes)
   useEffect(() => {
-    if (!selectedSemesterId) return;
+    if (!studentId) return;
 
-    const loadSubjects = async () => {
+    const semesterIds = Array.isArray(activeSemesterKey)
+      ? activeSemesterKey
+      : activeSemesterKey
+      ? [activeSemesterKey]
+      : [];
+
+    semesterIds.forEach((semesterId) => {
       // Check if subjects are already loaded
-      if (subjectsBySemester[selectedSemesterId]) {
+      if (subjectsBySemester[semesterId]) {
         return;
       }
 
-      setIsLoadingSubjects(true);
-      try {
-        const response = await GradeServices.getSubjects({
-          semesterId: selectedSemesterId,
-          pageSize: 100, // Get all subjects for this semester
-        });
-        setSubjectsBySemester((prev) => ({
-          ...prev,
-          [selectedSemesterId]: response.data,
-        }));
-      } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message ||
-          err.message ||
-          "Failed to load subjects";
-        message.error(errorMessage);
-      } finally {
-        setIsLoadingSubjects(false);
-      }
-    };
+      // Load subjects for this semester
+      const loadSubjects = async () => {
+        setIsLoadingSubjects((prev) => ({ ...prev, [semesterId]: true }));
+        setError(null);
+        try {
+          console.log("Loading subjects for semester:", semesterId, "studentId:", studentId);
+          const response = await GradeServices.getStudentGrades(studentId, {
+            SemesterId: semesterId,
+          });
+          
+          console.log("API response:", response);
+          
+          // Extract subjects from the grades response
+          const subjects = response.subjects || [];
+          console.log("Extracted subjects:", subjects);
+          
+          setSubjectsBySemester((prev) => ({
+            ...prev,
+            [semesterId]: subjects,
+          }));
+          
+          if (subjects.length === 0) {
+            message.info("No subjects found for this semester");
+          }
+        } catch (err: any) {
+          console.error("Error loading subjects:", err);
+          const errorMessage =
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to load subjects";
+          setError(errorMessage);
+          message.error(errorMessage);
+        } finally {
+          setIsLoadingSubjects((prev) => ({ ...prev, [semesterId]: false }));
+        }
+      };
 
-    loadSubjects();
-  }, [selectedSemesterId, subjectsBySemester]);
+      loadSubjects();
+    });
+  }, [activeSemesterKey, studentId]);
 
   // Load grades when subject is selected
+  // The grades data is already loaded when semester is opened, so we just need to find and display it
   useEffect(() => {
-    if (!selectedSubjectId || !studentId) return;
+    if (!selectedSubjectId) {
+      setGradeData([]);
+      return;
+    }
 
-    const loadGrades = async () => {
-      setIsLoadingGrades(true);
-      setError(null);
-      try {
-        console.log("Calling API with studentId:", studentId);
-        const response = await GradeServices.getStudentGrades(studentId);
+    // Find the subject grade from all loaded semesters
+    let subjectGrade: SubjectGradeDto | undefined;
+    for (const semesterId in subjectsBySemester) {
+      const subjects = subjectsBySemester[semesterId];
+      subjectGrade = subjects.find((s) => s.subjectId === selectedSubjectId);
+      if (subjectGrade) break;
+    }
 
-        // Find the selected subject's grades from the response
-        const subjectGrade = response.subjects.find(
-          (s) => s.subjectId === selectedSubjectId
-        );
-
-        if (subjectGrade) {
-          // Transform API data to table format
-          const transformedData = transformGradeData(subjectGrade);
-          setGradeData(transformedData);
-        } else {
-          setGradeData([]);
-          message.info("No grades found for this subject");
-        }
-      } catch (err: any) {
-        const errorMessage =
-          err.response?.data?.message || err.message || "Failed to load grades";
-        setError(errorMessage);
-        message.error(errorMessage);
-        setGradeData([]);
-      } finally {
-        setIsLoadingGrades(false);
-      }
-    };
-
-    loadGrades();
-  }, [selectedSubjectId, studentId]);
+    if (subjectGrade) {
+      // Transform API data to table format
+      const transformedData = transformGradeData(subjectGrade);
+      setGradeData(transformedData);
+    } else {
+      setGradeData([]);
+    }
+  }, [selectedSubjectId, subjectsBySemester]);
 
   // Transform API grade data to table format
   const transformGradeData = (subjectGrade: SubjectGradeDto): GradeRecord[] => {
@@ -232,12 +254,6 @@ const GradeReport: React.FC = () => {
     }
 
     return records;
-  };
-
-  const handleSemesterClick = (semesterId: string) => {
-    setSelectedSemesterId(semesterId);
-    setSelectedSubjectId(null); // Reset subject selection
-    setGradeData([]); // Clear grade data
   };
 
   const handleSubjectClick = (subjectId: string) => {
@@ -346,13 +362,15 @@ const GradeReport: React.FC = () => {
     },
   ];
 
-  const selectedSemester = semesters.find((s) => s.id === selectedSemesterId);
-  const subjects = selectedSemesterId
-    ? subjectsBySemester[selectedSemesterId] || []
-    : [];
-  const selectedSubject = subjects.find((s) => s.id === selectedSubjectId);
+  // Find selected subject from all loaded semesters
+  let selectedSubject: SubjectGradeDto | undefined;
+  for (const semesterId in subjectsBySemester) {
+    const subjects = subjectsBySemester[semesterId];
+    selectedSubject = subjects.find((s) => s.subjectId === selectedSubjectId);
+    if (selectedSubject) break;
+  }
 
-  if (!studentId) {
+  if (isLoadingStudent || !studentId) {
     return (
       <div className="grade-report">
         <div className="page-header">
@@ -361,12 +379,16 @@ const GradeReport: React.FC = () => {
           </Title>
         </div>
         <Card>
-          <Alert
-            message="Authentication Required"
-            description="Please login to view your grade report."
-            type="warning"
-            showIcon
-          />
+          {isLoadingStudent ? (
+            <Spin size="large" style={{ display: "block", textAlign: "center", padding: "40px 0" }} />
+          ) : (
+            <Alert
+              message="Authentication Required"
+              description="Please login to view your grade report."
+              type="warning"
+              showIcon
+            />
+          )}
         </Card>
       </div>
     );
@@ -398,63 +420,50 @@ const GradeReport: React.FC = () => {
           <Card className="sidebar-card" loading={isLoadingSemesters}>
             <div className="semester-list">
               <Collapse
-                activeKey={selectedSemesterId ? [selectedSemesterId] : []}
+                activeKey={activeSemesterKey}
+                onChange={(keys) => setActiveSemesterKey(keys)}
                 ghost
-                onChange={(keys) => {
-                  if (keys.length > 0) {
-                    handleSemesterClick(keys[0] as string);
-                  }
-                }}
               >
-                {semesters.map((semester) => (
-                  <Panel
-                    header={
-                      <div>
-                        <Text strong>{semester.name}</Text>
-                        <br />
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                          {semester.totalSubjects} subjects
-                          {semester.isActive && (
-                            <Tag color="green" style={{ marginLeft: 8 }}>
-                              Active
-                            </Tag>
-                          )}
-                        </Text>
-                      </div>
-                    }
-                    key={semester.id}
-                  >
-                    {isLoadingSubjects && selectedSemesterId === semester.id ? (
-                      <Spin size="small" />
-                    ) : subjects.length === 0 ? (
-                      <Empty
-                        description="No subjects"
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                        style={{ padding: "20px 0" }}
-                      />
-                    ) : (
-                      subjects.map((subject) => (
-                        <div
-                          key={subject.id}
-                          className={`course-item ${
-                            selectedSubjectId === subject.id ? "active" : ""
-                          }`}
-                          onClick={() => handleSubjectClick(subject.id)}
-                        >
-                          <Text strong className="course-code">
-                            {subject.subjectCode}
-                          </Text>
-                          <Text className="course-name">
-                            {subject.subjectName}
-                          </Text>
-                          <Text type="secondary" style={{ fontSize: 11 }}>
-                            {subject.credits} credits
-                          </Text>
-                        </div>
-                      ))
-                    )}
-                  </Panel>
-                ))}
+                {semesters.map((semester) => {
+                  const semesterSubjects = subjectsBySemester[semester.id] || [];
+                  const isLoading = isLoadingSubjects[semester.id] || false;
+                  
+                  return (
+                    <Panel header={semester.name} key={semester.id}>
+                      {isLoading ? (
+                        <Spin size="small" style={{ display: "block", textAlign: "center", padding: "20px 0" }} />
+                      ) : semesterSubjects.length === 0 ? (
+                        <Empty
+                          description="No subjects"
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          style={{ padding: "20px 0" }}
+                        />
+                      ) : (
+                        semesterSubjects.map((subject) => (
+                          <div
+                            key={subject.subjectId}
+                            className={`course-item ${
+                              selectedSubjectId === subject.subjectId ? "active" : ""
+                            }`}
+                            onClick={() => handleSubjectClick(subject.subjectId)}
+                          >
+                            <Text strong className="course-code">
+                              {subject.subjectCode}
+                            </Text>
+                            <Text className="course-name">
+                              {subject.subjectName}
+                            </Text>
+                            {subject.averageScore !== null && (
+                              <Text type="secondary" style={{ fontSize: 11 }}>
+                                {subject.averageScore.toFixed(2)} ({subject.finalLetterGrade || "N/A"})
+                              </Text>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </Panel>
+                  );
+                })}
               </Collapse>
             </div>
           </Card>
@@ -475,12 +484,11 @@ const GradeReport: React.FC = () => {
                 className="grade-table-card"
                 title={
                   selectedSubject
-                    ? `${selectedSubject.subjectCode} - ${selectedSubject.subjectName}`
+                    ? `${selectedSubject.subjectCode} - ${selectedSubject.subjectName} (${selectedSubject.semesterName})`
                     : "Grade Report"
                 }
-                loading={isLoadingGrades}
               >
-                {gradeData.length === 0 && !isLoadingGrades ? (
+                {gradeData.length === 0 ? (
                   <Empty description="No grades available" />
                 ) : (
                   <Table

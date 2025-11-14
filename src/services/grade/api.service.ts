@@ -58,13 +58,15 @@ class GradeServices {
   /**
    * Get student grade transcript
    * Endpoint: GET /api/Students/{id}/grades
-   * Note: Only studentId in path, no query parameters
+   * Query parameters: SemesterId, SubjectId, SortBy, SortOrder (all optional)
    */
   static async getStudentGrades(
-    studentId: string
+    studentId: string,
+    params?: GetStudentGradesRequest
   ): Promise<StudentGradeTranscriptDto> {
     const response = await api.get<StudentGradeTranscriptDto>(
-      `/Students/${studentId}/grades`
+      `/Students/${studentId}/grades`,
+      { params }
     );
     return response.data;
   }
