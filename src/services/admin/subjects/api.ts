@@ -85,3 +85,5 @@ export const deleteSubjectApi = async (id: string): Promise<void> => {
   await api.delete(`/Subjects/${id}`);
 };
 
+
+

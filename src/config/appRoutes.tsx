@@ -15,7 +15,6 @@ import {
   IdcardOutlined,
   LineChartOutlined,
   ScheduleOutlined,
-  SecurityScanOutlined,
   SettingOutlined,
   ShareAltOutlined,
   TeamOutlined,
@@ -33,7 +32,6 @@ import SubjectsManagement from "../pages/admin/subjects";
 import CredentialsManagement from "../pages/admin/credentials";
 import ManagerProduct from "../pages/admin/products";
 import ReportsManagement from "../pages/admin/reports";
-import RolesManagement from "../pages/admin/roles";
 import SecurityManagement from "../pages/admin/security";
 import StudentsManagement from "../pages/admin/students";
 import TeachersManagement from "../pages/admin/teachers";
@@ -165,16 +163,6 @@ export const adminRoutes: RouteConfig = {
       menuSection: "main",
     },
     {
-      path: "/admin/roles",
-      element: <RolesManagement />,
-      menuLabel: "Quản lý Vai trò",
-      menuIcon: <SecurityScanOutlined />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN], // Only admin
-      menuIndex: 6,
-      menuSection: "main",
-    },
-    {
       path: "/admin/credentials",
       element: <CredentialsManagement />,
       menuLabel: "Quản lý Chứng chỉ",
@@ -228,7 +216,7 @@ export const adminRoutes: RouteConfig = {
       menuIcon: <UserOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN],
-      menuIndex: 6,
+      menuIndex: 5,
       menuSection: "main",
     },
     {
