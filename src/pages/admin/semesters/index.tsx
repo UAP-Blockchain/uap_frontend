@@ -15,7 +15,6 @@ import {
   Row,
   Col,
   Tooltip,
-  Switch,
 } from "antd";
 import {
   PlusOutlined,
@@ -36,6 +35,7 @@ import type { SemesterDto } from "../../../types/Semester";
 import dayjs from "dayjs";
 import "./index.scss";
 import {
+  activeSemesterApi,
   closeSemesterApi,
   createSemesterApi,
   fetchSemestersApi,
@@ -49,8 +49,7 @@ const { RangePicker } = DatePicker;
 interface SemesterFormValues {
   name: string;
   dateRange: [Dayjs, Dayjs];
-  isActive?: boolean;
-  isClosed?: boolean;
+  // Status fields removed - use separate APIs for status changes
 }
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -149,10 +148,8 @@ const SemestersManagement: React.FC = () => {
     if (semester) {
       setEditingSemester(semester);
       form.setFieldsValue({
-        ...semester,
+        name: semester.name,
         dateRange: [dayjs(semester.startDate), dayjs(semester.endDate)],
-        isActive: semester.isActive,
-        isClosed: semester.isClosed,
       });
     } else {
       setEditingSemester(null);
@@ -169,12 +166,12 @@ const SemestersManagement: React.FC = () => {
       }
 
       const [startValue, endValue] = values.dateRange;
+
+      // PUT API only updates name, startDate, endDate
       const payload = {
         name: values.name.trim(),
         startDate: startValue.toISOString(),
         endDate: endValue.toISOString(),
-        isActive: values.isActive ?? true,
-        isClosed: values.isClosed ?? false,
       };
 
       try {
@@ -201,19 +198,55 @@ const SemestersManagement: React.FC = () => {
     field: "isActive" | "isClosed"
   ) => {
     try {
-      if (field === "isClosed" && !record.isClosed) {
-        await closeSemesterApi(record.id);
-      } else {
-        await updateSemesterApi(record.id, {
-          name: record.name,
-          startDate: record.startDate,
-          endDate: record.endDate,
-          isActive: field === "isActive" ? !record.isActive : record.isActive,
-          isClosed: field === "isClosed" ? !record.isClosed : record.isClosed,
-        });
+      if (field === "isActive") {
+        // Use PATCH /api/Semesters/{id}/active to activate
+        if (!record.isActive) {
+          await activeSemesterApi(record.id);
+          message.success("Đã kích hoạt học kì!");
+          // If filtering by "inactive", switch to "all" to see the updated semester
+          // Otherwise, refresh with current filter
+          const newStatusFilter =
+            statusFilter === "inactive" ? "all" : statusFilter;
+          if (newStatusFilter !== statusFilter) {
+            setStatusFilter(newStatusFilter);
+          }
+          await fetchData(
+            pagination.pageNumber,
+            pagination.pageSize,
+            searchText,
+            newStatusFilter
+          );
+        } else {
+          // If already active, we might want to deactivate, but there's no deactivate API
+          // So we can only activate, not deactivate via this button
+          message.warning("Học kì đã đang hoạt động");
+          return;
+        }
+      } else if (field === "isClosed") {
+        // Use PATCH /api/Semesters/{id}/close to close
+        if (!record.isClosed) {
+          await closeSemesterApi(record.id);
+          message.success("Đã đóng học kì!");
+          // If filtering by "active" or "inactive", switch to "all" to see the updated semester
+          // Otherwise, refresh with current filter
+          const newStatusFilter =
+            statusFilter === "active" || statusFilter === "inactive"
+              ? "all"
+              : statusFilter;
+          if (newStatusFilter !== statusFilter) {
+            setStatusFilter(newStatusFilter);
+          }
+          await fetchData(
+            pagination.pageNumber,
+            pagination.pageSize,
+            searchText,
+            newStatusFilter
+          );
+        } else {
+          message.warning("Học kì đã được đóng");
+          return;
+        }
       }
-      message.success("Cập nhật trạng thái học kì thành công!");
-      fetchData(pagination.pageNumber, pagination.pageSize);
     } catch {
       message.error("Không thể cập nhật trạng thái");
     }
@@ -587,11 +620,7 @@ const SemestersManagement: React.FC = () => {
         okText={editingSemester ? "Cập nhật" : "Thêm"}
         cancelText="Hủy"
       >
-        <Form
-          form={form}
-          layout="vertical"
-          initialValues={{ isActive: true, isClosed: false }}
-        >
+        <Form form={form} layout="vertical">
           <Form.Item
             name="name"
             label="Tên học kì"
@@ -614,29 +643,22 @@ const SemestersManagement: React.FC = () => {
             />
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="isActive"
-                label="Kích hoạt"
-                valuePropName="checked"
-              >
-                <Switch checkedChildren="Có" unCheckedChildren="Không" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="isClosed"
-                label="Đã đóng"
-                valuePropName="checked"
-              >
-                <Switch
-                  checkedChildren="Đã đóng"
-                  unCheckedChildren="Chưa đóng"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          {editingSemester && (
+            <div
+              style={{
+                marginTop: 16,
+                padding: 12,
+                background: "#f5f5f5",
+                borderRadius: 6,
+              }}
+            >
+              <p style={{ margin: 0, fontSize: 12, color: "#666" }}>
+                <strong>Lưu ý:</strong> Form này chỉ dùng để cập nhật tên và
+                ngày học kì. Để thay đổi trạng thái (kích hoạt/đóng), vui lòng
+                sử dụng các nút trong cột "Thao tác" của bảng.
+              </p>
+            </div>
+          )}
         </Form>
       </Modal>
     </div>

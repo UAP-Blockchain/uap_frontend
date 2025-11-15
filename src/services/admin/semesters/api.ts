@@ -43,8 +43,28 @@ export const updateSemesterApi = async (
   return response.data;
 };
 
+export const activeSemesterApi = async (id: string): Promise<void> => {
+  await api.patch(
+    `${SEMESTER_ENDPOINT}/${id}/active`,
+    { isActive: true },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+};
+
 export const closeSemesterApi = async (id: string): Promise<void> => {
-  await api.patch(`${SEMESTER_ENDPOINT}/${id}/close`);
+  await api.patch(
+    `${SEMESTER_ENDPOINT}/${id}/close`,
+    { isClosed: true },
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 };
 
 export const deleteSemesterApi = async (id: string): Promise<void> => {

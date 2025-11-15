@@ -22,10 +22,9 @@ export interface CreateSemesterRequest {
   endDate: string;
 }
 
-export interface UpdateSemesterRequest extends CreateSemesterRequest {
-  isActive?: boolean;
-  isClosed?: boolean;
-}
+// PUT API only updates name, startDate, endDate
+// Status changes use separate PATCH APIs: /active and /close
+export type UpdateSemesterRequest = CreateSemesterRequest;
 
 // ==================== Response Types ====================
 
