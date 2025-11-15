@@ -466,7 +466,6 @@ const RegisterUser: React.FC = () => {
               onChange: (page) =>
                 fetchData(page, pagination.pageSize, searchText, roleFilter),
             }}
-            scroll={{ x: 1000 }}
             size="small"
             locale={{
               emptyText: searchText
