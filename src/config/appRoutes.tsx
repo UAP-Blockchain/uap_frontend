@@ -33,7 +33,6 @@ import CredentialsManagement from "../pages/admin/credentials";
 import ManagerProduct from "../pages/admin/products";
 import ReportsManagement from "../pages/admin/reports";
 import SecurityManagement from "../pages/admin/security";
-import StudentsManagement from "../pages/admin/students";
 import TeachersManagement from "../pages/admin/teachers";
 import RegisterUser from "../pages/admin/registerUser";
 import BulkRegister from "../pages/admin/bulkRegister";
@@ -104,17 +103,6 @@ export const adminRoutes: RouteConfig = {
       showInMenu: false,
     },
     {
-      path: "/admin/students",
-      element: <StudentsManagement />,
-      menuLabel: "Quản lý Sinh viên",
-      menuIcon: <UserOutlined />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
-      requiredPermissions: [PERMISSIONS.MANAGE_STUDENTS],
-      menuIndex: 1,
-      menuSection: "main",
-    },
-    {
       path: "/admin/teachers",
       element: <TeachersManagement />,
       menuLabel: "Quản lý Giảng viên",
@@ -122,7 +110,7 @@ export const adminRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
       requiredPermissions: [PERMISSIONS.MANAGE_TEACHERS],
-      menuIndex: 2,
+      menuIndex: 1,
       menuSection: "main",
     },
     {
@@ -132,7 +120,7 @@ export const adminRoutes: RouteConfig = {
       menuIcon: <BookOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
-      menuIndex: 3,
+      menuIndex: 2,
       menuSection: "main",
     },
     {
@@ -143,7 +131,7 @@ export const adminRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
       requiredPermissions: [PERMISSIONS.MANAGE_CLASSES],
-      menuIndex: 4,
+      menuIndex: 3,
       menuSection: "main",
     },
     {
@@ -159,7 +147,7 @@ export const adminRoutes: RouteConfig = {
       menuIcon: <CalendarOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
-      menuIndex: 5,
+      menuIndex: 4,
       menuSection: "main",
     },
     {
@@ -226,7 +214,7 @@ export const adminRoutes: RouteConfig = {
       menuIcon: <TeamOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN],
-      menuIndex: 7,
+      menuIndex: 6,
       menuSection: "main",
     },
   ],
