@@ -29,6 +29,7 @@ import type { Permission, RoleCode } from "../constants/roles";
 import { PERMISSIONS, ROLE_CODES } from "../constants/roles";
 import ClassesManagement from "../pages/admin/classes";
 import ClassDetail from "../pages/admin/classes/ClassDetail";
+import SubjectsManagement from "../pages/admin/subjects";
 import CredentialsManagement from "../pages/admin/credentials";
 import ManagerProduct from "../pages/admin/products";
 import ReportsManagement from "../pages/admin/reports";
@@ -127,6 +128,16 @@ export const adminRoutes: RouteConfig = {
       menuSection: "main",
     },
     {
+      path: "/admin/subjects",
+      element: <SubjectsManagement />,
+      menuLabel: "Quản lý Môn học",
+      menuIcon: <BookOutlined />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
+      menuIndex: 3,
+      menuSection: "main",
+    },
+    {
       path: "/admin/classes",
       element: <ClassesManagement />,
       menuLabel: "Quản lý Lớp học",
@@ -134,7 +145,7 @@ export const adminRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
       requiredPermissions: [PERMISSIONS.MANAGE_CLASSES],
-      menuIndex: 3,
+      menuIndex: 4,
       menuSection: "main",
     },
     {
@@ -150,7 +161,7 @@ export const adminRoutes: RouteConfig = {
       menuIcon: <CalendarOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
-      menuIndex: 4,
+      menuIndex: 5,
       menuSection: "main",
     },
     {
@@ -160,7 +171,7 @@ export const adminRoutes: RouteConfig = {
       menuIcon: <SecurityScanOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN], // Only admin
-      menuIndex: 5,
+      menuIndex: 6,
       menuSection: "main",
     },
     {
