@@ -28,6 +28,7 @@ import { Outlet } from "react-router-dom";
 import type { Permission, RoleCode } from "../constants/roles";
 import { PERMISSIONS, ROLE_CODES } from "../constants/roles";
 import ClassesManagement from "../pages/admin/classes";
+import ClassDetail from "../pages/admin/classes/ClassDetail";
 import CredentialsManagement from "../pages/admin/credentials";
 import ManagerProduct from "../pages/admin/products";
 import ReportsManagement from "../pages/admin/reports";
@@ -135,6 +136,12 @@ export const adminRoutes: RouteConfig = {
       requiredPermissions: [PERMISSIONS.MANAGE_CLASSES],
       menuIndex: 3,
       menuSection: "main",
+    },
+    {
+      path: "/admin/classes/:id",
+      element: <ClassDetail />,
+      showInMenu: false,
+      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
     },
     {
       path: "/admin/semesters",

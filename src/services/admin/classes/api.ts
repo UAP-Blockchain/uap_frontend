@@ -69,3 +69,21 @@ export const deleteClassApi = async (id: string): Promise<void> => {
   await api.delete(`/Classes/${id}`);
 };
 
+export interface StudentRoster {
+  id: string;
+  studentCode: string;
+  fullName: string;
+  email: string;
+  enrollmentDate?: string;
+}
+
+export const getClassRosterApi = async (
+  id: string
+): Promise<StudentRoster[]> => {
+  const response = await api.get<{
+    data?: StudentRoster[];
+    items?: StudentRoster[];
+  }>(`/Classes/${id}/roster`);
+  return normalizeItems<StudentRoster>(response.data);
+};
+

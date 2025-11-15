@@ -4,7 +4,6 @@ import {
   Card,
   Form,
   Input,
-  message,
   Modal,
   Row,
   Col,
@@ -15,6 +14,8 @@ import {
   Popconfirm,
   Tooltip,
 } from "antd";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import type { ColumnsType } from "antd/es/table";
 import {
   BookOutlined,
@@ -28,11 +29,7 @@ import {
   DeleteOutlined,
 } from "@ant-design/icons";
 import "./index.scss";
-import type {
-  ClassSummary,
-  CreateClassRequest,
-  UpdateClassRequest,
-} from "../../../types/Class";
+import type { ClassSummary, CreateClassRequest } from "../../../types/Class";
 import type { SubjectDto } from "../../../types/Subject";
 import type { TeacherOption } from "../../../types/Teacher";
 import {
@@ -49,6 +46,7 @@ const { Search } = Input;
 const { Option } = Select;
 
 const ClassesManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [classes, setClasses] = useState<ClassSummary[]>([]);
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
@@ -72,8 +70,8 @@ const ClassesManagement: React.FC = () => {
       setClasses(classRes);
       setSubjects(subjectRes);
       setTeachers(teacherRes);
-    } catch (error) {
-      message.error("Không thể tải dữ liệu lớp học");
+    } catch {
+      toast.error("Không thể tải dữ liệu lớp học");
     } finally {
       setLoading(false);
     }
@@ -158,7 +156,11 @@ const ClassesManagement: React.FC = () => {
       key: "classInfo",
       width: 220,
       render: (_, record) => (
-        <div className="class-info">
+        <div
+          className="class-info clickable"
+          onClick={() => navigate(`/admin/classes/${record.id}`)}
+          style={{ cursor: "pointer" }}
+        >
           <div className="class-info__code">{record.classCode}</div>
           <div className="class-info__subject">
             {record.subjectCode} - {record.subjectName}
@@ -267,7 +269,7 @@ const ClassesManagement: React.FC = () => {
       setLoading(true);
       const classDetail = await getClassByIdApi(classItem.id);
       setEditingClass(classDetail);
-      
+
       // Find subject and teacher IDs from the current data
       const subject = subjects.find(
         (s) => s.subjectCode === classItem.subjectCode
@@ -282,8 +284,8 @@ const ClassesManagement: React.FC = () => {
         teacherId: teacher?.id,
       });
       setIsModalVisible(true);
-    } catch (error) {
-      message.error("Không thể tải thông tin lớp học");
+    } catch {
+      toast.error("Không thể tải thông tin lớp học");
     } finally {
       setLoading(false);
     }
@@ -293,10 +295,10 @@ const ClassesManagement: React.FC = () => {
     try {
       setLoading(true);
       await deleteClassApi(id);
-      message.success("Xóa lớp học thành công");
+      toast.success("Xóa lớp học thành công");
       await loadInitialData();
-    } catch (error) {
-      message.error("Không thể xóa lớp học");
+    } catch {
+      toast.error("Không thể xóa lớp học");
     } finally {
       setLoading(false);
     }
@@ -306,24 +308,24 @@ const ClassesManagement: React.FC = () => {
     try {
       const values = await form.validateFields();
       setIsSubmitting(true);
-      
+
       if (editingClass) {
         await updateClassApi(editingClass.id, values);
-        message.success("Cập nhật lớp học thành công");
+        toast.success("Cập nhật lớp học thành công");
       } else {
         await createClassApi(values);
-        message.success("Tạo lớp học thành công");
+        toast.success("Tạo lớp học thành công");
       }
-      
+
       setIsModalVisible(false);
       setEditingClass(null);
       form.resetFields();
       await loadInitialData();
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message);
+        toast.error(error.message);
       } else {
-        message.error(
+        toast.error(
           editingClass
             ? "Không thể cập nhật lớp học"
             : "Không thể tạo lớp học mới"
@@ -401,11 +403,7 @@ const ClassesManagement: React.FC = () => {
           </div>
         )}
 
-        <div
-          className={`filters-row ${
-            !showDetails ? "compact-layout" : ""
-          }`}
-        >
+        <div className={`filters-row ${!showDetails ? "compact-layout" : ""}`}>
           {showDetails && (
             <Row gutter={[16, 16]} className="filter-row-expanded">
               <Col xs={24} sm={12} md={8} lg={10}>
