@@ -4,8 +4,6 @@ import {
   QuestionCircleOutlined,
   SearchOutlined,
   UserOutlined,
-  EditOutlined,
-  SettingOutlined,
   LogoutOutlined,
   GlobalOutlined,
   RightOutlined,
@@ -130,32 +128,6 @@ const HeaderComponent: React.FC<HeaderProps> = ({
         } else {
           navigate("/admin/students");
         }
-      },
-    },
-    {
-      key: "edit-profile",
-      icon: <EditOutlined />,
-      label: "Edit Profile",
-      onClick: () => {
-        if (userProfile?.roleCode === "R4") {
-          navigate("/student-portal/profile");
-        }
-      },
-    },
-    {
-      key: "manage-account",
-      icon: <SettingOutlined />,
-      label: "Manage Account",
-      onClick: () => {
-        navigate("/admin/security");
-      },
-    },
-    {
-      key: "manage-subscription",
-      icon: <RightOutlined style={{ transform: "rotate(-90deg)" }} />,
-      label: "Manage Subscription",
-      onClick: () => {
-        // Handle subscription management
       },
     },
     {
