@@ -213,7 +213,7 @@ export const adminRoutes: RouteConfig = {
     {
       path: "/admin/users/register",
       element: <RegisterUser />,
-      menuLabel: "Register User",
+      menuLabel: "Quản lý Người dùng",
       menuIcon: <UserOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN],
