@@ -41,18 +41,18 @@ const PublicHome: React.FC = () => {
 
   const steps = [
     {
-      title: "Input Credentials",
-      description: "Scan QR code, enter ID, or upload file",
+      title: "Nhập thông tin chứng chỉ",
+      description: "Quét mã QR, nhập ID, hoặc tải lên file",
       icon: <SearchOutlined style={{ color: "#1890ff" }} />,
     },
     {
-      title: "Blockchain Verify",
-      description: "Check against immutable ledger",
+      title: "Xác thực Blockchain",
+      description: "Kiểm tra trên sổ cái bất biến",
       icon: <SafetyCertificateOutlined style={{ color: "#52c41a" }} />,
     },
     {
-      title: "Get Results",
-      description: "Instant verification with detailed report",
+      title: "Nhận kết quả",
+      description: "Xác thực tức thì với báo cáo chi tiết",
       icon: <CheckCircleOutlined style={{ color: "#1890ff" }} />,
     },
   ];
@@ -60,28 +60,28 @@ const PublicHome: React.FC = () => {
   const features = [
     {
       icon: <ClockCircleOutlined style={{ fontSize: 48, color: "#1890ff" }} />,
-      title: "Instant Verification",
-      description: "Get results in seconds, not days",
+      title: "Xác thực tức thì",
+      description: "Nhận kết quả trong vài giây, không phải vài ngày",
       color: "#e6f7ff",
     },
     {
       icon: (
         <SafetyCertificateOutlined style={{ fontSize: 48, color: "#52c41a" }} />
       ),
-      title: "100% Secure",
-      description: "Blockchain-powered tamper-proof verification",
+      title: "100% An toàn",
+      description: "Xác thực chống giả mạo bằng công nghệ blockchain",
       color: "#f6ffed",
     },
     {
       icon: <GlobalOutlined style={{ fontSize: 48, color: "#1890ff" }} />,
-      title: "Global Recognition",
-      description: "Verified by 500+ organizations worldwide",
+      title: "Công nhận toàn cầu",
+      description: "Được xác thực bởi 500+ tổ chức trên toàn thế giới",
       color: "#e6f7ff",
     },
     {
       icon: <FileProtectOutlined style={{ fontSize: 48, color: "#36cfc9" }} />,
-      title: "Zero Fraud",
-      description: "Eliminate fake credentials with blockchain proof",
+      title: "Không gian lận",
+      description: "Loại bỏ chứng chỉ giả bằng bằng chứng blockchain",
       color: "#e6fffb",
     },
   ];
@@ -102,14 +102,14 @@ const PublicHome: React.FC = () => {
             <Space direction="vertical" size="large" style={{ width: "100%" }}>
               <div>
                 <Title level={1} className="hero-title">
-                  Verify Academic Credentials
+                  Xác thực Chứng chỉ Học thuật
                   <br />
-                  <span className="highlight">Instantly & Securely</span>
+                  <span className="highlight">Tức thì & An toàn</span>
                 </Title>
                 <Paragraph className="hero-description">
-                  Trust but verify. Our blockchain-powered platform lets
-                  employers verify academic credentials in seconds, eliminating
-                  fraud and saving time in your hiring process.
+                  Tin tưởng nhưng phải xác minh. Nền tảng blockchain của chúng tôi
+                  giúp nhà tuyển dụng xác thực chứng chỉ học thuật trong vài giây,
+                  loại bỏ gian lận và tiết kiệm thời gian trong quy trình tuyển dụng.
                 </Paragraph>
               </div>
 
@@ -121,13 +121,13 @@ const PublicHome: React.FC = () => {
                   onClick={() => navigate("/public-portal/verify")}
                   className="cta-button"
                 >
-                  Start Verification
+                  Bắt đầu xác thực
                 </Button>
                 <Button
                   size="large"
                   onClick={() => navigate("/public-portal/help")}
                 >
-                  Learn How It Works
+                  Tìm hiểu cách hoạt động
                 </Button>
               </Space>
 
@@ -138,7 +138,7 @@ const PublicHome: React.FC = () => {
                       {stats.totalVerifications.toLocaleString()}+
                     </Text>
                     <Text type="secondary" style={{ display: "block" }}>
-                      Credentials Verified
+                      Chứng chỉ đã xác thực
                     </Text>
                   </div>
                   <div className="stat-item">
@@ -146,7 +146,7 @@ const PublicHome: React.FC = () => {
                       {stats.verificationTime}s
                     </Text>
                     <Text type="secondary" style={{ display: "block" }}>
-                      Average Time
+                      Thời gian trung bình
                     </Text>
                   </div>
                   <div className="stat-item">
@@ -154,7 +154,7 @@ const PublicHome: React.FC = () => {
                       100%
                     </Text>
                     <Text type="secondary" style={{ display: "block" }}>
-                      Accuracy Rate
+                      Tỷ lệ chính xác
                     </Text>
                   </div>
                 </Space>
@@ -195,7 +195,7 @@ const PublicHome: React.FC = () => {
         <Col xs={12} sm={6}>
           <Card hoverable>
             <Statistic
-              title="Total Verifications"
+              title="Tổng số xác thực"
               value={stats.totalVerifications}
               prefix={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
               suffix="+"
@@ -205,7 +205,7 @@ const PublicHome: React.FC = () => {
         <Col xs={12} sm={6}>
           <Card hoverable>
             <Statistic
-              title="Partner Institutions"
+              title="Tổ chức đối tác"
               value={stats.activeInstitutions}
               prefix={<BookOutlined style={{ color: "#1890ff" }} />}
             />
@@ -214,7 +214,7 @@ const PublicHome: React.FC = () => {
         <Col xs={12} sm={6}>
           <Card hoverable>
             <Statistic
-              title="Trusted Employers"
+              title="Nhà tuyển dụng tin cậy"
               value={stats.trustedEmployers}
               prefix={<TeamOutlined style={{ color: "#1890ff" }} />}
             />
@@ -223,7 +223,7 @@ const PublicHome: React.FC = () => {
         <Col xs={12} sm={6}>
           <Card hoverable>
             <Statistic
-              title="Avg. Response Time"
+              title="Thời gian phản hồi TB"
               value={stats.verificationTime}
               prefix={<ClockCircleOutlined style={{ color: "#36cfc9" }} />}
               suffix="s"
@@ -235,7 +235,7 @@ const PublicHome: React.FC = () => {
       {/* How It Works Section */}
       <Card className="section-card" style={{ marginBottom: 48 }}>
         <Title level={2} style={{ textAlign: "center", marginBottom: 32 }}>
-          How Verification Works
+          Cách thức xác thực hoạt động
         </Title>
         <Steps
           current={-1}
@@ -251,7 +251,7 @@ const PublicHome: React.FC = () => {
             icon={<RocketOutlined />}
             onClick={() => navigate("/public-portal/verify")}
           >
-            Try It Now
+            Thử ngay
           </Button>
         </div>
       </Card>
@@ -259,7 +259,7 @@ const PublicHome: React.FC = () => {
       {/* Features Section */}
       <Card className="section-card" style={{ marginBottom: 48 }}>
         <Title level={2} style={{ textAlign: "center", marginBottom: 32 }}>
-          Why Choose Our Platform?
+          Tại sao chọn nền tảng của chúng tôi?
         </Title>
         <Row gutter={[24, 24]}>
           {features.map((feature, index) => (
@@ -285,7 +285,7 @@ const PublicHome: React.FC = () => {
       {/* Trusted Institutions */}
       <Card className="section-card">
         <Title level={2} style={{ textAlign: "center", marginBottom: 32 }}>
-          Trusted by Leading Institutions
+          Được tin tưởng bởi các tổ chức hàng đầu
         </Title>
         <Row gutter={[24, 24]} justify="center">
           {trustedInstitutions.map((institution, index) => (
@@ -298,7 +298,7 @@ const PublicHome: React.FC = () => {
                   <Title level={5} style={{ margin: "0 0 8px" }}>
                     {institution.name}
                   </Title>
-                  <Text type="secondary">{institution.students} Students</Text>
+                  <Text type="secondary">{institution.students} Sinh viên</Text>
                 </div>
               </Card>
             </Col>
@@ -307,7 +307,7 @@ const PublicHome: React.FC = () => {
 
         <div style={{ textAlign: "center", marginTop: 32 }}>
           <Text type="secondary">
-            Join 500+ organizations worldwide who trust our verification system
+            Tham gia cùng 500+ tổ chức trên toàn thế giới tin tưởng hệ thống xác thực của chúng tôi
           </Text>
         </div>
       </Card>

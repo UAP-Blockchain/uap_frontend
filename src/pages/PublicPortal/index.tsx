@@ -29,25 +29,25 @@ function PublicPortal() {
     {
       key: "",
       icon: <HomeOutlined />,
-      label: "Home",
+      label: "Trang chủ",
       onClick: () => navigate("/public-portal"),
     },
     {
       key: "verify",
       icon: <SafetyCertificateOutlined />,
-      label: "Verify Credentials",
+      label: "Xác thực chứng chỉ",
       onClick: () => navigate("/public-portal/verify"),
     },
     {
       key: "history",
       icon: <HistoryOutlined />,
-      label: "Verification History",
+      label: "Lịch sử xác thực",
       onClick: () => navigate("/public-portal/history"),
     },
     {
       key: "help",
       icon: <QuestionCircleOutlined />,
-      label: "Help & FAQ",
+      label: "Trợ giúp & FAQ",
       onClick: () => navigate("/public-portal/help"),
     },
   ];
@@ -57,19 +57,19 @@ function PublicPortal() {
     {
       key: "contact",
       icon: <PhoneOutlined />,
-      label: "Contact Support",
+      label: "Liên hệ hỗ trợ",
     },
     {
       key: "api",
       icon: <GlobalOutlined />,
-      label: "API Documentation",
+      label: "Tài liệu API",
     },
     {
       type: "divider" as const,
     },
     {
       key: "enterprise",
-      label: "Enterprise Solutions",
+      label: "Giải pháp doanh nghiệp",
     },
   ];
 
@@ -102,13 +102,13 @@ function PublicPortal() {
               </span>
               {!collapsed && (
                 <Title level={4} className="logo-text">
-                  Credential Verifier
+                  Xác thực Chứng chỉ
                 </Title>
               )}
             </div>
             {!collapsed && (
               <Text type="secondary" className="logo-subtitle">
-                For Employers & Organizations
+                Dành cho Nhà tuyển dụng & Tổ chức
               </Text>
             )}
           </div>
@@ -127,7 +127,7 @@ function PublicPortal() {
                   type="secondary"
                   style={{ fontSize: 12, display: "block", marginBottom: 8 }}
                 >
-                  Trusted by 500+ Organizations
+                  Được tin tưởng bởi 500+ Tổ chức
                 </Text>
                 <div className="trust-logos">
                   <span style={{ opacity: 0.6 }}> FPT</span>
@@ -157,9 +157,9 @@ function PublicPortal() {
               />
               <div className="header-brand">
                 <Title level={3} className="brand-title">
-                  Blockchain Credential Verification
+                  Xác thực Chứng chỉ Blockchain
                 </Title>
-                <Text type="secondary">Instant, Secure, Trusted</Text>
+                <Text type="secondary">Tức thì, An toàn, Đáng tin cậy</Text>
               </div>
             </div>
 
@@ -171,14 +171,14 @@ function PublicPortal() {
                   size="large"
                   onClick={() => navigate("/public-portal/verify")}
                 >
-                  Quick Verify
+                  Xác thực nhanh
                 </Button>
                 <Dropdown
                   menu={{ items: quickAccessItems }}
                   trigger={["click"]}
                   placement="bottomRight"
                 >
-                  <Button size="large">More Services</Button>
+                  <Button size="large">Dịch vụ khác</Button>
                 </Dropdown>
               </Space>
             </div>
