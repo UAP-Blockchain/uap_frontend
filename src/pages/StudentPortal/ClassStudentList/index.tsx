@@ -1,8 +1,8 @@
-import React from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { Card, Table, Button, Typography, Avatar, Row, Col } from "antd";
 import { ArrowLeftOutlined, UserOutlined } from "@ant-design/icons";
+import { Avatar, Button, Card, Col, Row, Table, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./ClassStudentList.scss";
 
 const { Title, Text } = Typography;
@@ -239,7 +239,7 @@ const ClassStudentList: React.FC = () => {
 
   const columns: ColumnsType<StudentData> = [
     {
-      title: "INDEX",
+      title: "STT",
       dataIndex: "index",
       key: "index",
       width: 80,
@@ -247,7 +247,7 @@ const ClassStudentList: React.FC = () => {
       render: (index: number) => <Text strong>{index}</Text>,
     },
     {
-      title: "IMAGE",
+      title: "ẢNH",
       dataIndex: "image",
       key: "image",
       width: 100,
@@ -265,32 +265,32 @@ const ClassStudentList: React.FC = () => {
       ),
     },
     {
-      title: "MEMBER",
+      title: "MÃ SV",
       dataIndex: "member",
       key: "member",
       width: 120,
       render: (member: string) => <Text strong>{member}</Text>,
     },
     {
-      title: "CODE",
+      title: "HỌ",
       dataIndex: "code",
       key: "code",
       width: 100,
     },
     {
-      title: "SURNAME",
+      title: "TÊN ĐỆM",
       dataIndex: "surname",
       key: "surname",
       width: 100,
     },
     {
-      title: "MIDDLE NAME",
+      title: "TÊN",
       dataIndex: "middleName",
       key: "middleName",
       width: 120,
     },
     {
-      title: "GIVEN NAME",
+      title: "TÊN GỌI",
       dataIndex: "givenName",
       key: "givenName",
       width: 120,
@@ -307,7 +307,7 @@ const ClassStudentList: React.FC = () => {
           onClick={handleBackClick}
           style={{ marginBottom: 16 }}
         >
-          {fromActivity ? "Back to Activity" : "Back to Timetable"}
+          {fromActivity ? "Quay lại hoạt động" : "Quay lại thời khóa biểu"}
         </Button>
 
         <Row
@@ -317,7 +317,7 @@ const ClassStudentList: React.FC = () => {
         >
           <Col>
             <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-              Student List
+              Danh sách sinh viên
             </Title>
           </Col>
         </Row>
@@ -335,7 +335,7 @@ const ClassStudentList: React.FC = () => {
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} students`,
+              `${range[0]}-${range[1]} trong tổng số ${total} sinh viên`,
           }}
           scroll={{ x: 800 }}
           size="middle"

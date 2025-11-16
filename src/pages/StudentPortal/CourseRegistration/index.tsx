@@ -62,9 +62,7 @@ const curatedCourses = [
         id: "ai401-02",
         classCode: "AI401-02",
         teacher: "Dr. Lý Thu Thảo",
-        schedule: [
-          { day: "Tue & Thu", time: "13:00 - 15:00", slot: "Slot 4" },
-        ],
+        schedule: [{ day: "Tue & Thu", time: "13:00 - 15:00", slot: "Slot 4" }],
         location: "AI Studio B2.12",
         seatsUsed: 34,
       },
@@ -84,9 +82,7 @@ const curatedCourses = [
         id: "ml501-01",
         classCode: "ML501-01",
         teacher: "Ms. Đoàn Khánh An",
-        schedule: [
-          { day: "Mon & Thu", time: "15:00 - 17:00", slot: "Slot 6" },
-        ],
+        schedule: [{ day: "Mon & Thu", time: "15:00 - 17:00", slot: "Slot 6" }],
         location: "Tech Lab C1.08",
         seatsUsed: 19,
       },
@@ -106,9 +102,7 @@ const curatedCourses = [
         id: "bc303-01",
         classCode: "BC303-01",
         teacher: "Mr. Huỳnh Quốc Hải",
-        schedule: [
-          { day: "Tue", time: "08:00 - 11:00", slot: "Slot 2" },
-        ],
+        schedule: [{ day: "Tue", time: "08:00 - 11:00", slot: "Slot 2" }],
         location: "Blockchain Studio D3.02",
         seatsUsed: 22,
       },
@@ -116,9 +110,7 @@ const curatedCourses = [
         id: "bc303-02",
         classCode: "BC303-02",
         teacher: "Ms. Phạm Tú Uyên",
-        schedule: [
-          { day: "Fri", time: "13:30 - 16:30", slot: "Slot 5" },
-        ],
+        schedule: [{ day: "Fri", time: "13:30 - 16:30", slot: "Slot 5" }],
         location: "Blockchain Studio D3.02",
         seatsUsed: 31,
       },
@@ -138,9 +130,7 @@ const curatedCourses = [
         id: "ux402-01",
         classCode: "UX402-01",
         teacher: "Ms. Nguyễn Thụy Vy",
-        schedule: [
-          { day: "Wed", time: "09:00 - 12:00", slot: "Slot 2" },
-        ],
+        schedule: [{ day: "Wed", time: "09:00 - 12:00", slot: "Slot 2" }],
         location: "Creative Lab E1.01",
         seatsUsed: 15,
       },
@@ -160,9 +150,7 @@ const curatedCourses = [
         id: "ds501-01",
         classCode: "DS501-01",
         teacher: "Mr. Trần Đức Khang",
-        schedule: [
-          { day: "Mon", time: "13:00 - 16:00", slot: "Slot 4" },
-        ],
+        schedule: [{ day: "Mon", time: "13:00 - 16:00", slot: "Slot 4" }],
         location: "Auditorium F2.10",
         seatsUsed: 27,
       },
@@ -170,9 +158,7 @@ const curatedCourses = [
         id: "ds501-02",
         classCode: "DS501-02",
         teacher: "Ms. Võ Khánh Linh",
-        schedule: [
-          { day: "Thu", time: "08:00 - 11:00", slot: "Slot 1" },
-        ],
+        schedule: [{ day: "Thu", time: "08:00 - 11:00", slot: "Slot 1" }],
         location: "Auditorium F2.10",
         seatsUsed: 13,
       },
@@ -181,7 +167,9 @@ const curatedCourses = [
 ];
 
 const CourseRegistration: React.FC = () => {
-  const [selectedCourseId, setSelectedCourseId] = useState(curatedCourses[0].id);
+  const [selectedCourseId, setSelectedCourseId] = useState(
+    curatedCourses[0].id
+  );
   const [isRegistering, setIsRegistering] = useState<string | null>(null);
   const [planMode, setPlanMode] = useState<"guided" | "custom">("guided");
 
@@ -194,18 +182,20 @@ const CourseRegistration: React.FC = () => {
     setIsRegistering(classId);
     setTimeout(() => {
       setIsRegistering(null);
-      message.success("Registration request submitted! We'll notify you soon.");
+      message.success(
+        "Yêu cầu đăng ký đã được gửi! Chúng tôi sẽ thông báo cho bạn sớm."
+      );
     }, 1000);
   };
 
   return (
     <div className="course-registration-page">
       <div className="page-header">
-        <Title level={2}>Plan Your Upcoming Semester</Title>
+        <Title level={2}>Lập kế hoạch học kỳ sắp tới</Title>
         <Paragraph>
-          Curated subjects for {upcomingSemester.name}. Pick the classes that
-          boost your portfolio, balance your weekly load and keep your GPA on
-          track.
+          Các môn học được tuyển chọn cho {upcomingSemester.name}. Chọn các lớp
+          học giúp nâng cao hồ sơ của bạn, cân bằng khối lượng công việc hàng
+          tuần và duy trì GPA của bạn.
         </Paragraph>
       </div>
 
@@ -213,50 +203,48 @@ const CourseRegistration: React.FC = () => {
         <Row gutter={[32, 32]} align="middle">
           <Col xs={24} lg={15}>
             <Space direction="vertical" size={16}>
-              <Text className="hero-eyebrow">Curated Plan</Text>
+              <Text className="hero-eyebrow">Kế hoạch được tuyển chọn</Text>
               <Title level={3} style={{ margin: 0 }}>
                 {upcomingSemester.focus}
               </Title>
               <Paragraph className="hero-paragraph">
-                5 recommended modules crafted with Career Services & Industry
-                Mentors. Each class includes real project briefs, mentor hours
-                and studio-grade facilities.
+                5 mô-đun được đề xuất được tạo ra với Dịch vụ Nghề nghiệp & Cố
+                vấn Ngành. Mỗi lớp học bao gồm bản tóm tắt dự án thực tế, giờ cố
+                vấn và cơ sở vật chất cấp studio.
               </Paragraph>
               <Segmented
                 value={planMode}
-                onChange={(value) =>
-                  setPlanMode(value as "guided" | "custom")
-                }
+                onChange={(value) => setPlanMode(value as "guided" | "custom")}
                 options={[
-                  { label: "Guided Journey", value: "guided" },
-                  { label: "Custom Mix", value: "custom" },
+                  { label: "Hành trình có hướng dẫn", value: "guided" },
+                  { label: "Tùy chỉnh", value: "custom" },
                 ]}
                 size="large"
               />
               <Space size="large" wrap>
                 <div className="hero-stat">
-                  <Text type="secondary">Credits Planned</Text>
+                  <Text type="secondary">Tín chỉ đã lên kế hoạch</Text>
                   <Title level={4} style={{ margin: 0 }}>
                     {upcomingSemester.recommendedCredits}/
                     {upcomingSemester.maxCredits}
                   </Title>
                 </div>
                 <div className="hero-stat">
-                  <Text type="secondary">Registration Deadline</Text>
+                  <Text type="secondary">Hạn đăng ký</Text>
                   <Title level={4} style={{ margin: 0 }}>
                     {upcomingSemester.registrationDeadline}
                   </Title>
                 </div>
                 <div className="hero-stat">
-                  <Text type="secondary">Semester Window</Text>
+                  <Text type="secondary">Thời gian học kỳ</Text>
                   <Title level={4} style={{ margin: 0 }}>
                     {upcomingSemester.startDate} ↔ {upcomingSemester.endDate}
                   </Title>
                 </div>
               </Space>
               <Space>
-                <Button type="primary">Download Study Plan</Button>
-                <Button>Ask Academic Advisor</Button>
+                <Button type="primary">Tải xuống kế hoạch học tập</Button>
+                <Button>Hỏi cố vấn học thuật</Button>
               </Space>
             </Space>
           </Col>
@@ -265,10 +253,10 @@ const CourseRegistration: React.FC = () => {
               <div className="panel-row">
                 <CalendarOutlined />
                 <div>
-                  <Text strong>Weekly Flow</Text>
+                  <Text strong>Luồng hàng tuần</Text>
                   <Paragraph type="secondary" style={{ margin: 0 }}>
-                    Spread between morning labs and afternoon studios for better
-                    recovery time.
+                    Phân bổ giữa phòng lab buổi sáng và studio buổi chiều để có
+                    thời gian phục hồi tốt hơn.
                   </Paragraph>
                 </div>
               </div>
@@ -276,10 +264,10 @@ const CourseRegistration: React.FC = () => {
               <div className="panel-row">
                 <ExperimentOutlined />
                 <div>
-                  <Text strong>Experience Blocks</Text>
+                  <Text strong>Khối kinh nghiệm</Text>
                   <Paragraph type="secondary" style={{ margin: 0 }}>
-                    Project, research and certification-ready topics aligned
-                    with blockchain & AI roadmap.
+                    Dự án, nghiên cứu và các chủ đề sẵn sàng chứng nhận phù hợp
+                    với lộ trình blockchain & AI.
                   </Paragraph>
                 </div>
               </div>
@@ -291,9 +279,9 @@ const CourseRegistration: React.FC = () => {
       <Row gutter={[24, 24]} style={{ marginTop: 24 }}>
         <Col xs={24} lg={10}>
           <Card
-            title="Recommended Subjects"
+            title="Môn học được đề xuất"
             className="course-list-card"
-            extra={<Tag color="blue">5 modules</Tag>}
+            extra={<Tag color="blue">5 mô-đun</Tag>}
           >
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               {curatedCourses.map((course) => (
@@ -307,7 +295,7 @@ const CourseRegistration: React.FC = () => {
                   <div className="course-card__header">
                     <Space size={8}>
                       <Text className="course-code">{course.code}</Text>
-                      <Tag color="blue">{course.credits} credits</Tag>
+                      <Tag color="blue">{course.credits} tín chỉ</Tag>
                       <Tag color="geekblue">{course.difficulty}</Tag>
                     </Space>
                     <Tag color="purple">{course.tags[0]}</Tag>
@@ -338,14 +326,14 @@ const CourseRegistration: React.FC = () => {
             className="class-list-card"
             extra={
               <Text type="secondary">
-                Select a class to register. Each class is capped at {seatLimit}{" "}
-                students.
+                Chọn một lớp để đăng ký. Mỗi lớp được giới hạn {seatLimit} sinh
+                viên.
               </Text>
             }
           >
             {!selectedCourse ? (
               <Paragraph type="secondary">
-                Select a course from the left panel to view available classes.
+                Chọn một môn học từ panel bên trái để xem các lớp có sẵn.
               </Paragraph>
             ) : (
               <Space direction="vertical" size={18} style={{ width: "100%" }}>
@@ -356,7 +344,7 @@ const CourseRegistration: React.FC = () => {
                   const isFull = cls.seatsUsed >= seatLimit;
                   return (
                     <Badge.Ribbon
-                      text={isFull ? "Waitlist" : "Open"}
+                      text={isFull ? "Danh sách chờ" : "Mở đăng ký"}
                       color={isFull ? "volcano" : "cyan"}
                       key={cls.id}
                     >
@@ -380,7 +368,7 @@ const CourseRegistration: React.FC = () => {
                             loading={isRegistering === cls.id}
                             onClick={() => handleRegister(cls.id)}
                           >
-                            {isFull ? "Join Waitlist" : "Register"}
+                            {isFull ? "Tham gia danh sách chờ" : "Đăng ký"}
                           </Button>
                         </div>
 
@@ -410,19 +398,21 @@ const CourseRegistration: React.FC = () => {
                               <div className="schedule-row">
                                 <TeamOutlined />
                                 <div>
-                                  <Text strong>Capacity</Text>
+                                  <Text strong>Sức chứa</Text>
                                   <Paragraph
                                     type="secondary"
                                     style={{ margin: 0 }}
                                   >
-                                    {cls.seatsUsed}/{seatLimit} students
+                                    {cls.seatsUsed}/{seatLimit} sinh viên
                                   </Paragraph>
                                 </div>
                               </div>
                               <Progress
                                 percent={seatsPercent}
                                 status={isFull ? "exception" : "active"}
-                                format={() => `${seatLimit - cls.seatsUsed} left`}
+                                format={() =>
+                                  `Còn ${seatLimit - cls.seatsUsed} chỗ`
+                                }
                               />
                             </Space>
                           </Col>
@@ -443,9 +433,10 @@ const CourseRegistration: React.FC = () => {
             <div className="tip-item">
               <ClockCircleOutlined />
               <div>
-                <Text strong>Balance your week</Text>
+                <Text strong>Cân bằng tuần học của bạn</Text>
                 <Paragraph type="secondary">
-                  Mix morning labs with afternoon studios to keep energy consistent.
+                  Kết hợp phòng lab buổi sáng với studio buổi chiều để duy trì
+                  năng lượng ổn định.
                 </Paragraph>
               </div>
             </div>
@@ -454,10 +445,10 @@ const CourseRegistration: React.FC = () => {
             <div className="tip-item">
               <CalendarOutlined />
               <div>
-                <Text strong>Plan for deadlines</Text>
+                <Text strong>Lập kế hoạch cho hạn chót</Text>
                 <Paragraph type="secondary">
-                  Check overlap between major project milestones before locking
-                  classes.
+                  Kiểm tra sự trùng lặp giữa các cột mốc dự án chính trước khi
+                  khóa các lớp.
                 </Paragraph>
               </div>
             </div>
@@ -466,9 +457,10 @@ const CourseRegistration: React.FC = () => {
             <div className="tip-item">
               <ExperimentOutlined />
               <div>
-                <Text strong>Leverage studios</Text>
+                <Text strong>Tận dụng studio</Text>
                 <Paragraph type="secondary">
-                  Many classes include dedicated mentor sessions—book them early!
+                  Nhiều lớp học bao gồm các buổi cố vấn chuyên dụng—đặt chúng
+                  sớm!
                 </Paragraph>
               </div>
             </div>
@@ -480,5 +472,3 @@ const CourseRegistration: React.FC = () => {
 };
 
 export default CourseRegistration;
-
-
