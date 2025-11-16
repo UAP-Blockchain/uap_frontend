@@ -1,31 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Avatar,
+  Button,
   Card,
-  Row,
   Col,
-  Typography,
+  DatePicker,
+  Descriptions,
+  Divider,
   Form,
   Input,
-  Button,
-  Avatar,
-  DatePicker,
-  Divider,
   message,
   Modal,
-  Tag,
-  Descriptions,
+  Row,
   Space,
   Spin,
+  Tag,
+  Typography,
 } from "antd";
 import {
-  UserOutlined,
   EditOutlined,
-  SaveOutlined,
-  MailOutlined,
   EnvironmentOutlined,
   IdcardOutlined,
   LockOutlined,
+  MailOutlined,
   PhoneOutlined,
+  SaveOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -72,7 +72,7 @@ const Profile: React.FC = () => {
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
-        "Failed to load student profile";
+        "Không thể tải hồ sơ sinh viên";
       message.error(errorMessage);
     } finally {
       setLoading(false);
@@ -82,21 +82,21 @@ const Profile: React.FC = () => {
   const handlePersonalInfoSave = async (values: Record<string, string>) => {
     try {
       console.log("Saving personal info:", values);
-      message.success("Personal information updated successfully!");
+      message.success("Cập nhật thông tin cá nhân thành công!");
       setEditingPersonal(false);
     } catch {
-      message.error("Failed to update personal information");
+      message.error("Cập nhật thông tin cá nhân thất bại");
     }
   };
 
   const handlePasswordChange = async (values: Record<string, string>) => {
     try {
       console.log("Changing password:", values);
-      message.success("Password changed successfully!");
+      message.success("Đổi mật khẩu thành công!");
       setShowPasswordModal(false);
       passwordForm.resetFields();
     } catch {
-      message.error("Failed to change password");
+      message.error("Đổi mật khẩu thất bại");
     }
   };
 
@@ -121,7 +121,7 @@ const Profile: React.FC = () => {
     return (
       <div className="profile-page">
         <Card>
-          <Text>No student data available</Text>
+          <Text>Không có dữ liệu sinh viên</Text>
         </Card>
       </div>
     );
@@ -132,13 +132,13 @@ const Profile: React.FC = () => {
       {/* Page Header */}
       <div className="page-header">
         <Title level={2} style={{ margin: 0, color: "white" }}>
-          Profile Management
+          Quản lý hồ sơ
         </Title>
         <Text
           type="secondary"
           style={{ fontSize: 16, color: "rgba(255,255,255,0.8)" }}
         >
-          Manage your personal information and security settings
+          Quản lý thông tin cá nhân và cài đặt bảo mật
         </Text>
       </div>
 
@@ -174,9 +174,11 @@ const Profile: React.FC = () => {
                 </Text>
                 <div style={{ textAlign: "center" }}>
                   <Tag color={studentData.isActive ? "green" : "red"}>
-                    {studentData.isActive ? "Active" : "Inactive"}
+                    {studentData.isActive ? "Hoạt động" : "Không hoạt động"}
                   </Tag>
-                  {studentData.isGraduated && <Tag color="blue">Graduated</Tag>}
+                  {studentData.isGraduated && (
+                    <Tag color="blue">Đã tốt nghiệp</Tag>
+                  )}
                 </div>
               </div>
             </div>
@@ -190,10 +192,10 @@ const Profile: React.FC = () => {
               <Descriptions.Item label="GPA">
                 <Tag color="gold">{studentData.gpa.toFixed(2)}</Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="Enrollment Date">
-                {dayjs(studentData.enrollmentDate).format("MMMM YYYY")}
+              <Descriptions.Item label="Ngày nhập học">
+                {dayjs(studentData.enrollmentDate).format("MM/YYYY")}
               </Descriptions.Item>
-              <Descriptions.Item label="Total Classes">
+              <Descriptions.Item label="Tổng số lớp">
                 <Tag color="blue">{studentData.totalClasses}</Tag>
               </Descriptions.Item>
             </Descriptions>
@@ -209,7 +211,7 @@ const Profile: React.FC = () => {
                 title={
                   <Space>
                     <IdcardOutlined style={{ color: "#1a94fc" }} />
-                    <span>Personal Information</span>
+                    <span>Thông tin cá nhân</span>
                   </Space>
                 }
                 extra={
@@ -224,7 +226,7 @@ const Profile: React.FC = () => {
                       }
                     }}
                   >
-                    {editingPersonal ? "Save Changes" : "Edit Info"}
+                    {editingPersonal ? "Lưu thay đổi" : "Chỉnh sửa"}
                   </Button>
                 }
               >
@@ -239,7 +241,7 @@ const Profile: React.FC = () => {
                 >
                   <Row gutter={[16, 0]}>
                     <Col xs={24} md={12}>
-                      <Form.Item label="Full Name" name="fullName">
+                      <Form.Item label="Họ và tên" name="fullName">
                         <Input
                           prefix={<UserOutlined />}
                           disabled={!editingPersonal}
@@ -255,7 +257,7 @@ const Profile: React.FC = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Form.Item label="Phone Number" name="phone">
+                      <Form.Item label="Số điện thoại" name="phone">
                         <Input
                           prefix={<PhoneOutlined />}
                           disabled={!editingPersonal}
@@ -263,7 +265,7 @@ const Profile: React.FC = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={12}>
-                      <Form.Item label="Date of Birth" name="dateOfBirth">
+                      <Form.Item label="Ngày sinh" name="dateOfBirth">
                         <DatePicker
                           style={{ width: "100%" }}
                           disabled={!editingPersonal}
@@ -271,7 +273,7 @@ const Profile: React.FC = () => {
                       </Form.Item>
                     </Col>
                     <Col xs={24}>
-                      <Form.Item label="Address" name="address">
+                      <Form.Item label="Địa chỉ" name="address">
                         <Input
                           prefix={<EnvironmentOutlined />}
                           disabled={!editingPersonal}
@@ -289,7 +291,7 @@ const Profile: React.FC = () => {
                 title={
                   <Space>
                     <LockOutlined style={{ color: "#1a94fc" }} />
-                    <span>Change Password</span>
+                    <span>Đổi mật khẩu</span>
                   </Space>
                 }
               >
@@ -302,10 +304,10 @@ const Profile: React.FC = () => {
                   }}
                 >
                   <div>
-                    <Text strong>Password</Text>
+                    <Text strong>Mật khẩu</Text>
                     <br />
                     <Text type="secondary">
-                      Update your password to keep your account secure
+                      Cập nhật mật khẩu để bảo vệ tài khoản của bạn
                     </Text>
                   </div>
                   <Button
@@ -313,7 +315,7 @@ const Profile: React.FC = () => {
                     icon={<LockOutlined />}
                     onClick={() => setShowPasswordModal(true)}
                   >
-                    Change Password
+                    Đổi mật khẩu
                   </Button>
                 </div>
               </Card>
@@ -324,7 +326,7 @@ const Profile: React.FC = () => {
 
       {/* Change Password Modal */}
       <Modal
-        title="Change Password"
+        title="Đổi mật khẩu"
         open={showPasswordModal}
         onCancel={() => {
           setShowPasswordModal(false);
@@ -332,14 +334,14 @@ const Profile: React.FC = () => {
         }}
         footer={[
           <Button key="cancel" onClick={() => setShowPasswordModal(false)}>
-            Cancel
+            Hủy
           </Button>,
           <Button
             key="submit"
             type="primary"
             onClick={() => passwordForm.submit()}
           >
-            Change Password
+            Đổi mật khẩu
           </Button>,
         ]}
       >
@@ -349,43 +351,43 @@ const Profile: React.FC = () => {
           onFinish={handlePasswordChange}
         >
           <Form.Item
-            label="Current Password"
+            label="Mật khẩu hiện tại"
             name="currentPassword"
             rules={[
-              { required: true, message: "Please enter your current password" },
+              { required: true, message: "Vui lòng nhập mật khẩu hiện tại" },
             ]}
           >
-            <Input.Password placeholder="Enter current password" />
+            <Input.Password placeholder="Nhập mật khẩu hiện tại" />
           </Form.Item>
 
           <Form.Item
-            label="New Password"
+            label="Mật khẩu mới"
             name="newPassword"
             rules={[
-              { required: true, message: "Please enter a new password" },
-              { min: 8, message: "Password must be at least 8 characters" },
+              { required: true, message: "Vui lòng nhập mật khẩu mới" },
+              { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" },
             ]}
           >
-            <Input.Password placeholder="Enter new password" />
+            <Input.Password placeholder="Nhập mật khẩu mới" />
           </Form.Item>
 
           <Form.Item
-            label="Confirm New Password"
+            label="Xác nhận mật khẩu mới"
             name="confirmPassword"
             dependencies={["newPassword"]}
             rules={[
-              { required: true, message: "Please confirm your new password" },
+              { required: true, message: "Vui lòng xác nhận mật khẩu mới" },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue("newPassword") === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error("Passwords do not match!"));
+                  return Promise.reject(new Error("Mật khẩu không khớp!"));
                 },
               }),
             ]}
           >
-            <Input.Password placeholder="Confirm new password" />
+            <Input.Password placeholder="Nhập lại mật khẩu mới" />
           </Form.Item>
         </Form>
       </Modal>

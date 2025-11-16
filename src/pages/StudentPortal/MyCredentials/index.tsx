@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   BookOutlined,
   CalendarOutlined,
@@ -9,7 +11,6 @@ import {
   SearchOutlined,
   TrophyOutlined,
 } from "@ant-design/icons";
-import type { TableColumnsType, TableProps } from "antd";
 import {
   Avatar,
   Badge,
@@ -25,9 +26,8 @@ import {
   Tooltip,
   Typography,
 } from "antd";
+import type { TableColumnsType, TableProps } from "antd";
 import dayjs from "dayjs";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./MyCredentials.scss";
 
 const { Text } = Typography;
@@ -52,7 +52,7 @@ const MyCredentials: React.FC = () => {
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState("");
   const [filteredInfo, setFilteredInfo] = useState<
-    Record<string, string | null>
+    Record<string, (string | number | boolean)[] | null>
   >({});
 
   // Mock data - Comprehensive credentials list
@@ -166,22 +166,23 @@ const MyCredentials: React.FC = () => {
   const getStatusTag = (status: string) => {
     switch (status) {
       case "active":
-        return <Tag color="success">Active</Tag>;
+        return <Tag color="success">Hoạt động</Tag>;
       case "pending":
-        return <Tag color="warning">Pending</Tag>;
+        return <Tag color="warning">Đang chờ</Tag>;
       case "revoked":
-        return <Tag color="error">Revoked</Tag>;
+        return <Tag color="error">Đã thu hồi</Tag>;
       default:
-        return <Tag>Unknown</Tag>;
+        return <Tag>Không xác định</Tag>;
     }
   };
 
   const handleTableChange: TableProps<CredentialData>["onChange"] = (
-    pagination,
-    filters,
-    sorter
+    _pagination,
+    filters
   ) => {
-    setFilteredInfo(filters || {});
+    setFilteredInfo(
+      (filters as Record<string, (string | number | boolean)[] | null>) || {}
+    );
   };
 
   const handleSearch = (value: string) => {
@@ -207,7 +208,7 @@ const MyCredentials: React.FC = () => {
 
   const columns: TableColumnsType<CredentialData> = [
     {
-      title: "Credential",
+      title: "Chứng chỉ",
       dataIndex: "title",
       key: "title",
       render: (text, record) => (
@@ -230,21 +231,21 @@ const MyCredentials: React.FC = () => {
       ),
     },
     {
-      title: "Type",
+      title: "Loại",
       dataIndex: "type",
       key: "type",
       filters: [
-        { text: "Degree", value: "degree" },
-        { text: "Certificate", value: "certificate" },
-        { text: "Transcript", value: "transcript" },
+        { text: "Bằng cấp", value: "degree" },
+        { text: "Chứng chỉ", value: "certificate" },
+        { text: "Bảng điểm", value: "transcript" },
       ],
-      filteredValue: filteredInfo.type || null,
+      filteredValue: (filteredInfo.type as string[]) || null,
       onFilter: (value, record) => record.type === value,
       render: (type) => {
         const config = {
-          degree: { color: "green", text: "Degree" },
-          certificate: { color: "blue", text: "Certificate" },
-          transcript: { color: "purple", text: "Transcript" },
+          degree: { color: "green", text: "Bằng cấp" },
+          certificate: { color: "blue", text: "Chứng chỉ" },
+          transcript: { color: "purple", text: "Bảng điểm" },
         };
         return (
           <Tag color={config[type as keyof typeof config].color}>
@@ -254,31 +255,31 @@ const MyCredentials: React.FC = () => {
       },
     },
     {
-      title: "Issue Date",
+      title: "Ngày cấp",
       dataIndex: "issueDate",
       key: "issueDate",
       render: (date) => (
         <Space>
           <CalendarOutlined style={{ color: "#8c8c8c" }} />
-          {dayjs(date).format("MMM DD, YYYY")}
+          {dayjs(date).format("DD/MM/YYYY")}
         </Space>
       ),
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       filters: [
-        { text: "Active", value: "active" },
-        { text: "Pending", value: "pending" },
-        { text: "Revoked", value: "revoked" },
+        { text: "Hoạt động", value: "active" },
+        { text: "Đang chờ", value: "pending" },
+        { text: "Đã thu hồi", value: "revoked" },
       ],
-      filteredValue: filteredInfo.status || null,
+      filteredValue: (filteredInfo.status as string[]) || null,
       onFilter: (value, record) => record.status === value,
       render: (status) => getStatusTag(status),
     },
     {
-      title: "Verification",
+      title: "Xác thực",
       key: "verification",
       render: (_, record) => (
         <Space direction="vertical" size="small">
@@ -291,14 +292,14 @@ const MyCredentials: React.FC = () => {
               </Tooltip>
             )}
             <Text style={{ marginLeft: 8, fontSize: 12 }}>
-              {record.verificationCount} verifications
+              {record.verificationCount} lần xác thực
             </Text>
           </div>
         </Space>
       ),
     },
     {
-      title: "Actions",
+      title: "Thao tác",
       key: "actions",
       render: (_, record) => (
         <Button
@@ -318,7 +319,7 @@ const MyCredentials: React.FC = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Search
-              placeholder="Search credentials..."
+              placeholder="Tìm kiếm chứng chỉ..."
               allowClear
               enterButton={<SearchOutlined />}
               size="large"
@@ -329,7 +330,7 @@ const MyCredentials: React.FC = () => {
           </Col>
           <Col xs={24} md={6}>
             <Select
-              placeholder="Filter by type"
+              placeholder="Lọc theo loại"
               style={{ width: "100%" }}
               size="large"
               allowClear
@@ -340,14 +341,14 @@ const MyCredentials: React.FC = () => {
                 });
               }}
             >
-              <Option value="degree">Degrees</Option>
-              <Option value="certificate">Certificates</Option>
-              <Option value="transcript">Transcripts</Option>
+              <Option value="degree">Bằng cấp</Option>
+              <Option value="certificate">Chứng chỉ</Option>
+              <Option value="transcript">Bảng điểm</Option>
             </Select>
           </Col>
           <Col xs={24} md={6}>
             <Select
-              placeholder="Filter by status"
+              placeholder="Lọc theo trạng thái"
               style={{ width: "100%" }}
               size="large"
               allowClear
@@ -358,9 +359,9 @@ const MyCredentials: React.FC = () => {
                 });
               }}
             >
-              <Option value="active">Active</Option>
-              <Option value="pending">Pending</Option>
-              <Option value="revoked">Revoked</Option>
+              <Option value="active">Hoạt động</Option>
+              <Option value="pending">Đang chờ</Option>
+              <Option value="revoked">Đã thu hồi</Option>
             </Select>
           </Col>
           <Col xs={24} md={4}>
@@ -370,7 +371,7 @@ const MyCredentials: React.FC = () => {
               onClick={handleReset}
               style={{ width: "100%" }}
             >
-              Reset
+              Đặt lại
             </Button>
           </Col>
         </Row>
@@ -388,7 +389,7 @@ const MyCredentials: React.FC = () => {
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} credentials`,
+              `${range[0]}-${range[1]} trong tổng số ${total} chứng chỉ`,
           }}
           scroll={{ x: 800 }}
           size="middle"

@@ -1,10 +1,10 @@
 import React from "react";
-import { Card, Row, Col, Typography, Space, Avatar, Button } from "antd";
+import { Avatar, Button, Card, Col, Row, Space, Typography } from "antd";
 import {
-  QrcodeOutlined,
-  ShareAltOutlined,
   LinkOutlined,
+  QrcodeOutlined,
   SettingOutlined,
+  ShareAltOutlined,
 } from "@ant-design/icons";
 import "./SharePortal.scss";
 
@@ -16,13 +16,13 @@ const SharePortal: React.FC = () => {
       {/* Page Header */}
       <div className="page-header">
         <Title level={2} style={{ margin: 0, color: "white" }}>
-          Share Portal
+          Cổng chia sẻ
         </Title>
         <Text
           type="secondary"
           style={{ fontSize: 16, color: "rgba(255,255,255,0.8)" }}
         >
-          Generate QR codes and verification links for your credentials
+          Tạo mã QR và liên kết xác thực cho chứng chỉ của bạn
         </Text>
       </div>
 
@@ -47,7 +47,7 @@ const SharePortal: React.FC = () => {
                   level={2}
                   style={{ color: "#1a94fc", margin: "16px 0 8px" }}
                 >
-                  🚧 Coming Soon
+                  🚧 Sắp ra mắt
                 </Title>
                 <Text
                   style={{
@@ -57,8 +57,8 @@ const SharePortal: React.FC = () => {
                     marginBottom: 24,
                   }}
                 >
-                  This page will allow you to generate QR codes and secure
-                  verification links for your credentials.
+                  Trang này sẽ cho phép bạn tạo mã QR và liên kết xác thực an
+                  toàn cho chứng chỉ của bạn.
                 </Text>
               </div>
 
@@ -72,9 +72,9 @@ const SharePortal: React.FC = () => {
                         marginBottom: 16,
                       }}
                     />
-                    <Title level={4}>QR Code Generator</Title>
+                    <Title level={4}>Trình tạo mã QR</Title>
                     <Text type="secondary">
-                      Generate secure QR codes for quick credential sharing
+                      Tạo mã QR an toàn để chia sẻ chứng chỉ nhanh chóng
                     </Text>
                   </Card>
                 </Col>
@@ -87,9 +87,9 @@ const SharePortal: React.FC = () => {
                         marginBottom: 16,
                       }}
                     />
-                    <Title level={4}>Verification Links</Title>
+                    <Title level={4}>Liên kết xác thực</Title>
                     <Text type="secondary">
-                      Create shareable verification links with expiration
+                      Tạo liên kết xác thực có thể chia sẻ với thời hạn hết hạn
                     </Text>
                   </Card>
                 </Col>
@@ -102,9 +102,9 @@ const SharePortal: React.FC = () => {
                         marginBottom: 16,
                       }}
                     />
-                    <Title level={4}>Social Sharing</Title>
+                    <Title level={4}>Chia sẻ xã hội</Title>
                     <Text type="secondary">
-                      Share to LinkedIn, email, and other platforms
+                      Chia sẻ lên LinkedIn, email và các nền tảng khác
                     </Text>
                   </Card>
                 </Col>
@@ -117,7 +117,7 @@ const SharePortal: React.FC = () => {
                 style={{ marginTop: 24 }}
                 disabled
               >
-                Configure Sharing Settings
+                Cấu hình cài đặt chia sẻ
               </Button>
             </Space>
           </Col>
