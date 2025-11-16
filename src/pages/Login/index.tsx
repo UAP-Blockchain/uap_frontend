@@ -77,7 +77,7 @@ const Login: React.FC = () => {
         })
       );
 
-      toast.success("Login successful!");
+      toast.success("Đăng nhập thành công!");
       setIsNavigating(true);
 
       // Small delay to ensure Redux state is updated before redirect
@@ -98,14 +98,19 @@ const Login: React.FC = () => {
           setIsNavigating(false);
         }, 300);
       }, 100);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login error:", error);
 
       // Extract error message from API response
       const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Login failed! Please check your credentials.";
+        (
+          error as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (error as { message?: string })?.message ||
+        "Đăng nhập thất bại! Vui lòng kiểm tra thông tin đăng nhập.";
 
       toast.error(errorMessage);
       setIsLoading(false);
@@ -118,10 +123,10 @@ const Login: React.FC = () => {
       <div className="login-left">
         <div className="login-form">
           <Title level={1} className="login-title">
-            Get Started Now
+            Bắt đầu ngay
           </Title>
           <Text className="login-subtitle">
-            Enter your credentials to access your account
+            Nhập thông tin đăng nhập để truy cập tài khoản
           </Text>
 
           <Form
@@ -138,27 +143,25 @@ const Login: React.FC = () => {
               label="Email"
               name="email"
               rules={[
-                { required: true, message: "Please input your email!" },
-                { type: "email", message: "Please enter a valid email!" },
+                { required: true, message: "Vui lòng nhập email!" },
+                { type: "email", message: "Vui lòng nhập email hợp lệ!" },
               ]}
             >
               <Input
                 prefix={<MailOutlined className="site-form-item-icon" />}
-                placeholder="Enter your email"
+                placeholder="Nhập email của bạn"
                 disabled={isLoading || isNavigating}
               />
             </Form.Item>
 
             <Form.Item
-              label="Password"
+              label="Mật khẩu"
               name="password"
-              rules={[
-                { required: true, message: "Please input your password!" },
-              ]}
+              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
             >
               <Input.Password
                 prefix={<LockOutlined className="site-form-item-icon" />}
-                placeholder="Enter your password"
+                placeholder="Nhập mật khẩu của bạn"
                 disabled={isLoading || isNavigating}
               />
             </Form.Item>
@@ -166,11 +169,11 @@ const Login: React.FC = () => {
             <div className="login-links">
               <Form.Item name="remember" valuePropName="checked" noStyle>
                 <Checkbox className="login-checkbox">
-                  I agree to the Terms & Privacy
+                  Tôi đồng ý với Điều khoản & Quyền riêng tư
                 </Checkbox>
               </Form.Item>
               <Link to="/forgot-password" className="forgot-password-link">
-                Forgot Password?
+                Quên mật khẩu?
               </Link>
             </div>
 
@@ -183,10 +186,10 @@ const Login: React.FC = () => {
                 block
               >
                 {isLoading
-                  ? "Logging in..."
+                  ? "Đang đăng nhập..."
                   : isNavigating
-                  ? "Redirecting..."
-                  : "Login"}
+                  ? "Đang chuyển hướng..."
+                  : "Đăng nhập"}
               </Button>
             </Form.Item>
           </Form>
