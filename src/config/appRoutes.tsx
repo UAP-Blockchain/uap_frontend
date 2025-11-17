@@ -89,7 +89,7 @@ export const adminRoutes: RouteConfig = {
     {
       path: "/admin",
       element: <Dashboard />,
-      menuLabel: "Dashboard",
+      menuLabel: "Bảng điều khiển",
       menuIcon: <DashboardOutlined />,
       showInMenu: true,
       menuIndex: 0,
@@ -164,7 +164,7 @@ export const adminRoutes: RouteConfig = {
     {
       path: "/admin/blockchain",
       element: <ReportsManagement />,
-      menuLabel: "Blockchain Monitor",
+      menuLabel: "Giám sát Blockchain",
       menuIcon: <BellOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
@@ -210,7 +210,7 @@ export const adminRoutes: RouteConfig = {
     {
       path: "/admin/users/bulk-register",
       element: <BulkRegister />,
-      menuLabel: "Bulk Register",
+      menuLabel: "Đăng ký hàng loạt",
       menuIcon: <TeamOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN],
@@ -232,7 +232,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "",
       element: <Dashboard />,
-      menuLabel: "Student Dashboard",
+      menuLabel: "Bảng điều khiển",
       menuIcon: <HomeOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
@@ -247,7 +247,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "credentials",
       element: <MyCredentials />,
-      menuLabel: "My Credentials",
+      menuLabel: "Chứng chỉ của tôi",
       menuIcon: <IdcardOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
@@ -262,7 +262,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "timetable",
       element: <WeeklyTimetable />,
-      menuLabel: "Weekly Timetable",
+      menuLabel: "Thời khóa biểu",
       menuIcon: <CalendarOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
@@ -272,7 +272,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "course-registration",
       element: <CourseRegistration />,
-      menuLabel: "Course Registration",
+      menuLabel: "Đăng ký môn học",
       menuIcon: <BookOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT],
@@ -282,7 +282,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "attendance-report",
       element: <AttendanceReport />,
-      menuLabel: "Attendance Report",
+      menuLabel: "Báo cáo điểm danh",
       menuIcon: <CheckCircleOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
@@ -292,7 +292,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "grade-report",
       element: <GradeReport />,
-      menuLabel: "Grade Report",
+      menuLabel: "Báo cáo điểm",
       menuIcon: <RiseOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
@@ -302,7 +302,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "share",
       element: <SharePortal />,
-      menuLabel: "Share Portal",
+      menuLabel: "Cổng chia sẻ",
       menuIcon: <ShareAltOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
@@ -312,7 +312,7 @@ export const studentPortalRoutes: RouteConfig = {
     {
       path: "profile",
       element: <Profile />,
-      menuLabel: "Student Profile",
+      menuLabel: "Hồ sơ",
       menuIcon: <UserOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
@@ -349,7 +349,7 @@ export const teacherRoutes: RouteConfig = {
     {
       path: "/teacher",
       element: <TeacherDashboard />,
-      menuLabel: "Dashboard",
+      menuLabel: "Bảng điều khiển",
       menuIcon: <DashboardOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.TEACHER],

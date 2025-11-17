@@ -38,36 +38,36 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 
     const paths = pathname?.split("/").filter(Boolean) || [];
 
-    // Route name mapping
+    // Route name mapping (Vietnamese)
     const routeNameMap: Record<string, string> = {
-      "student-portal": "Student Portal",
-      dashboard: "Dashboard",
-      credentials: "Credentials",
-      timetable: "Timetable",
-      "attendance-report": "Attendance Report",
-      "grade-report": "Grade Report",
-      profile: "Profile",
-      share: "Share Portal",
-      "course-registration": "Course Registration",
-      "class-list": "Class List",
-      activity: "Activity Detail",
-      instructor: "Instructor Detail",
-      "credential-detail": "Credential Detail",
-      "my-credentials": "My Credentials",
+      "student-portal": "Cổng sinh viên",
+      dashboard: "Bảng điều khiển",
+      credentials: "Chứng chỉ",
+      timetable: "Thời khóa biểu",
+      "attendance-report": "Báo cáo điểm danh",
+      "grade-report": "Báo cáo điểm",
+      profile: "Hồ sơ",
+      share: "Cổng chia sẻ",
+      "course-registration": "Đăng ký môn học",
+      "class-list": "Danh sách lớp",
+      activity: "Chi tiết hoạt động",
+      instructor: "Chi tiết giảng viên",
+      "credential-detail": "Chi tiết chứng chỉ",
+      "my-credentials": "Chứng chỉ của tôi",
     };
 
-    // For student-portal routes, create breadcrumb with "Student Portal" as first item
+    // For student-portal routes, create breadcrumb with "Cổng sinh viên" as first item
     if (paths[0] === "student-portal") {
       const breadcrumbs: Array<{ title: React.ReactNode }> = [
         {
-          title: <Link to="/student-portal">Student Portal</Link>,
+          title: <Link to="/student-portal">Cổng sinh viên</Link>,
         },
       ];
 
-      // If only student-portal, add Dashboard
+      // If only student-portal, add Bảng điều khiển
       if (paths.length === 1) {
         breadcrumbs.push({
-          title: "Dashboard",
+          title: "Bảng điều khiển",
         });
       } else {
         // Add sub-routes

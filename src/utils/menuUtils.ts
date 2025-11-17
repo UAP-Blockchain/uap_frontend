@@ -90,7 +90,7 @@ export function getToolsNavItems(adminRoutes: RouteConfig): MenuItem[] {
  */
 export const SECTION_TITLES = {
   MAIN: "Quản lý Chính",
-  STUDENT: "Student Portal",
+  STUDENT: "Cổng sinh viên",
   TOOLS: "Blockchain & Báo cáo",
 } as const;
 

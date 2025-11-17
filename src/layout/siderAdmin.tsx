@@ -1,4 +1,4 @@
-import { Layout, Menu, Button } from "antd";
+import { Layout, Menu } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -16,15 +16,6 @@ import {
   type MenuItem,
 } from "../utils/menuUtils";
 import type { RootState } from "../redux/store";
-import {
-  FaGift,
-  FaFileAlt,
-  FaEllipsisV,
-  FaTwitter,
-  FaInstagram,
-  FaDiscord,
-} from "react-icons/fa";
-import { SiTiktok } from "react-icons/si";
 import "./index.scss";
 
 const { Sider } = Layout;
@@ -231,50 +222,6 @@ const SiderComponent: React.FC<SiderProps> = ({ collapsed }) => {
             </>
           )}
         </div>
-
-        {/* Footer Section - Credits & Additional Links - Always visible at bottom */}
-        {!collapsed && (
-          <div className="sidebar-footer-content">
-            {/* Credits Display */}
-            <div className="credits-display">50 Credits</div>
-
-            {/* Go Pro Card */}
-            <div className="go-pro-card">
-              <div className="go-pro-title">Go Pro</div>
-              <div className="go-pro-description">
-                Unlock new features, more credits, better access, and more!
-              </div>
-              <Button className="upgrade-btn" type="default">
-                Upgrade
-              </Button>
-            </div>
-
-            {/* Additional Links */}
-            <div className="footer-links-section">
-              <div className="footer-link-item">
-                <FaGift className="footer-link-icon" />
-                <span>Earn Credits</span>
-              </div>
-              <div className="footer-link-item">
-                <FaFileAlt className="footer-link-icon" />
-                <span>What's new?</span>
-                <span className="new-badge">20</span>
-              </div>
-              <div className="footer-link-item">
-                <FaEllipsisV className="footer-link-icon" />
-                <span>More from FAP</span>
-              </div>
-            </div>
-
-            {/* Social Media Icons */}
-            <div className="social-media-icons">
-              <FaTwitter className="social-icon" />
-              <FaInstagram className="social-icon" />
-              <SiTiktok className="social-icon" />
-              <FaDiscord className="social-icon" />
-            </div>
-          </div>
-        )}
       </div>
     </Sider>
   );
