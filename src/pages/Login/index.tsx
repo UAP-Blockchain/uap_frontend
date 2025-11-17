@@ -9,7 +9,7 @@ import AuthServices from "../../services/auth/api.service";
 import { setAuthData } from "../../redux/features/authSlice";
 import { clearAllCookies, setCookie } from "../../utils/cookie";
 import { mapBackendRoleToCode, ROLE_CODES } from "../../constants/roles";
-import type { LoginRequest } from "../../Types/Auth";
+import type { LoginRequest } from "../../types/Auth";
 
 interface LoginForm {
   email: string;

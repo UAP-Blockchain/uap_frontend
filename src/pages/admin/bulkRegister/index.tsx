@@ -1,41 +1,36 @@
-import React, { useState, useEffect } from "react";
 import {
-  Card,
-  Tabs,
-  Form,
-  Input,
-  Button,
-  Table,
-  Typography,
-  Space,
-  message,
-  Upload,
-  Select,
-  DatePicker,
-  Divider,
-  Tag,
-  Alert,
-  Result,
-} from "antd";
-import {
-  UploadOutlined,
-  UserAddOutlined,
   DeleteOutlined,
   SaveOutlined,
-  DownloadOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
+import {
+  Alert,
+  Button,
+  Card,
+  Divider,
+  Form,
+  Input,
+  message,
+  Result,
+  Select,
+  Table,
+  Tabs,
+  Tag,
+  Typography,
+} from "antd";
+import dayjs from "dayjs";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import dayjs from "dayjs";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../redux/store";
 import { useRoleAccess } from "../../../hooks/useRoleAccess";
+import type { RootState } from "../../../redux/store";
 import AuthServices from "../../../services/auth/api.service";
 import type {
-  RegisterUserRequest,
   BulkRegisterResponse,
+  RegisterUserRequest,
   RegisterUserResponse,
-} from "../../../Types/Auth";
+} from "../../../types/Auth";
 import "./index.scss";
 
 const { Title, Text } = Typography;
@@ -56,9 +51,7 @@ const BulkRegister: React.FC = () => {
   const isAuthenticated = useSelector(
     (state: RootState) => state.auth.isAuthenticated
   );
-  const accessToken = useSelector(
-    (state: RootState) => state.auth.accessToken
-  );
+  const accessToken = useSelector((state: RootState) => state.auth.accessToken);
 
   // Check authentication and admin role on mount
   useEffect(() => {

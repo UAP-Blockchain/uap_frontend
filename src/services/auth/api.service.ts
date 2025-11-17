@@ -1,21 +1,20 @@
 import api from "../../config/axios";
 import type {
-  LoginRequest,
-  LoginResponse,
-  RefreshTokenRequest,
-  RefreshTokenResponse,
-  ChangePasswordRequest,
-  ChangePasswordResponse,
-  SendOtpRequest,
-  ResetPasswordWithOtpRequest,
-  ChangePasswordWithOtpRequest,
-  OtpResponse,
-  LogoutResponse,
-  RegisterUserRequest,
-  RegisterUserResponse,
   BulkRegisterRequest,
   BulkRegisterResponse,
-} from "../../Types/Auth";
+  ChangePasswordResponse,
+  ChangePasswordWithOtpRequest,
+  LoginRequest,
+  LoginResponse,
+  LogoutResponse,
+  OtpResponse,
+  RefreshTokenRequest,
+  RefreshTokenResponse,
+  RegisterUserRequest,
+  RegisterUserResponse,
+  ResetPasswordWithOtpRequest,
+  SendOtpRequest
+} from "../../types/Auth";
 
 class AuthServices {
   /**

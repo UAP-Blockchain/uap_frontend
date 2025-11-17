@@ -3,7 +3,7 @@ import { io, Socket } from "socket.io-client";
 
 const useSocket = (): Socket => {
   const socket = useMemo(() => {
-    const s = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:8080", {
+    const s = io(import.meta.env.VITE_SOCKET_URL, {
       transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -12,7 +12,7 @@ const useSocket = (): Socket => {
     });
     console.log(
       "Connecting to:",
-      import.meta.env.VITE_SOCKET_URL || "http://localhost:8080"
+      import.meta.env.VITE_SOCKET_URL
     );
 
     s.on("connect", () => {

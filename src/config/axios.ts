@@ -1,13 +1,12 @@
 import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
-import type { RefreshTokenResponse } from "../Types/Auth";
+import type { RefreshTokenResponse } from "../types/Auth";
 import { logout } from "../redux/features/authSlice";
 import { store } from "../redux/store";
 
 const api = axios.create({
   baseURL:
-    import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:8080/api",
+  import.meta.env.VITE_API_BASE_URL,
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
