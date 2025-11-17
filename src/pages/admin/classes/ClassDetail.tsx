@@ -1,6 +1,16 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { Card, Table, Button, Tag, Descriptions, Spin, Typography } from "antd";
+import {
+  Card,
+  Table,
+  Button,
+  Tag,
+  Descriptions,
+  Spin,
+  Typography,
+  Modal,
+  Space,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ArrowLeftOutlined,
@@ -15,6 +25,12 @@ import {
   getClassRosterApi,
   type StudentRoster,
 } from "../../../services/admin/classes/api";
+import {
+  approveEnrollmentApi,
+  fetchEnrollmentsByClassApi,
+  rejectEnrollmentApi,
+  type EnrollmentRequest,
+} from "../../../services/admin/enrollments/api";
 import type { ClassSummary } from "../../../types/Class";
 import "./ClassDetail.scss";
 
@@ -28,6 +44,15 @@ const ClassDetail: React.FC = () => {
   const [classInfo, setClassInfo] = useState<ClassSummary | null>(null);
   const [students, setStudents] = useState<StudentRoster[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [enrollments, setEnrollments] = useState<EnrollmentRequest[]>([]);
+  const [enrollmentsLoading, setEnrollmentsLoading] = useState<boolean>(false);
+  const [isEnrollmentsModalOpen, setIsEnrollmentsModalOpen] =
+    useState<boolean>(false);
+  const [rejectModal, setRejectModal] = useState<{
+    visible: boolean;
+    id: string | null;
+  }>({ visible: false, id: null });
+  const [rejectReason, setRejectReason] = useState<string>("");
 
   const loadClassDetail = useCallback(
     async (id: string) => {
@@ -49,6 +74,18 @@ const ClassDetail: React.FC = () => {
     [navigate]
   );
 
+  const loadEnrollments = useCallback(async (id: string) => {
+    setEnrollmentsLoading(true);
+    try {
+      const data = await fetchEnrollmentsByClassApi(id);
+      setEnrollments(data);
+    } catch {
+      toast.error("Không thể tải danh sách đơn đăng ký");
+    } finally {
+      setEnrollmentsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!classId) {
       toast.error("Không tìm thấy thông tin lớp học");
@@ -58,6 +95,52 @@ const ClassDetail: React.FC = () => {
 
     loadClassDetail(classId);
   }, [classId, loadClassDetail, navigate]);
+
+  const handleOpenEnrollmentsModal = () => {
+    if (!classId) {
+      toast.error("Không tìm thấy thông tin lớp học");
+      return;
+    }
+    // Gọi API mỗi lần mở modal để bạn thấy request trong Network
+    loadEnrollments(classId);
+    setIsEnrollmentsModalOpen(true);
+  };
+
+  const handleApprove = async (record: EnrollmentRequest) => {
+    try {
+      await approveEnrollmentApi(record.id);
+      toast.success("Duyệt đơn đăng ký thành công");
+      if (classId) {
+        await loadEnrollments(classId);
+        await loadClassDetail(classId);
+      }
+    } catch {
+      toast.error("Không thể duyệt đơn đăng ký");
+    }
+  };
+
+  const handleReject = (record: EnrollmentRequest) => {
+    setRejectModal({ visible: true, id: record.id });
+    setRejectReason("");
+  };
+
+  const handleConfirmReject = async () => {
+    if (!rejectModal.id || !rejectReason.trim()) {
+      toast.error("Vui lòng nhập lý do từ chối");
+      return;
+    }
+    try {
+      await rejectEnrollmentApi(rejectModal.id, rejectReason.trim());
+      toast.success("Từ chối đơn đăng ký thành công");
+      setRejectModal({ visible: false, id: null });
+      setRejectReason("");
+      if (classId) {
+        await loadEnrollments(classId);
+      }
+    } catch {
+      toast.error("Không thể từ chối đơn đăng ký");
+    }
+  };
 
   const columns: ColumnsType<StudentRoster> = [
     {
@@ -96,6 +179,60 @@ const ClassDetail: React.FC = () => {
     },
   ];
 
+  const enrollmentColumns: ColumnsType<EnrollmentRequest> = [
+    {
+      title: "Mã sinh viên",
+      dataIndex: "studentCode",
+      key: "studentCode",
+      width: 130,
+    },
+    {
+      title: "Họ và tên",
+      dataIndex: "studentName",
+      key: "studentName",
+      width: 200,
+    },
+    {
+      title: "Email",
+      dataIndex: "studentEmail",
+      key: "studentEmail",
+      width: 220,
+    },
+    {
+      title: "Thời gian đăng ký",
+      dataIndex: "registeredAt",
+      key: "registeredAt",
+      width: 180,
+      render: (date?: string) =>
+        date ? new Date(date).toLocaleString("vi-VN") : "-",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: 120,
+    },
+    {
+      title: "Thao tác",
+      key: "actions",
+      width: 160,
+      render: (_, record) => (
+        <Space size="small">
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => handleApprove(record)}
+          >
+            Duyệt
+          </Button>
+          <Button danger size="small" onClick={() => handleReject(record)}>
+            Từ chối
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+
   if (loading) {
     return (
       <div className="class-detail-loading">
@@ -111,16 +248,21 @@ const ClassDetail: React.FC = () => {
   return (
     <div className="class-detail">
       <div className="class-detail-header">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate("/admin/classes")}
-          className="back-button"
-        >
-          Quay lại
+        <div className="header-left">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/admin/classes")}
+            className="back-button"
+          >
+            Quay lại
+          </Button>
+          <Title level={2} className="page-title">
+            {classCode ? `Chi tiết lớp ${classCode}` : "Chi tiết lớp học"}
+          </Title>
+        </div>
+        <Button type="primary" onClick={handleOpenEnrollmentsModal}>
+          Danh sách đơn
         </Button>
-        <Title level={2} className="page-title">
-          {classCode ? `Chi tiết lớp ${classCode}` : "Chi tiết lớp học"}
-        </Title>
       </div>
 
       <Card className="class-info-card">
@@ -210,6 +352,42 @@ const ClassDetail: React.FC = () => {
           size="small"
         />
       </Card>
+
+      <Modal
+        title="Danh sách đơn đăng ký chờ duyệt"
+        open={isEnrollmentsModalOpen}
+        onCancel={() => setIsEnrollmentsModalOpen(false)}
+        footer={null}
+        width={900}
+      >
+        <Table
+          columns={enrollmentColumns}
+          dataSource={enrollments}
+          rowKey="id"
+          loading={enrollmentsLoading}
+          pagination={{
+            pageSize: 10,
+            size: "small",
+          }}
+          size="small"
+        />
+      </Modal>
+
+      <Modal
+        title="Lý do từ chối"
+        open={rejectModal.visible}
+        onOk={handleConfirmReject}
+        onCancel={() => setRejectModal({ visible: false, id: null })}
+        okText="Xác nhận từ chối"
+        cancelText="Hủy"
+      >
+        <textarea
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          placeholder="Nhập lý do từ chối..."
+          style={{ width: "100%", minHeight: 80 }}
+        />
+      </Modal>
     </div>
   );
 };

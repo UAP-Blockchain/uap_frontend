@@ -1,7 +1,6 @@
 import axios, { AxiosError } from "axios";
 import type { InternalAxiosRequestConfig } from "axios";
 
-=======
 import type { RefreshTokenResponse } from "../types/Auth";
 
 import { logout } from "../redux/features/authSlice";

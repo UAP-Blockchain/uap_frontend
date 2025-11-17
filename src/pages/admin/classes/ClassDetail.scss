@@ -1,9 +1,9 @@
 @use "../../../styles/theme-variables" as *;
 
 .class-detail {
-  padding: 20px;
-  background: #f4f6fb;
-  min-height: calc(100vh - 64px);
+  // padding: 20px;
+  // background: #f4f6fb;
+  // min-height: calc(100vh - 64px);
 
   .class-detail-loading {
     display: flex;
@@ -14,9 +14,15 @@
 
   .class-detail-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 16px;
     margin-bottom: 20px;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
 
     .back-button {
       border-radius: 8px;
