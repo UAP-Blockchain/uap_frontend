@@ -135,7 +135,7 @@ export const adminRoutes: RouteConfig = {
       menuSection: "main",
     },
     {
-      path: "/admin/classes/:id",
+      path: "/admin/classes/:classCode",
       element: <ClassDetail />,
       showInMenu: false,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],

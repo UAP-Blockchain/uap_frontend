@@ -1,15 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Card,
-  Table,
-  Button,
-  Space,
-  Tag,
-  Descriptions,
-  Spin,
-  Typography,
-} from "antd";
+import React, { useCallback, useEffect, useState } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { Card, Table, Button, Tag, Descriptions, Spin, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
   ArrowLeftOutlined,
@@ -30,36 +21,43 @@ import "./ClassDetail.scss";
 const { Title } = Typography;
 
 const ClassDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { classCode } = useParams<{ classCode: string }>();
+  const [searchParams] = useSearchParams();
+  const classId = searchParams.get("id");
   const navigate = useNavigate();
   const [classInfo, setClassInfo] = useState<ClassSummary | null>(null);
   const [students, setStudents] = useState<StudentRoster[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (id) {
-      loadClassDetail();
-    }
-  }, [id]);
+  const loadClassDetail = useCallback(
+    async (id: string) => {
+      setLoading(true);
+      try {
+        const [classData, rosterData] = await Promise.all([
+          getClassByIdApi(id),
+          getClassRosterApi(id),
+        ]);
+        setClassInfo(classData);
+        setStudents(rosterData);
+      } catch {
+        toast.error("Không thể tải thông tin lớp học");
+        navigate("/admin/classes");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [navigate]
+  );
 
-  const loadClassDetail = async () => {
-    if (!id) return;
-    
-    setLoading(true);
-    try {
-      const [classData, rosterData] = await Promise.all([
-        getClassByIdApi(id),
-        getClassRosterApi(id),
-      ]);
-      setClassInfo(classData);
-      setStudents(rosterData);
-    } catch (error) {
-      toast.error("Không thể tải thông tin lớp học");
+  useEffect(() => {
+    if (!classId) {
+      toast.error("Không tìm thấy thông tin lớp học");
       navigate("/admin/classes");
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
+
+    loadClassDetail(classId);
+  }, [classId, loadClassDetail, navigate]);
 
   const columns: ColumnsType<StudentRoster> = [
     {
@@ -79,18 +77,14 @@ const ClassDetail: React.FC = () => {
       dataIndex: "fullName",
       key: "fullName",
       width: 250,
-      render: (name: string) => (
-        <span className="student-name">{name}</span>
-      ),
+      render: (name: string) => <span className="student-name">{name}</span>,
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
       width: 250,
-      render: (email: string) => (
-        <span className="student-email">{email}</span>
-      ),
+      render: (email: string) => <span className="student-email">{email}</span>,
     },
     {
       title: "Ngày đăng ký",
@@ -125,7 +119,7 @@ const ClassDetail: React.FC = () => {
           Quay lại
         </Button>
         <Title level={2} className="page-title">
-          Chi tiết lớp học
+          {classCode ? `Chi tiết lớp ${classCode}` : "Chi tiết lớp học"}
         </Title>
       </div>
 
@@ -221,4 +215,3 @@ const ClassDetail: React.FC = () => {
 };
 
 export default ClassDetail;
-

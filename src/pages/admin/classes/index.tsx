@@ -150,6 +150,10 @@ const ClassesManagement: React.FC = () => {
     });
   }, [classes, searchText, semesterFilter]);
 
+  const handleNavigateDetail = (classItem: ClassSummary) => {
+    navigate(`/admin/classes/${classItem.classCode}?id=${classItem.id}`);
+  };
+
   const columns: ColumnsType<ClassSummary> = [
     {
       title: "Lớp học",
@@ -158,7 +162,7 @@ const ClassesManagement: React.FC = () => {
       render: (_, record) => (
         <div
           className="class-info clickable"
-          onClick={() => navigate(`/admin/classes/${record.id}`)}
+          onClick={() => handleNavigateDetail(record)}
           style={{ cursor: "pointer" }}
         >
           <div className="class-info__code">{record.classCode}</div>
