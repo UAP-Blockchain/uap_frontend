@@ -71,19 +71,44 @@ export const deleteClassApi = async (id: string): Promise<void> => {
 
 export interface StudentRoster {
   id: string;
+  studentId: string;
   studentCode: string;
   fullName: string;
   email: string;
   enrollmentDate?: string;
+  gpa?: number;
+}
+
+interface ClassRosterResponse {
+  data?: StudentRoster[];
+  items?: StudentRoster[];
+  students?: Array<{
+    studentId: string;
+    studentCode: string;
+    fullName: string;
+    email: string;
+    joinedAt?: string;
+    gpa?: number;
+  }>;
 }
 
 export const getClassRosterApi = async (
   id: string
 ): Promise<StudentRoster[]> => {
-  const response = await api.get<{
-    data?: StudentRoster[];
-    items?: StudentRoster[];
-  }>(`/Classes/${id}/roster`);
+  const response = await api.get<ClassRosterResponse>(`/Classes/${id}/roster`);
+
+  if (Array.isArray(response.data?.students)) {
+    return response.data.students.map((student) => ({
+      id: student.studentId,
+      studentId: student.studentId,
+      studentCode: student.studentCode,
+      fullName: student.fullName,
+      email: student.email,
+      enrollmentDate: student.joinedAt,
+      gpa: student.gpa,
+    }));
+  }
+
   return normalizeItems<StudentRoster>(response.data);
 };
 

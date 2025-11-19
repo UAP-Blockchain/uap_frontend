@@ -55,8 +55,11 @@ const ClassDetail: React.FC = () => {
   const [rejectReason, setRejectReason] = useState<string>("");
 
   const loadClassDetail = useCallback(
-    async (id: string) => {
-      setLoading(true);
+    async (id: string, options?: { showLoading?: boolean }) => {
+      const shouldShowLoading = options?.showLoading ?? true;
+      if (shouldShowLoading) {
+        setLoading(true);
+      }
       try {
         const [classData, rosterData] = await Promise.all([
           getClassByIdApi(id),
@@ -68,7 +71,9 @@ const ClassDetail: React.FC = () => {
         toast.error("Không thể tải thông tin lớp học");
         navigate("/admin/classes");
       } finally {
-        setLoading(false);
+        if (shouldShowLoading) {
+          setLoading(false);
+        }
       }
     },
     [navigate]
@@ -113,9 +118,38 @@ const ClassDetail: React.FC = () => {
     try {
       await approveEnrollmentApi(record.id);
       toast.success("Duyệt đơn đăng ký thành công");
+
+      setEnrollments((prev) => prev.filter((item) => item.id !== record.id));
+      setStudents((prev) => {
+        const exists = prev.some((student) => student.id === record.studentId);
+        if (exists) {
+          return prev;
+        }
+        return [
+          ...prev,
+          {
+            id: record.studentId,
+            studentId: record.studentId,
+            studentCode: record.studentCode,
+            fullName: record.studentName,
+            email: record.studentEmail,
+            enrollmentDate: record.registeredAt,
+          },
+        ];
+      });
+      setClassInfo((prev) =>
+        prev
+          ? {
+              ...prev,
+              totalStudents: prev.totalStudents + 1,
+              totalSlots: Math.max(prev.totalSlots - 1, 0),
+            }
+          : prev
+      );
+
       if (classId) {
         await loadEnrollments(classId);
-        await loadClassDetail(classId);
+        await loadClassDetail(classId, { showLoading: false });
       }
     } catch {
       toast.error("Không thể duyệt đơn đăng ký");
