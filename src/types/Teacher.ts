@@ -42,4 +42,4 @@ export interface TeacherOption {
   fullName: string;
 }
 
-export type { Teacher, TeacherFormData, TeacherOption };
+export type { Teacher, TeacherFormData };

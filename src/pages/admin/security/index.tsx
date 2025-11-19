@@ -519,7 +519,6 @@ const SecurityManagement: React.FC = () => {
           <div>
             <div className="user-name">{record.userName}</div>
             <Tag
-              size="small"
               color={
                 record.userRole === "admin"
                   ? "red"
@@ -762,7 +761,7 @@ const SecurityManagement: React.FC = () => {
             <Statistic
               title="Đã bật MFA"
               value={stats.mfaEnabled}
-              prefix={<ShieldOutlined />}
+              prefix={<SafetyOutlined />}
               valueStyle={{ color: "#1890ff" }}
             />
           </Card>

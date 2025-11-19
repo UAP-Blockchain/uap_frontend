@@ -32,17 +32,13 @@ import {
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
-import type {
-  Role,
-  RoleFormData,
-  DEFAULT_PERMISSIONS,
-  Permission,
-} from "../../../types/Role";
+import type { Role, RoleFormData, Permission } from "../../../types/Role";
+import { DEFAULT_PERMISSIONS } from "../../../types/Role";
 import "./index.scss";
 
 const { Search } = Input;
 const { Option } = Select;
-const { CheckboxGroup } = Checkbox;
+const { Group: CheckboxGroup } = Checkbox;
 
 const RolesManagement: React.FC = () => {
   const [roles, setRoles] = useState<Role[]>([
@@ -539,7 +535,6 @@ const RolesManagement: React.FC = () => {
                             <Tag
                               color={getPermissionColor(permission.action)}
                               icon={getPermissionIcon(permission.action)}
-                              size="small"
                             >
                               {permission.name}
                             </Tag>

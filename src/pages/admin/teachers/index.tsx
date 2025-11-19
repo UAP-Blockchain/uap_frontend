@@ -309,7 +309,7 @@ const TeachersManagement: React.FC = () => {
           />
           <div className="teacher-details">
             <div className="teacher-name">
-              <Tag color={getTitleColor(record.title)} size="small">
+              <Tag color={getTitleColor(record.title)}>
                 {record.title}
               </Tag>
               {record.fullName}
@@ -356,12 +356,12 @@ const TeachersManagement: React.FC = () => {
       render: (specialization: string[]) => (
         <div className="specialization-tags">
           {specialization.slice(0, 2).map((spec, index) => (
-            <Tag key={index} color="geekblue" size="small">
+            <Tag key={index} color="geekblue">
               {spec}
             </Tag>
           ))}
           {specialization.length > 2 && (
-            <Tag color="default" size="small">
+            <Tag color="default">
               +{specialization.length - 2}
             </Tag>
           )}

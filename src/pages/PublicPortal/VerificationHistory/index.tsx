@@ -17,6 +17,7 @@ import {
   Tooltip,
   Modal,
 } from "antd";
+import type { RangePickerProps } from "antd/es/date-picker";
 import {
  
   EyeOutlined,
@@ -60,9 +61,7 @@ const VerificationHistory: React.FC = () => {
   const [filterResult, setFilterResult] = useState<string | undefined>(
     undefined
   );
-  const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs] | null>(
-    null
-  );
+  const [dateRange, setDateRange] = useState<RangePickerProps["value"]>(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
 
   // Mock history data
@@ -321,6 +320,10 @@ const VerificationHistory: React.FC = () => {
     },
   ];
 
+  const handleDateRangeChange: RangePickerProps["onChange"] = (values) => {
+    setDateRange(values);
+  };
+
   const filteredData = historyData.filter((item) => {
     const matchesSearch =
       item.credentialTitle.toLowerCase().includes(searchText.toLowerCase()) ||
@@ -332,10 +335,12 @@ const VerificationHistory: React.FC = () => {
       !filterMethod || item.verificationMethod === filterMethod;
     const matchesResult = !filterResult || item.result === filterResult;
 
+    const hasDateRange =
+      Array.isArray(dateRange) && dateRange[0] && dateRange[1];
     const matchesDate =
-      !dateRange ||
-      (dayjs(item.timestamp).isAfter(dateRange[0]) &&
-        dayjs(item.timestamp).isBefore(dateRange[1]));
+      !hasDateRange ||
+      (dayjs(item.timestamp).isAfter(dateRange[0]!) &&
+        dayjs(item.timestamp).isBefore(dateRange[1]!));
 
     return matchesSearch && matchesMethod && matchesResult && matchesDate;
   });
@@ -446,7 +451,7 @@ const VerificationHistory: React.FC = () => {
           <Col xs={24} md={6}>
             <RangePicker
               value={dateRange}
-              onChange={setDateRange}
+              onChange={handleDateRangeChange}
               style={{ width: "100%" }}
               placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
             />

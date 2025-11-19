@@ -426,7 +426,7 @@ const CredentialsManagement: React.FC = () => {
             <div className="credential-details">
               <div className="credential-title">{record.title}</div>
               <div className="credential-description">{record.description}</div>
-              <Tag color={getTypeColor(record.credentialType)} size="small">
+              <Tag color={getTypeColor(record.credentialType)}>
                 {getTypeText(record.credentialType)}
               </Tag>
             </div>
