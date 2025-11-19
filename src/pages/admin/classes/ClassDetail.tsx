@@ -356,7 +356,7 @@ const ClassDetail: React.FC = () => {
               </span>
             }
           >
-            {classInfo.totalStudents} sinh viên
+            {classInfo.currentEnrollment} sinh viên
           </Descriptions.Item>
           <Descriptions.Item label="Đăng ký">
             {classInfo.totalEnrollments} lượt

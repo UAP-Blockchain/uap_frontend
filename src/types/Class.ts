@@ -67,6 +67,7 @@ export interface ClassSummary {
   totalStudents: number;
   totalEnrollments: number;
   totalSlots: number;
+  currentEnrollment: number;
 }
 
 export interface ClassesApiResponse {
