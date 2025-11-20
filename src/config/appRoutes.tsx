@@ -7,21 +7,22 @@ import {
   BellOutlined,
   BookOutlined,
   CalendarOutlined,
+  CheckCircleOutlined,
   CheckSquareOutlined,
   DashboardOutlined,
   EditOutlined,
   FileTextOutlined,
+  FlagOutlined,
   HomeOutlined,
   IdcardOutlined,
   LineChartOutlined,
+  RiseOutlined,
   ScheduleOutlined,
   SettingOutlined,
   ShareAltOutlined,
   TeamOutlined,
   TrophyOutlined,
   UserOutlined,
-  CheckCircleOutlined,
-  RiseOutlined,
 } from "@ant-design/icons";
 import { Outlet } from "react-router-dom";
 import type { Permission, RoleCode } from "../constants/roles";
@@ -52,6 +53,7 @@ import GradeReport from "../pages/StudentPortal/GradeReport";
 import InstructorDetail from "../pages/StudentPortal/InstructorDetail";
 import MyCredentials from "../pages/StudentPortal/MyCredentials";
 import Profile from "../pages/StudentPortal/Profile";
+import Roadmap from "../pages/StudentPortal/Roadmap";
 import SharePortal from "../pages/StudentPortal/SharePortal";
 import WeeklyTimetable from "../pages/StudentPortal/WeeklyTimetable";
 import TeacherAttendance from "../pages/teacher/attendance";
@@ -245,13 +247,23 @@ export const studentPortalRoutes: RouteConfig = {
       showInMenu: false,
     },
     {
+      path: "roadmap",
+      element: <Roadmap />,
+      menuLabel: "Lộ trình học tập",
+      menuIcon: <FlagOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.STUDENT],
+      menuIndex: 6,
+      menuSection: "main",
+    },
+    {
       path: "credentials",
       element: <MyCredentials />,
       menuLabel: "Chứng chỉ của tôi",
       menuIcon: <IdcardOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 6,
+      menuIndex: 7,
       menuSection: "main",
     },
     {
@@ -266,7 +278,7 @@ export const studentPortalRoutes: RouteConfig = {
       menuIcon: <CalendarOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 7,
+      menuIndex: 8,
       menuSection: "main",
     },
     {
@@ -276,7 +288,7 @@ export const studentPortalRoutes: RouteConfig = {
       menuIcon: <BookOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT],
-      menuIndex: 8,
+      menuIndex: 9,
       menuSection: "main",
     },
     {
@@ -286,7 +298,7 @@ export const studentPortalRoutes: RouteConfig = {
       menuIcon: <CheckCircleOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 9,
+      menuIndex: 10,
       menuSection: "main",
     },
     {
@@ -296,7 +308,7 @@ export const studentPortalRoutes: RouteConfig = {
       menuIcon: <RiseOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 10,
+      menuIndex: 11,
       menuSection: "main",
     },
     {
@@ -306,7 +318,7 @@ export const studentPortalRoutes: RouteConfig = {
       menuIcon: <ShareAltOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 11,
+      menuIndex: 12,
       menuSection: "main",
     },
     {
@@ -316,7 +328,7 @@ export const studentPortalRoutes: RouteConfig = {
       menuIcon: <UserOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 12,
+      menuIndex: 13,
       menuSection: "main",
     },
     {

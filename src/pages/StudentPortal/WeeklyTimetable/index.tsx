@@ -51,13 +51,13 @@ interface TimetableSlot {
   slotIndex: number;
   time: string;
   label: string;
-  monday?: ClassInfo;
-  tuesday?: ClassInfo;
-  wednesday?: ClassInfo;
-  thursday?: ClassInfo;
-  friday?: ClassInfo;
-  saturday?: ClassInfo;
-  sunday?: ClassInfo;
+  monday?: ClassInfo | ClassInfo[];
+  tuesday?: ClassInfo | ClassInfo[];
+  wednesday?: ClassInfo | ClassInfo[];
+  thursday?: ClassInfo | ClassInfo[];
+  friday?: ClassInfo | ClassInfo[];
+  saturday?: ClassInfo | ClassInfo[];
+  sunday?: ClassInfo | ClassInfo[];
 }
 
 interface ClassInfo {
@@ -111,9 +111,41 @@ const WeeklyTimetable: React.FC = () => {
 
   const formatTimeRange = useCallback((start?: string, end?: string) => {
     if (!start || !end) return "—";
-    const startLabel = dayjs(start).format("HH:mm");
-    const endLabel = dayjs(end).format("HH:mm");
-    return `${startLabel} - ${endLabel}`;
+
+    // Handle TimeSpan format from backend (HH:mm:ss) or ISO time string
+    try {
+      let startTime: string;
+      let endTime: string;
+
+      // Parse start time
+      if (start.includes("T")) {
+        // ISO datetime string
+        startTime = dayjs(start).format("HH:mm");
+      } else if (start.includes(":")) {
+        // TimeSpan format (HH:mm:ss or HH:mm)
+        const parts = start.split(":");
+        startTime = `${parts[0]}:${parts[1]}`;
+      } else {
+        startTime = start;
+      }
+
+      // Parse end time
+      if (end.includes("T")) {
+        // ISO datetime string
+        endTime = dayjs(end).format("HH:mm");
+      } else if (end.includes(":")) {
+        // TimeSpan format (HH:mm:ss or HH:mm)
+        const parts = end.split(":");
+        endTime = `${parts[0]}:${parts[1]}`;
+      } else {
+        endTime = end;
+      }
+
+      return `${startTime} - ${endTime}`;
+    } catch (error) {
+      console.warn("Error formatting time range:", error, { start, end });
+      return "—";
+    }
   }, []);
 
   const mapAttendance = useCallback(
@@ -127,20 +159,29 @@ const WeeklyTimetable: React.FC = () => {
   );
 
   const convertSlotToClassInfo = useCallback(
-    (slot: ScheduleItemDto): ClassInfo => ({
-      courseCode: slot.subjectCode || slot.classCode,
-      courseName: slot.subjectName || slot.classCode,
-      instructor: slot.teacherName,
-      location: slot.notes || slot.classCode,
-      attendance: mapAttendance(slot),
-      date: slot.date,
-      classId: slot.classId,
-      slotId: slot.slotId,
-      status: slot.status,
-      startTime: slot.startTime,
-      endTime: slot.endTime,
-      rawSlot: slot,
-    }),
+    (slot: ScheduleItemDto): ClassInfo => {
+      // Ensure date is valid - if slot.date is invalid, use day from dayData
+      let validDate = slot.date;
+      if (!validDate || !dayjs(validDate).isValid()) {
+        // Try to construct date from dayData if available
+        validDate = dayjs().toISOString();
+      }
+
+      return {
+        courseCode: slot.subjectCode || slot.classCode,
+        courseName: slot.subjectName || slot.classCode,
+        instructor: slot.teacherName,
+        location: slot.notes || slot.classCode,
+        attendance: mapAttendance(slot),
+        date: validDate,
+        classId: slot.classId,
+        slotId: slot.slotId,
+        status: slot.status,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        rawSlot: slot,
+      };
+    },
     [mapAttendance]
   );
 
@@ -203,53 +244,68 @@ const WeeklyTimetable: React.FC = () => {
   };
 
   const renderClassCell = useCallback(
-    (classInfo?: ClassInfo, dayKey?: string) => {
+    (classInfo?: ClassInfo | ClassInfo[], dayKey?: string) => {
       if (!classInfo) {
         return <div className="empty-slot">-</div>;
       }
 
-      const handleViewDetails = () => {
-        const activityId = getActivityId(classInfo, dayKey || "tue");
-        navigate(`/student-portal/activity/${activityId}`, {
-          state: { slot: classInfo.rawSlot },
-        });
-      };
+      // Handle array of classes (multiple classes in same time slot)
+      const classes = Array.isArray(classInfo) ? classInfo : [classInfo];
 
       return (
-        <div
-          className="class-slot"
-          onClick={handleViewDetails}
-          style={{ cursor: "pointer" }}
-        >
-          <div className="course-code">
-            <Text strong>{classInfo.courseCode}</Text>
-            <Tooltip title="Xem chi tiết">
-              <Button
-                type="link"
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewDetails();
+        <div className="class-slot-container">
+          {classes.map((info, index) => {
+            const handleViewDetails = () => {
+              const activityId = getActivityId(info, dayKey || "tue");
+              navigate(`/student-portal/activity/${activityId}`, {
+                state: { slot: info.rawSlot },
+              });
+            };
+
+            return (
+              <div
+                key={index}
+                className="class-slot"
+                onClick={handleViewDetails}
+                style={{
+                  cursor: "pointer",
+                  marginBottom: index < classes.length - 1 ? 8 : 0,
                 }}
               >
-                Xem tài liệu
-              </Button>
-            </Tooltip>
-          </div>
-          <div className="course-info">
-            <Text style={{ fontSize: 12 }}>
-              {classInfo.courseName}
-              {classInfo.instructor && ` • ${classInfo.instructor}`}
-            </Text>
-          </div>
-          <div className="attendance-status">
-            {getAttendanceTag(classInfo.attendance)}
-          </div>
-          <div className="time-info">
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              {dayjs(classInfo.date).format("DD/MM/YYYY")}
-            </Text>
-          </div>
+                <div className="course-code">
+                  <Text strong>{info.courseCode}</Text>
+                  <Tooltip title="Xem chi tiết">
+                    <Button
+                      type="link"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails();
+                      }}
+                    >
+                      Xem tài liệu
+                    </Button>
+                  </Tooltip>
+                </div>
+                <div className="course-info">
+                  <Text style={{ fontSize: 12 }}>
+                    {info.courseName}
+                    {info.instructor && ` • ${info.instructor}`}
+                  </Text>
+                </div>
+                <div className="attendance-status">
+                  {getAttendanceTag(info.attendance)}
+                </div>
+                <div className="time-info">
+                  <Text type="secondary" style={{ fontSize: 11 }}>
+                    {info.date && dayjs(info.date).isValid()
+                      ? dayjs(info.date).format("DD/MM/YYYY")
+                      : "—"}
+                  </Text>
+                </div>
+              </div>
+            );
+          })}
         </div>
       );
     },
@@ -265,28 +321,58 @@ const WeeklyTimetable: React.FC = () => {
       const dayMeta = dayMappings[day.dayOfWeek];
       if (!dayMeta) return;
 
+      // Use day.date as fallback for slots without date
+      const dayDate =
+        day.date && dayjs(day.date).isValid()
+          ? day.date
+          : dayjs().toISOString();
+
       day.slots.forEach((slot) => {
-        const startTimeKey = slot.startTime || slot.timeSlotName || slot.slotId;
-        const key = `${slot.timeSlotId}-${startTimeKey}`;
+        // Ensure slot has valid date - use day.date if slot.date is invalid
+        const slotDate =
+          slot.date && dayjs(slot.date).isValid() ? slot.date : dayDate;
+
+        // Create unique key based on timeSlotId and startTime
+        // This ensures same time slot across different days maps to same row
+        const timeSlotKey = slot.timeSlotId || slot.slotId;
+        const startTime = slot.startTime || "00:00:00";
+        const key = `${timeSlotKey}-${startTime}`;
 
         if (!slotMap.has(key)) {
           slotMap.set(key, {
             slotIndex: slotMap.size + 1,
             time: formatTimeRange(slot.startTime, slot.endTime),
-            label: slot.timeSlotName || `Ca ${slotMap.size + 1}`,
+            label: slot.timeSlotName || `Slot ${slotMap.size + 1}`,
           });
         }
 
         const row = slotMap.get(key);
         if (row) {
-          row[dayMeta.key] = convertSlotToClassInfo(slot);
+          // Create slot with valid date
+          const slotWithDate = { ...slot, date: slotDate };
+          const classInfo = convertSlotToClassInfo(slotWithDate);
+
+          // If there's already a class in this cell, convert to array to store multiple
+          const existing = row[dayMeta.key];
+          if (existing) {
+            if (Array.isArray(existing)) {
+              existing.push(classInfo);
+            } else {
+              row[dayMeta.key] = [existing, classInfo];
+            }
+          } else {
+            row[dayMeta.key] = classInfo;
+          }
         }
       });
     });
 
-    const rows = Array.from(slotMap.values()).sort((a, b) =>
-      a.time.localeCompare(b.time)
-    );
+    // Sort rows by time (extract hour from time string for proper sorting)
+    const rows = Array.from(slotMap.values()).sort((a, b) => {
+      const timeA = a.time.split(" - ")[0] || "00:00";
+      const timeB = b.time.split(" - ")[0] || "00:00";
+      return timeA.localeCompare(timeB);
+    });
 
     return rows.length > 0 ? rows : DEFAULT_TIME_SLOTS;
   }, [weeklySchedule, convertSlotToClassInfo, formatTimeRange]);
@@ -317,14 +403,16 @@ const WeeklyTimetable: React.FC = () => {
             <CalendarOutlined />
             <span>{meta.shortLabel}</span>
             <div className="date-number">
-              {dayData ? dayjs(dayData.date).format("DD/MM") : "--/--"}
+              {dayData && dayData.date && dayjs(dayData.date).isValid()
+                ? dayjs(dayData.date).format("DD/MM")
+                : "--/--"}
             </div>
           </div>
         ),
         dataIndex: meta.key,
         key: meta.key,
         width: 130,
-        render: (classInfo: ClassInfo) =>
+        render: (classInfo: ClassInfo | ClassInfo[]) =>
           renderClassCell(classInfo, meta.shortLabel.toLowerCase()),
       });
     });
@@ -361,7 +449,9 @@ const WeeklyTimetable: React.FC = () => {
               <div className="week-info">
                 <Title level={4} style={{ margin: 0 }}>
                   {weeklySchedule?.weekLabel ||
-                    `Tuần: ${selectedWeek.format("DD/MM")} - ${selectedWeek
+                    `Tuần: ${getMondayOfWeek(selectedWeek).format(
+                      "DD/MM"
+                    )} - ${getMondayOfWeek(selectedWeek)
                       .add(6, "day")
                       .format("DD/MM/YYYY")}`}
                 </Title>

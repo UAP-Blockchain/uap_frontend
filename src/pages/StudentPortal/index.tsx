@@ -15,6 +15,7 @@ import {
   CalendarOutlined,
   FileSearchOutlined,
   FileTextOutlined,
+  FlagOutlined,
   HomeOutlined,
   LogoutOutlined,
   MenuOutlined,
@@ -52,6 +53,12 @@ function StudentPortal() {
       icon: <HomeOutlined />,
       label: "Bảng điều khiển",
       onClick: () => navigate("/student-portal"),
+    },
+    {
+      key: "roadmap",
+      icon: <FlagOutlined />,
+      label: "Lộ trình học tập",
+      onClick: () => navigate("/student-portal/roadmap"),
     },
     {
       key: "credentials",

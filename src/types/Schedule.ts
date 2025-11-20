@@ -6,12 +6,12 @@ export interface ScheduleItemDto {
   subjectName: string;
   subjectCode: string;
   credits: number;
-  date: string;
+  date: string; // ISO date string from backend
   dayOfWeek: string;
   timeSlotId: string;
   timeSlotName?: string;
-  startTime?: string;
-  endTime?: string;
+  startTime?: string; // TimeSpan format from backend (HH:mm:ss) or ISO time string
+  endTime?: string; // TimeSpan format from backend (HH:mm:ss) or ISO time string
   teacherId?: string;
   teacherName?: string;
   teacherCode?: string;

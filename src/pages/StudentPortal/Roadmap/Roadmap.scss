@@ -1,0 +1,369 @@
+.student-roadmap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0;
+
+  .roadmap-header {
+    background: linear-gradient(135deg, #1a94fc 0%, #0d73c9 50%, #1a94fc 100%);
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(26, 148, 252, 0.25),
+      0 4px 16px rgba(26, 148, 252, 0.15);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 70%
+      );
+      animation: shimmer 3s ease-in-out infinite;
+    }
+
+    .roadmap-header-content {
+      position: relative;
+      z-index: 1;
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 24px;
+      flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 20px;
+      }
+    }
+
+    .roadmap-title-section {
+      flex: 1;
+      min-width: 300px;
+
+      .ant-typography {
+        position: relative;
+        z-index: 1;
+      }
+
+      .ant-typography-title-2 {
+        color: #ffffff;
+        font-weight: 700;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+      }
+
+      .ant-typography-caption {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .ant-typography-text {
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 15px;
+        line-height: 1.6;
+        margin: 0;
+      }
+    }
+
+    .roadmap-metrics {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      align-items: stretch;
+
+      .metric-card {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+
+        .metric-card {
+          width: 100%;
+          height: auto;
+        }
+      }
+
+      @media (min-width: 769px) and (max-width: 1200px) {
+        flex-wrap: wrap;
+
+        .metric-card {
+          flex: 1 1 calc(50% - 6px);
+          min-width: 200px;
+        }
+      }
+    }
+  }
+
+  .metric-card.compact {
+    border-radius: 16px;
+    border: 1px solid #e0e7ff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06),
+      0 2px 8px rgba(26, 148, 252, 0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: #ffffff;
+    overflow: hidden;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .ant-card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #1a94fc, #0ea5e9, #1a94fc);
+      background-size: 200% 100%;
+      animation: gradient-shift 3s ease infinite;
+    }
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12),
+        0 4px 12px rgba(26, 148, 252, 0.2);
+      border-color: #91d5ff;
+    }
+
+    .ant-statistic-title {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+
+    .ant-statistic-content {
+      .ant-statistic-content-value {
+        color: #1a94fc;
+        font-weight: 700;
+      }
+
+      .ant-statistic-content-suffix {
+        color: #64748b;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .registration-card {
+    background: linear-gradient(135deg, #f0f5ff 0%, #e6f7ff 50%, #f0f5ff 100%);
+    background-size: 200% 200%;
+    border: 1px solid #91d5ff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06),
+      0 2px 8px rgba(26, 148, 252, 0.08);
+    animation: gradient-shift 4s ease infinite;
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #1a94fc, #0ea5e9, #1a94fc);
+      background-size: 200% 100%;
+      animation: gradient-shift 3s ease infinite;
+    }
+
+    .ant-card-body {
+      position: relative;
+      z-index: 2;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+  }
+
+  .roadmap-collapse {
+    .ant-collapse-item {
+      border: 1px solid #e0e7ff;
+      margin-bottom: 16px;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+      &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08),
+          0 2px 8px rgba(26, 148, 252, 0.1);
+        border-color: #91d5ff;
+      }
+
+      &.ant-collapse-item-active {
+        border: 2px solid #1a94fc;
+        box-shadow: 0 8px 24px rgba(26, 148, 252, 0.2),
+          0 4px 12px rgba(26, 148, 252, 0.15);
+        transform: translateY(-2px);
+
+        .ant-collapse-header {
+          background: linear-gradient(135deg, #e6f7ff 0%, #d6f0ff 100%);
+          color: #1a94fc;
+          font-weight: 700;
+          padding: 18px 20px;
+          border-bottom: 2px solid #91d5ff;
+
+          .ant-collapse-arrow {
+            color: #1a94fc;
+            font-size: 16px;
+            font-weight: 700;
+          }
+        }
+
+        .ant-collapse-content {
+          border-top: 1px solid #91d5ff;
+          background: #fafbff;
+        }
+      }
+    }
+
+    .ant-collapse-header {
+      background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      padding: 16px 20px;
+      border-radius: 16px;
+
+      &:hover {
+        background: linear-gradient(135deg, #f0f5ff 0%, #e6f7ff 100%);
+        color: #1a94fc;
+        transform: translateX(4px);
+      }
+    }
+  }
+
+  .semester-panel-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .semester-label {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 4px;
+  }
+
+  // Table styling
+  .ant-table {
+    border-radius: 12px;
+    overflow: hidden;
+
+    .ant-table-thead > tr > th {
+      background: linear-gradient(135deg, #1a94fc 0%, #0ea5e9 100%);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 3px solid #0d73c9;
+      padding: 16px;
+      text-align: center;
+
+      &:first-child {
+        border-top-left-radius: 12px;
+      }
+
+      &:last-child {
+        border-top-right-radius: 12px;
+      }
+    }
+
+    .ant-table-tbody {
+      .ant-table-row {
+        transition: all 0.2s ease;
+
+        &:nth-child(even) {
+          background: #f8faff;
+        }
+
+        &:hover {
+          background: linear-gradient(
+            90deg,
+            #e6f7ff 0%,
+            #f0f5ff 100%
+          ) !important;
+          transform: scale(1.01);
+          box-shadow: 0 2px 8px rgba(26, 148, 252, 0.1);
+        }
+
+        td {
+          padding: 14px 16px;
+          border-bottom: 1px solid #e0e7ff;
+        }
+      }
+    }
+  }
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    50% {
+      transform: translate(-50%, -50%) rotate(180deg);
+    }
+  }
+
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .semester-panel-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .roadmap-header {
+      padding: 24px 20px;
+    }
+  }
+}

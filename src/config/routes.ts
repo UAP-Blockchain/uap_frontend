@@ -28,9 +28,11 @@ export const ROUTES = {
   STUDENT_PORTAL: {
     BASE: "/student-portal",
     DASHBOARD: "/student-portal",
+    ROADMAP: "/student-portal/roadmap",
     CREDENTIALS: "/student-portal/credentials",
     CREDENTIAL_DETAIL: "/student-portal/credentials/:id",
     TIMETABLE: "/student-portal/timetable",
+    COURSE_REGISTRATION: "/student-portal/course-registration",
     ATTENDANCE_REPORT: "/student-portal/attendance-report",
     GRADE_REPORT: "/student-portal/grade-report",
     SHARE: "/student-portal/share",
