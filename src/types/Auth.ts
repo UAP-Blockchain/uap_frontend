@@ -95,13 +95,28 @@ export interface RegisterUserResponse {
   email: string;
   roleName: string;
   errors?: string[];
+  fullName?: string;
+  phoneNumber?: string;
+  studentCode?: string;
+  teacherCode?: string;
+  enrollmentDate?: string;
+  hireDate?: string;
+  specialization?: string;
 }
 
 export interface BulkRegisterResponse {
-  totalRequested: number;
-  successCount: number;
-  failureCount: number;
+  success: boolean;
+  message: string;
+  statistics: {
+    total: number;
+    success: number;
+    failed: number;
+  };
   results: RegisterUserResponse[];
+  // Legacy fields (deprecated, use statistics instead)
+  totalRequested?: number;
+  successCount?: number;
+  failureCount?: number;
 }
 
 // ==================== User Profile Type ====================

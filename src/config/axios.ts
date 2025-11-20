@@ -12,7 +12,7 @@ const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 60000, // Increased to 60 seconds for bulk operations
   headers: {
     "Content-Type": "application/json",
   },
