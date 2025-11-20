@@ -69,6 +69,7 @@ export interface ClassSummary {
   totalEnrollments: number;
   totalSlots: number;
   currentEnrollment: number;
+  subjectOfferingId?: string;
 }
 
 export interface ClassesApiResponse {
@@ -78,15 +79,11 @@ export interface ClassesApiResponse {
 
 export interface CreateClassRequest {
   classCode: string;
-  subjectId: string;
+  subjectOfferingId: string;
   teacherId: string;
 }
 
-export interface UpdateClassRequest {
-  classCode: string;
-  subjectId: string;
-  teacherId: string;
-}
+export interface UpdateClassRequest extends CreateClassRequest {}
 
 export interface Attendance {
   id: string;
