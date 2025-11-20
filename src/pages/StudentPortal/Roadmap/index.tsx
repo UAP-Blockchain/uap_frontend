@@ -4,25 +4,31 @@ import {
   StarOutlined,
 } from "@ant-design/icons";
 import {
+  Alert,
   Button,
   Card,
   Collapse,
+  Empty,
   Space,
+  Spin,
   Statistic,
   Table,
   Tag,
   Typography,
+  message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import RoadmapServices from "../../../services/roadmap/api.service";
+import type { StudentRoadmapDto } from "../../../types/Roadmap";
 import "./Roadmap.scss";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 
-type CourseStatus = "PASSED" | "STUDYING" | "NOT_STARTED";
+type CourseStatus = "PASSED" | "STUDYING" | "NOT_STARTED" | "FAILED";
 
 interface RoadmapCourse {
   code: string;
@@ -46,450 +52,6 @@ interface RoadmapSemester {
   courses: RoadmapCourse[];
 }
 
-const roadmapSemesters: RoadmapSemester[] = [
-  {
-    id: "sem9",
-    name: "Kỳ 9 · 2025",
-    label: "Fall 2025",
-    isCurrent: true,
-    registration: {
-      start: "2025-12-01",
-      end: "2025-12-10",
-      isOpen: true,
-    },
-    courses: [
-      {
-        code: "MLN131",
-        name: "Scientific Socialism",
-        credits: 3,
-        prerequisites: [],
-        status: "STUDYING",
-      },
-      {
-        code: "VNR202",
-        name: "History of Vietnam Communist Party",
-        credits: 3,
-        prerequisites: ["MLN131"],
-        status: "NOT_STARTED",
-      },
-      {
-        code: "HCM202",
-        name: "Ho Chi Minh Ideology",
-        credits: 3,
-        prerequisites: ["MLN131"],
-        status: "NOT_STARTED",
-      },
-      {
-        code: "SEP490",
-        name: "SE Capstone Project",
-        credits: 6,
-        prerequisites: ["OJT202", "SWD392"],
-        status: "NOT_STARTED",
-      },
-    ],
-  },
-  {
-    id: "sem8",
-    name: "Kỳ 8 · 2025",
-    label: "Summer 2025",
-    registration: {
-      start: "2025-08-01",
-      end: "2025-08-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "WDP301",
-        name: "Web Development Project",
-        credits: 3,
-        prerequisites: ["SWP391"],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "EXE201",
-        name: "Experiential Entrepreneurship 2",
-        credits: 3,
-        prerequisites: ["EXE101"],
-        grade: "B+",
-        status: "PASSED",
-      },
-      {
-        code: "PRM392",
-        name: "Mobile Programming",
-        credits: 3,
-        prerequisites: ["LAB211"],
-        grade: "A-",
-        status: "PASSED",
-      },
-      {
-        code: "MLN122",
-        name: "Political Economics of Marxism – Leninism",
-        credits: 3,
-        prerequisites: ["MLN131"],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "WDU203c",
-        name: "The UI/UX Design",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "MLN111",
-        name: "Philosophy of Marxism – Leninism",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-    ],
-  },
-  {
-    id: "sem7",
-    name: "Kỳ 7 · 2025",
-    label: "Spring 2025",
-    registration: {
-      start: "2025-04-01",
-      end: "2025-04-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "PMG201c",
-        name: "Project Management",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "SWD392",
-        name: "Software Architecture and Design",
-        credits: 3,
-        prerequisites: ["SDN302"],
-        grade: "A-",
-        status: "PASSED",
-      },
-      {
-        code: "EXE101",
-        name: "Experiential Entrepreneurship 1",
-        credits: 3,
-        prerequisites: [],
-        grade: "B+",
-        status: "PASSED",
-      },
-      {
-        code: "SDN302",
-        name: "Server-Side Development with NodeJS",
-        credits: 3,
-        prerequisites: ["LAB211"],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "MMA301",
-        name: "Multiplatform Mobile App Development",
-        credits: 3,
-        prerequisites: ["LAB211"],
-        grade: "A",
-        status: "PASSED",
-      },
-    ],
-  },
-  {
-    id: "sem6",
-    name: "Kỳ 6 · 2024",
-    label: "Fall 2024",
-    registration: {
-      start: "2024-12-01",
-      end: "2024-12-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "ENW492c",
-        name: "Writing Research Papers",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "OJT202",
-        name: "On the Job Training",
-        credits: 5,
-        prerequisites: [],
-        grade: "P",
-        status: "PASSED",
-      },
-    ],
-  },
-  {
-    id: "sem5",
-    name: "Kỳ 5 · 2024",
-    label: "Summer 2024",
-    registration: {
-      start: "2024-08-01",
-      end: "2024-08-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "SWP391",
-        name: "Software Development Project",
-        credits: 3,
-        prerequisites: ["SDN302"],
-        grade: "A-",
-        status: "PASSED",
-      },
-      {
-        code: "ITE302c",
-        name: "Ethics in IT",
-        credits: 2,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "SWR302",
-        name: "Software Requirements",
-        credits: 3,
-        prerequisites: [],
-        grade: "B+",
-        status: "PASSED",
-      },
-      {
-        code: "SWT301",
-        name: "Software Testing",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "FER202",
-        name: "Front-End Web Development with React",
-        credits: 3,
-        prerequisites: ["PRJ301"],
-        grade: "A",
-        status: "PASSED",
-      },
-    ],
-  },
-  {
-    id: "sem4",
-    name: "Kỳ 4 · 2024",
-    label: "Spring 2024",
-    registration: {
-      start: "2024-04-01",
-      end: "2024-04-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "MAS291",
-        name: "Statistics & Probability",
-        credits: 3,
-        prerequisites: ["MAT110"],
-        grade: "B",
-        status: "PASSED",
-      },
-      {
-        code: "SWE201c",
-        name: "Introduction to Software Engineering",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "JPD123",
-        name: "Elementary Japanese 1 - A1.2",
-        credits: 3,
-        prerequisites: ["JPD113"],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "IOT102",
-        name: "Internet of Things",
-        credits: 3,
-        prerequisites: [],
-        grade: "A-",
-        status: "PASSED",
-      },
-      {
-        code: "PRJ301",
-        name: "Java Web Application Development",
-        credits: 3,
-        prerequisites: ["LAB211"],
-        grade: "A",
-        status: "PASSED",
-      },
-    ],
-  },
-  {
-    id: "sem3",
-    name: "Kỳ 3 · 2023",
-    label: "Fall 2023",
-    registration: {
-      start: "2023-12-01",
-      end: "2023-12-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "JPD113",
-        name: "Elementary Japanese 1 - A1.1",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "WED201c",
-        name: "Web Design",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "CSD201",
-        name: "Data Structures and Algorithms",
-        credits: 3,
-        prerequisites: ["PRF192"],
-        grade: "B+",
-        status: "PASSED",
-      },
-      {
-        code: "DBI202",
-        name: "Database Systems",
-        credits: 3,
-        prerequisites: ["PRF192"],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "LAB211",
-        name: "OOP with Java Lab",
-        credits: 3,
-        prerequisites: ["PRO192"],
-        grade: "A",
-        status: "PASSED",
-      },
-    ],
-  },
-  {
-    id: "sem2",
-    name: "Kỳ 2 · 2023",
-    label: "Summer 2023",
-    registration: {
-      start: "2023-08-01",
-      end: "2023-08-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "PRO192",
-        name: "Object-Oriented Programming",
-        credits: 3,
-        prerequisites: ["PRF192"],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "MAD101",
-        name: "Discrete Mathematics",
-        credits: 3,
-        prerequisites: [],
-        grade: "B+",
-        status: "PASSED",
-      },
-      {
-        code: "OSG202",
-        name: "Operating Systems",
-        credits: 3,
-        prerequisites: [],
-        grade: "B",
-        status: "PASSED",
-      },
-      {
-        code: "NWC203c",
-        name: "Computer Networking",
-        credits: 3,
-        prerequisites: [],
-        grade: "A-",
-        status: "PASSED",
-      },
-      {
-        code: "SSG104",
-        name: "Communication and In-Group Working Skills",
-        credits: 2,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-    ],
-  },
-  {
-    id: "sem1",
-    name: "Kỳ 1 · 2023",
-    label: "Spring 2023",
-    registration: {
-      start: "2023-04-01",
-      end: "2023-04-08",
-      isOpen: false,
-    },
-    courses: [
-      {
-        code: "CSI104",
-        name: "Introduction to Computing",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "SSL101c",
-        name: "Academic Skills for University Success",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "PRF192",
-        name: "Programming Fundamentals",
-        credits: 3,
-        prerequisites: [],
-        grade: "A",
-        status: "PASSED",
-      },
-      {
-        code: "MAE101",
-        name: "Mathematics for Engineering",
-        credits: 3,
-        prerequisites: [],
-        grade: "B+",
-        status: "PASSED",
-      },
-      {
-        code: "CEA201",
-        name: "Computer Organization and Architecture",
-        credits: 3,
-        prerequisites: [],
-        grade: "B",
-        status: "PASSED",
-      },
-    ],
-  },
-];
-
 const statusMap: Record<
   CourseStatus,
   { label: string; color: string; background: string }
@@ -501,25 +63,140 @@ const statusMap: Record<
     color: "#94a3b8",
     background: "#f8fafc",
   },
+  FAILED: {
+    label: "Failed",
+    color: "#ef4444",
+    background: "#fee2e2",
+  },
 };
 
 const Roadmap: React.FC = () => {
   const navigate = useNavigate();
-  const currentSemester = roadmapSemesters.find((sem) => sem.isCurrent);
+  const [roadmap, setRoadmap] = useState<StudentRoadmapDto | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchRoadmap = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await RoadmapServices.getMyRoadmap();
+        setRoadmap(data);
+      } catch (err) {
+        const messageText =
+          (
+            err as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
+          (err as { message?: string }).message ||
+          "Không thể tải dữ liệu lộ trình";
+        setError(messageText);
+        message.error(messageText);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void fetchRoadmap();
+  }, []);
+
+  const semesters: RoadmapSemester[] = useMemo(() => {
+    if (!roadmap) return [];
+    const now = dayjs();
+
+    return roadmap.semesterGroups.map((group) => {
+      const startDate = group.startDate || "";
+      const endDate = group.endDate || "";
+      const isOpen =
+        !!startDate &&
+        !!endDate &&
+        now.isAfter(dayjs(startDate)) &&
+        now.isBefore(dayjs(endDate).endOf("day"));
+
+      const courses = group.subjects
+        .slice()
+        .sort((a, b) => a.sequenceOrder - b.sequenceOrder)
+        .map((subject) => ({
+          code: subject.subjectCode,
+          name: subject.subjectName,
+          credits: subject.credits,
+          prerequisites: [],
+          grade:
+            subject.letterGrade ||
+            (subject.finalScore !== null && subject.finalScore !== undefined
+              ? subject.finalScore.toFixed(1)
+              : undefined),
+          status: mapBackendStatus(subject.status),
+        }));
+
+      return {
+        id: group.semesterId,
+        name: group.semesterName,
+        label: group.semesterCode,
+        isCurrent: group.isCurrentSemester,
+        registration: {
+          start: startDate,
+          end: endDate,
+          isOpen,
+        },
+        courses,
+      };
+    });
+  }, [roadmap]);
+
+  const currentSemester = useMemo(
+    () => semesters.find((sem) => sem.isCurrent) || semesters[0],
+    [semesters]
+  );
+
+  const stats = useMemo(() => {
+    const completedCredits = semesters.reduce(
+      (sum, semester) =>
+        sum +
+        semester.courses
+          .filter((course) => course.status === "PASSED")
+          .reduce((acc, course) => acc + course.credits, 0),
+      0
+    );
+
+    const totalCredits = semesters.reduce(
+      (sum, semester) =>
+        sum + semester.courses.reduce((acc, course) => acc + course.credits, 0),
+      0
+    );
+
+    const completedCourses = semesters
+      .flatMap((semester) => semester.courses)
+      .filter((course) => course.status === "PASSED" && course.grade);
+
+    const totalScore = completedCourses.reduce((sum, course) => {
+      const numericGrade = Number(course.grade);
+      return sum + (Number.isFinite(numericGrade) ? numericGrade : 0);
+    }, 0);
+
+    const averageScore = completedCourses.length
+      ? totalScore / completedCourses.length
+      : 0;
+
+    const gpa = completedCourses.length
+      ? Number(((averageScore / 10) * 4).toFixed(2))
+      : 0;
+
+    return {
+      completedCredits,
+      totalCredits,
+      gpa,
+    };
+  }, [semesters]);
+
   const handleRegister = (courseCode: string) => {
     navigate("/student-portal/course-registration", {
       state: { from: "roadmap", courseCode },
     });
   };
-
-  const stats = useMemo(
-    () => ({
-      completedCredits: 68,
-      totalCredits: 120,
-      gpa: 3.48,
-    }),
-    []
-  );
 
   const getColumns = (
     semester: RoadmapSemester
@@ -625,17 +302,6 @@ const Roadmap: React.FC = () => {
                 borderRadius: "8px",
                 fontWeight: 600,
                 boxShadow: "0 2px 8px rgba(26, 148, 252, 0.3)",
-                transition: "all 0.3s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "scale(1.05)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 12px rgba(26, 148, 252, 0.4)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "scale(1)";
-                e.currentTarget.style.boxShadow =
-                  "0 2px 8px rgba(26, 148, 252, 0.3)";
               }}
             >
               <PlusOutlined /> Đăng ký
@@ -646,6 +312,37 @@ const Roadmap: React.FC = () => {
       },
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="student-roadmap">
+        <div className="roadmap-loading">
+          <Spin size="large" />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="student-roadmap">
+        <Alert
+          type="error"
+          message="Không thể tải dữ liệu lộ trình"
+          description={error}
+          showIcon
+        />
+      </div>
+    );
+  }
+
+  if (!semesters.length) {
+    return (
+      <div className="student-roadmap">
+        <Empty description="Chưa có dữ liệu lộ trình học tập" />
+      </div>
+    );
+  }
 
   return (
     <div className="student-roadmap">
@@ -659,8 +356,7 @@ const Roadmap: React.FC = () => {
               Lộ trình học tập
             </Title>
             <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
-              Tập trung theo dõi tín chỉ, GPA và nhanh chóng xem trạng thái từng
-              kỳ.
+              Tập trung theo dõi tín chỉ, GPA và nhanh chóng xem trạng thái từng kỳ.
             </Text>
           </div>
 
@@ -732,7 +428,7 @@ const Roadmap: React.FC = () => {
         className="roadmap-collapse"
         defaultActiveKey={currentSemester?.id}
       >
-        {roadmapSemesters.map((semester) => (
+        {semesters.map((semester) => (
           <Panel
             header={
               <div className="semester-panel-header">
@@ -753,7 +449,6 @@ const Roadmap: React.FC = () => {
                         borderRadius: "20px",
                         boxShadow: "0 2px 8px rgba(26, 148, 252, 0.4)",
                         fontSize: "12px",
-                        letterSpacing: "0.3px",
                       }}
                     >
                       Kỳ hiện tại
@@ -769,9 +464,13 @@ const Roadmap: React.FC = () => {
                       borderRadius: "8px",
                     }}
                   >
-                    Đăng ký:{" "}
-                    {dayjs(semester.registration.start).format("DD/MM")} –{" "}
-                    {dayjs(semester.registration.end).format("DD/MM")}
+                    Đăng ký: {semester.registration.start
+                      ? dayjs(semester.registration.start).format("DD/MM")
+                      : "—"}
+                    {" "}–{" "}
+                    {semester.registration.end
+                      ? dayjs(semester.registration.end).format("DD/MM")
+                      : "—"}
                   </Tag>
                 </Space>
               </div>
@@ -781,7 +480,7 @@ const Roadmap: React.FC = () => {
             <Table
               columns={getColumns(semester)}
               dataSource={semester.courses}
-              rowKey={(record) => record.code}
+              rowKey={(record) => `${semester.id}-${record.code}`}
               pagination={false}
               size="small"
             />
@@ -793,3 +492,18 @@ const Roadmap: React.FC = () => {
 };
 
 export default Roadmap;
+
+const mapBackendStatus = (status: string): CourseStatus => {
+  switch (status) {
+    case "Completed":
+      return "PASSED";
+    case "InProgress":
+      return "STUDYING";
+    case "Planned":
+      return "NOT_STARTED";
+    case "Failed":
+      return "FAILED";
+    default:
+      return "NOT_STARTED";
+  }
+};
