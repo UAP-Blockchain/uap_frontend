@@ -1,507 +1,317 @@
 import {
+  Alert,
+  Card,
+  Col,
+  Collapse,
+  Empty,
+  Row,
+  Spin,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
+import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
-import { Card, Col, Collapse, Row, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import AttendanceServices from "../../../services/attendance/api.service";
+import GradeServices from "../../../services/grade/api.service";
+import { StudentGradeServices } from "../../../services/student/api.service";
+import type { AttendanceDto } from "../../../types/Attendance";
+import type { SubjectGradeDto } from "../../../types/Grade";
+import type { SemesterDto } from "../../../types/Semester";
+import type { RootState } from "../../../redux/store";
 import "./AttendanceReport.scss";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 
-interface Course {
-  code: string;
-  name: string;
-  isActive: boolean;
-}
-
-interface Semester {
-  id: string;
-  name: string;
-  courses: Course[];
-}
-
-interface AttendanceRecord {
-  no: number;
-  date: string;
-  slot: number;
-  slotTime: string;
-  room: string;
-  lecturer: string;
-  groupName: string;
-  status: "Present" | "Absent" | "Future";
-  lecturerComment?: string;
-}
+type SubjectMap = Record<string, SubjectGradeDto[]>;
+type LoadingMap = Record<string, boolean>;
 
 const AttendanceReport: React.FC = () => {
-  const [selectedCourse, setSelectedCourse] = useState("MLN131");
-  const [activeSemesterKey, setActiveSemesterKey] = useState<string | string[]>(
-    ["sem9"]
-  );
+  const [semesters, setSemesters] = useState<SemesterDto[]>([]);
+  const [subjectsBySemester, setSubjectsBySemester] = useState<SubjectMap>({});
+  const [isLoadingSemesters, setIsLoadingSemesters] = useState(false);
+  const [isLoadingSubjects, setIsLoadingSubjects] = useState<LoadingMap>({});
+  const [activeSemesterKey, setActiveSemesterKey] = useState<string | string[]>([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<SubjectGradeDto | null>(null);
+  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceDto[]>([]);
+  const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock semester data
-  const semesters: Semester[] = [
-    {
-      id: "sem9",
-      name: "Fall 2025",
-      courses: [
-        { code: "MLN131", name: "Scientific Socialism", isActive: true },
-        {
-          code: "VNR202",
-          name: "History of Vietnam Communist Party",
-          isActive: false,
-        },
-        { code: "HCM202", name: "Ho Chi Minh Ideology", isActive: false },
-        { code: "SEP490", name: "SE Capstone Project", isActive: false },
-      ],
-    },
-    {
-      id: "sem8",
-      name: "Summer 2025",
-      courses: [
-        { code: "WDP301", name: "Web Development Project", isActive: false },
-        {
-          code: "EXE201",
-          name: "Experiential Entrepreneurship 2",
-          isActive: false,
-        },
-        { code: "PRM392", name: "Mobile Programming", isActive: false },
-        {
-          code: "MLN122",
-          name: "Political Economics of Marxism – Leninism",
-          isActive: false,
-        },
-        { code: "WDU203c", name: "The UI/UX Design", isActive: false },
-        {
-          code: "MLN111",
-          name: "Philosophy of Marxism – Leninism",
-          isActive: false,
-        },
-      ],
-    },
-    {
-      id: "sem7",
-      name: "Spring 2025",
-      courses: [
-        { code: "PMG201c", name: "Project Management", isActive: false },
-        {
-          code: "SWD392",
-          name: "Software Architecture and Design",
-          isActive: false,
-        },
-        {
-          code: "EXE101",
-          name: "Experiential Entrepreneurship 1",
-          isActive: false,
-        },
-        {
-          code: "SDN302",
-          name: "Server-Side Development with NodeJS, Express, and MongoDB",
-          isActive: false,
-        },
-        {
-          code: "MMA301",
-          name: "Multiplatform Mobile App Development",
-          isActive: false,
-        },
-      ],
-    },
-    {
-      id: "sem6",
-      name: "Fall 2024",
-      courses: [
-        { code: "ENW492c", name: "Writing Research Papers", isActive: false },
-        { code: "OJT202", name: "On the Job Training", isActive: false },
-      ],
-    },
-    {
-      id: "sem5",
-      name: "Summer 2024",
-      courses: [
-        {
-          code: "SWP391",
-          name: "Software Development Project",
-          isActive: false,
-        },
-        { code: "ITE302c", name: "Ethics in IT", isActive: false },
-        { code: "SWR302", name: "Software Requirements", isActive: false },
-        { code: "SWT301", name: "Software Testing", isActive: false },
-        {
-          code: "FER202",
-          name: "Front-End Web Development with React",
-          isActive: false,
-        },
-      ],
-    },
-    {
-      id: "sem4",
-      name: "Spring 2024",
-      courses: [
-        { code: "MAS291", name: "Statistics & Probability", isActive: false },
-        {
-          code: "SWE201c",
-          name: "Introduction to Software Engineering",
-          isActive: false,
-        },
-        {
-          code: "JPD123",
-          name: "Elementary Japanese 1 - A1.2",
-          isActive: false,
-        },
-        { code: "IOT102", name: "Internet of Things", isActive: false },
-        {
-          code: "PRJ301",
-          name: "Java Web Application Development",
-          isActive: false,
-        },
-      ],
-    },
-    {
-      id: "sem3",
-      name: "Fall 2023",
-      courses: [
-        {
-          code: "JPD113",
-          name: "Elementary Japanese 1 - A1.1",
-          isActive: false,
-        },
-        { code: "WED201c", name: "Web Design", isActive: false },
-        {
-          code: "CSD201",
-          name: "Data Structures and Algorithms",
-          isActive: false,
-        },
-        { code: "DBI202", name: "Database Systems", isActive: false },
-        { code: "LAB211", name: "OOP with Java Lab", isActive: false },
-      ],
-    },
-    {
-      id: "sem2",
-      name: "Summer 2023",
-      courses: [
-        {
-          code: "PRO192",
-          name: "Object-Oriented Programming",
-          isActive: false,
-        },
-        { code: "MAD101", name: "Discrete Mathematics", isActive: false },
-        { code: "OSG202", name: "Operating Systems", isActive: false },
-        { code: "NWC203c", name: "Computer Networking", isActive: false },
-        {
-          code: "SSG104",
-          name: "Communication and In-Group Working Skills",
-          isActive: false,
-        },
-      ],
-    },
-    {
-      id: "sem1",
-      name: "Spring 2023",
-      courses: [
-        { code: "CSI104", name: "Introduction to Computing", isActive: false },
-        {
-          code: "SSL101c",
-          name: "Academic Skills for University Success",
-          isActive: false,
-        },
-        { code: "PRF192", name: "Programming Fundamentals", isActive: false },
-        {
-          code: "MAE101",
-          name: "Mathematics for Engineering",
-          isActive: false,
-        },
-        {
-          code: "CEA201",
-          name: "Computer Organization and Architecture",
-          isActive: false,
-        },
-      ],
-    },
-  ];
+  const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 
-  // Mock attendance data
-  const attendanceData: AttendanceRecord[] = [
-    {
-      no: 1,
-      date: "2025-09-08",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Present",
-    },
-    {
-      no: 2,
-      date: "2025-09-12",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Present",
-    },
-    {
-      no: 3,
-      date: "2025-09-16",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Absent",
-    },
-    {
-      no: 4,
-      date: "2025-09-19",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Present",
-    },
-    {
-      no: 5,
-      date: "2025-09-23",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Future",
-    },
-    {
-      no: 6,
-      date: "2025-09-26",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Future",
-    },
-    {
-      no: 7,
-      date: "2025-09-30",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Future",
-    },
-    {
-      no: 8,
-      date: "2025-10-03",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Future",
-    },
-    {
-      no: 9,
-      date: "2025-10-07",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Future",
-    },
-    {
-      no: 10,
-      date: "2025-10-10",
-      slot: 2,
-      slotTime: "09:30-11:45",
-      room: "NVH 409",
-      lecturer: "DuyNK32",
-      groupName: "Half1_GD1705",
-      status: "Future",
-    },
-  ];
-
-  const getStatusTag = (status: string) => {
-    switch (status) {
-      case "Present":
-        return (
-          <Tag color="success" icon={<CheckCircleOutlined />}>
-            Có mặt
-          </Tag>
-        );
-      case "Absent":
-        return (
-          <Tag color="error" icon={<CloseCircleOutlined />}>
-            Vắng mặt
-          </Tag>
-        );
-      case "Future":
-        return (
-          <Tag color="default" icon={<ExclamationCircleOutlined />}>
-            Sắp tới
-          </Tag>
-        );
-      default:
-        return <Tag color="default">{status}</Tag>;
+  const loadSemesters = useCallback(async () => {
+    setIsLoadingSemesters(true);
+    setError(null);
+    try {
+      const response = await GradeServices.getSemesters({
+        pageSize: 100,
+        sortBy: "StartDate",
+        isDescending: true,
+      });
+      setSemesters(response.data);
+      if (response.data.length > 0) {
+        const firstSemesterId = response.data[0].id;
+        setActiveSemesterKey([firstSemesterId]);
+        await loadSubjectsForSemester(firstSemesterId);
+      }
+    } catch (err) {
+      const messageText =
+        (err as { response?: { data?: { message?: string } }; message?: string })
+          ?.response?.data?.message ||
+        (err as { message?: string }).message ||
+        "Không thể tải danh sách học kỳ";
+      setError(messageText);
+      message.error(messageText);
+    } finally {
+      setIsLoadingSemesters(false);
     }
+  }, []);
+
+  const loadSubjectsForSemester = useCallback(async (semesterId: string) => {
+    if (subjectsBySemester[semesterId]) {
+      return;
+    }
+
+    setIsLoadingSubjects((prev) => ({ ...prev, [semesterId]: true }));
+    try {
+      const response = await StudentGradeServices.getMyGrades({
+        SemesterId: semesterId,
+      });
+      setSubjectsBySemester((prev) => ({
+        ...prev,
+        [semesterId]: response.subjects || [],
+      }));
+    } catch (err) {
+      const messageText =
+        (err as { response?: { data?: { message?: string } }; message?: string })
+          ?.response?.data?.message ||
+        (err as { message?: string }).message ||
+        "Không thể tải danh sách môn học";
+      message.error(messageText);
+    } finally {
+      setIsLoadingSubjects((prev) => ({ ...prev, [semesterId]: false }));
+    }
+  }, [subjectsBySemester]);
+
+  const loadAttendanceForSubject = useCallback(async (subjectId: string) => {
+    setIsLoadingAttendance(true);
+    setError(null);
+    try {
+      const records = await AttendanceServices.getMyAttendance({
+        SubjectId: subjectId,
+      });
+      setAttendanceRecords(records);
+    } catch (err) {
+      const messageText =
+        (err as { response?: { data?: { message?: string } }; message?: string })
+          ?.response?.data?.message ||
+        (err as { message?: string }).message ||
+        "Không thể tải dữ liệu điểm danh";
+      setAttendanceRecords([]);
+      setError(messageText);
+      message.error(messageText);
+    } finally {
+      setIsLoadingAttendance(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSemesters();
+  }, [loadSemesters]);
+
+  const handleSemesterChange = (keys: string | string[]) => {
+    setActiveSemesterKey(keys);
+    const semesterIds = Array.isArray(keys) ? keys : keys ? [keys] : [];
+    semesterIds.forEach((semesterId) => {
+      if (semesterId) {
+        void loadSubjectsForSemester(semesterId);
+      }
+    });
   };
 
-  const getDateTag = (date: string) => {
-    const dayOfWeek = dayjs(date).format("dddd");
-    const dateFormatted = dayjs(date).format("DD/MM/YYYY");
-
-    let color = "blue";
-    if (dayOfWeek === "Tuesday") color = "blue";
-    else if (dayOfWeek === "Friday") color = "green";
-
-    return (
-      <Tag color={color} style={{ minWidth: "90px", textAlign: "center" }}>
-        {dayOfWeek} {dateFormatted}
-      </Tag>
-    );
+  const handleSubjectClick = (subject: SubjectGradeDto) => {
+    setSelectedSubjectId(subject.subjectId);
+    setSelectedSubject(subject);
+    void loadAttendanceForSubject(subject.subjectId);
   };
 
-  const getSlotTag = (slot: number, slotTime: string) => {
-    return (
-      <Tag color="orange" style={{ minWidth: "80px", textAlign: "center" }}>
-        {slot} {slotTime}
-      </Tag>
-    );
-  };
-
-  const columns: ColumnsType<AttendanceRecord> = [
+  const columns: ColumnsType<AttendanceDto> = [
     {
       title: "STT",
-      dataIndex: "no",
-      key: "no",
-      width: 60,
+      key: "index",
+      width: 70,
       align: "center",
-      render: (no: number) => <Text strong>{no}</Text>,
+      render: (_: unknown, __: AttendanceDto, index: number) => (
+        <Text strong>{index + 1}</Text>
+      ),
     },
     {
-      title: "NGÀY",
+      title: "Ngày",
       dataIndex: "date",
       key: "date",
-      width: 150,
-      align: "center",
-      render: (date: string) => getDateTag(date),
+      width: 160,
+      render: (value: string) => (
+        <Tag color="blue" style={{ minWidth: 120, textAlign: "center" }}>
+          {dayjs(value).format("dddd · DD/MM/YYYY")}
+        </Tag>
+      ),
     },
     {
-      title: "CA HỌC",
-      dataIndex: "slot",
+      title: "Ca học",
+      dataIndex: "timeSlotName",
       key: "slot",
-      width: 120,
-      align: "center",
-      render: (slot: number, record: AttendanceRecord) =>
-        getSlotTag(slot, record.slotTime),
+      width: 150,
+      render: (slot: string) => (
+        <Tag color="purple" style={{ minWidth: 110, textAlign: "center" }}>
+          {slot}
+        </Tag>
+      ),
     },
     {
-      title: "PHÒNG",
-      dataIndex: "room",
-      key: "room",
-      width: 100,
-      align: "center",
-      render: (room: string) => <Text strong>{room}</Text>,
-    },
-    {
-      title: "GIẢNG VIÊN",
-      dataIndex: "lecturer",
-      key: "lecturer",
-      width: 120,
-      align: "center",
-      render: (lecturer: string) => <Text>{lecturer}</Text>,
-    },
-    {
-      title: "NHÓM",
-      dataIndex: "groupName",
-      key: "groupName",
+      title: "Lớp",
+      dataIndex: "classCode",
+      key: "classCode",
       width: 140,
-      align: "center",
-      render: (groupName: string) => <Text>{groupName}</Text>,
+      render: (classCode: string) => <Text strong>{classCode}</Text>,
     },
     {
-      title: "TRẠNG THÁI",
-      dataIndex: "status",
+      title: "Môn học",
+      dataIndex: "subjectName",
+      key: "subjectName",
+      render: (subjectName: string) => <Text>{subjectName}</Text>,
+    },
+    {
+      title: "Trạng thái",
       key: "status",
       width: 160,
       align: "center",
-      render: (status: string) => getStatusTag(status),
+      render: (_: unknown, record: AttendanceDto) => renderStatusTag(record),
     },
     {
-      title: "NHẬN XÉT CỦA GIẢNG VIÊN",
-      dataIndex: "lecturerComment",
-      key: "lecturerComment",
-      align: "center",
-      render: (comment?: string) => (
-        <Text type="secondary">{comment || ""}</Text>
+      title: "Ghi chú",
+      key: "notes",
+      render: (_: unknown, record: AttendanceDto) => (
+        <Text type="secondary">
+          {record.excuseReason || record.notes || "—"}
+        </Text>
       ),
     },
   ];
 
-  // Calculate statistics
-  const totalSessions = attendanceData.length;
-  const completedSessions = attendanceData.filter(
-    (record) => record.status !== "Future"
-  ).length;
-  const presentSessions = attendanceData.filter(
-    (record) => record.status === "Present"
-  ).length;
-  const absentSessions = attendanceData.filter(
-    (record) => record.status === "Absent"
-  ).length;
-  const absentPercentage =
-    completedSessions > 0
-      ? Math.round((absentSessions / completedSessions) * 100)
-      : 0;
+  const summary = useMemo(() => {
+    const total = attendanceRecords.length;
+    const present = attendanceRecords.filter((record) => record.isPresent).length;
+    const excused = attendanceRecords.filter(
+      (record) => !record.isPresent && record.isExcused
+    ).length;
+    const absent = attendanceRecords.filter(
+      (record) => !record.isPresent && !record.isExcused
+    ).length;
+    const percentage = total ? Math.round((present / total) * 100) : 0;
 
-  const handleCourseClick = (course: string) => {
-    setSelectedCourse(course);
+    return {
+      total,
+      present,
+      excused,
+      absent,
+      percentage,
+    };
+  }, [attendanceRecords]);
+
+  const renderStatusTag = (record: AttendanceDto) => {
+    if (record.isPresent) {
+      return (
+        <Tag color="success" icon={<CheckCircleOutlined />}>
+          Có mặt
+        </Tag>
+      );
+    }
+
+    if (record.isExcused) {
+      return (
+        <Tag color="blue" icon={<ExclamationCircleOutlined />}>
+          Miễn điểm danh
+        </Tag>
+      );
+    }
+
+    return (
+      <Tag color="error" icon={<CloseCircleOutlined />}>
+        Vắng mặt
+      </Tag>
+    );
   };
 
   return (
     <div className="attendance-report">
       <div className="page-header">
         <Title level={2} style={{ margin: 0, color: "#FFFFFF" }}>
-          Xem điểm danh cho Nghiêm Văn Hoàng (SE170117)
+          Báo cáo điểm danh cho {userProfile?.fullName || "Sinh viên"}
         </Title>
       </div>
 
+      {error && (
+        <Alert
+          type="error"
+          message="Không thể tải dữ liệu"
+          description={error}
+          showIcon
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
       <Row gutter={[24, 24]}>
-        {/* Sidebar - Semester and Course Selection */}
         <Col xs={24} lg={6}>
-          <Card className="sidebar-card">
+          <Card className="sidebar-card" loading={isLoadingSemesters}>
             <div className="semester-list">
               <Collapse
                 activeKey={activeSemesterKey}
-                onChange={(keys) => setActiveSemesterKey(keys)}
+                onChange={handleSemesterChange}
                 ghost
               >
                 {semesters.map((semester) => {
-                  const isActive = Array.isArray(activeSemesterKey)
-                    ? activeSemesterKey.includes(semester.id)
-                    : activeSemesterKey === semester.id;
+                  const semesterSubjects = subjectsBySemester[semester.id] || [];
+                  const isLoading = isLoadingSubjects[semester.id];
 
                   return (
                     <Panel header={semester.name} key={semester.id}>
-                      {semester.courses.map((course) => (
-                        <div
-                          key={course.code}
-                          className={`course-item ${
-                            course.isActive ? "active" : ""
-                          }`}
-                          onClick={() => handleCourseClick(course.code)}
-                        >
-                          <Text strong className="course-code">
-                            {course.code}
-                          </Text>
-                          <Text className="course-name">{course.name}</Text>
-                        </div>
-                      ))}
+                      {isLoading ? (
+                        <Spin />
+                      ) : semesterSubjects.length === 0 ? (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="Chưa có môn học"
+                        />
+                      ) : (
+                        semesterSubjects.map((subject) => (
+                          <div
+                            key={subject.subjectId}
+                            className={`course-item ${
+                              selectedSubjectId === subject.subjectId
+                                ? "active"
+                                : ""
+                            }`}
+                            onClick={() => handleSubjectClick(subject)}
+                          >
+                            <Text strong className="course-code">
+                              {subject.subjectCode}
+                            </Text>
+                            <Text className="course-name">
+                              {subject.subjectName}
+                            </Text>
+                          </div>
+                        ))
+                      )}
                     </Panel>
                   );
                 })}
@@ -510,29 +320,53 @@ const AttendanceReport: React.FC = () => {
           </Card>
         </Col>
 
-        {/* Main Content - Attendance Table */}
         <Col xs={24} lg={18}>
           <div className="report-section">
-            {/* Attendance Table */}
             <Card className="attendance-table-card">
-              <Table
-                columns={columns}
-                dataSource={attendanceData}
-                rowKey="no"
-                pagination={false}
-                scroll={{ x: 1000 }}
-                size="small"
-                className="attendance-table"
-                bordered
-              />
+              {!selectedSubjectId ? (
+                <Empty
+                  description="Chọn một môn học để xem điểm danh"
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                />
+              ) : (
+                <Spin spinning={isLoadingAttendance}>
+                  <div className="attendance-header">
+                    <div>
+                      <Text type="secondary">Môn học</Text>
+                      <Title level={4} style={{ margin: 0 }}>
+                        {selectedSubject?.subjectCode} · {selectedSubject?.subjectName}
+                      </Title>
+                    </div>
+                    <div className="attendance-summary-cards">
+                      <Tag color="green">Có mặt: {summary.present}</Tag>
+                      <Tag color="blue">Miễn: {summary.excused}</Tag>
+                      <Tag color="red">Vắng: {summary.absent}</Tag>
+                      <Tag color="purple">Tổng: {summary.total}</Tag>
+                    </div>
+                  </div>
 
-              {/* Summary */}
-              <div className="attendance-summary">
-                <Text strong style={{ color: "#ff4d4f", fontSize: 16 }}>
-                  VẮNG MẶT: {absentPercentage}% VẮNG MẶT TỔNG CỘNG ({absentSessions}{" "}
-                  VẮNG MẶT TRONG TỔNG SỐ {completedSessions} BUỔI HỌC).
-                </Text>
-              </div>
+                  {attendanceRecords.length === 0 ? (
+                    <Empty description="Chưa có dữ liệu điểm danh" />
+                  ) : (
+                    <Table
+                      columns={columns}
+                      dataSource={attendanceRecords}
+                      rowKey={(record) => record.id}
+                      pagination={false}
+                      scroll={{ x: 900 }}
+                      size="small"
+                      className="attendance-table"
+                      bordered
+                    />
+                  )}
+
+                  <div className="attendance-summary">
+                    <Text strong style={{ color: "#ff4d4f", fontSize: 15 }}>
+                      Tỉ lệ tham gia: {summary.percentage}% · Tổng số buổi: {summary.total}
+                    </Text>
+                  </div>
+                </Spin>
+              )}
             </Card>
           </div>
         </Col>

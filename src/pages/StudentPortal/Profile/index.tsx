@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Col,
-  DatePicker,
   Descriptions,
   Divider,
   Form,
@@ -17,16 +16,7 @@ import {
   Tag,
   Typography,
 } from "antd";
-import {
-  EditOutlined,
-  EnvironmentOutlined,
-  IdcardOutlined,
-  LockOutlined,
-  MailOutlined,
-  PhoneOutlined,
-  SaveOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import StudentServices from "../../../services/student/api.service";
@@ -40,9 +30,7 @@ dayjs.extend(relativeTime);
 const { Title, Text } = Typography;
 
 const Profile: React.FC = () => {
-  const [personalForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
-  const [editingPersonal, setEditingPersonal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [studentData, setStudentData] = useState<StudentDetailDto | null>(null);
@@ -54,7 +42,6 @@ const Profile: React.FC = () => {
 
   useEffect(() => {
     fetchStudentProfile();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchStudentProfile = async () => {
@@ -62,12 +49,6 @@ const Profile: React.FC = () => {
       setLoading(true);
       const data = await StudentServices.getCurrentStudentProfile();
       setStudentData(data);
-
-      // Set form values với dữ liệu từ API
-      personalForm.setFieldsValue({
-        fullName: data.fullName,
-        email: data.email,
-      });
     } catch (error: unknown) {
       const err = error as {
         response?: { data?: { message?: string } };
@@ -80,28 +61,6 @@ const Profile: React.FC = () => {
       message.error(errorMessage);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handlePersonalInfoSave = async (values: Record<string, string>) => {
-    try {
-      // TODO: Implement update profile API when available
-      // For now, just show success message
-      console.log("Saving personal info:", values);
-      message.success("Cập nhật thông tin cá nhân thành công!");
-      setEditingPersonal(false);
-      // Refresh profile data
-      await fetchStudentProfile();
-    } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-        message?: string;
-      };
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Cập nhật thông tin cá nhân thất bại";
-      message.error(errorMessage);
     }
   };
 
@@ -267,90 +226,49 @@ const Profile: React.FC = () => {
               <Descriptions.Item label="Tổng số lớp">
                 <Tag color="blue">{studentData.totalClasses}</Tag>
               </Descriptions.Item>
+              <Descriptions.Item label="Tình trạng tốt nghiệp">
+                <Tag color={studentData.isGraduated ? "blue" : "orange"}>
+                  {studentData.isGraduated
+                    ? "Đã tốt nghiệp"
+                    : "Chưa tốt nghiệp"}
+                </Tag>
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
 
         {/* Main Content */}
         <Col xs={24} lg={16}>
-          <Row gutter={[0, 24]}>
-            {/* Personal Information */}
+          <Row gutter={[24, 24]}>
             <Col xs={24}>
               <Card
                 title={
                   <Space>
-                    <IdcardOutlined style={{ color: "#1a94fc" }} />
-                    <span>Thông tin cá nhân</span>
+                    <UserOutlined style={{ color: "#1a94fc" }} />
+                    <span>Thông tin chung</span>
                   </Space>
                 }
-                extra={
-                  <Button
-                    type={editingPersonal ? "default" : "primary"}
-                    icon={editingPersonal ? <SaveOutlined /> : <EditOutlined />}
-                    onClick={() => {
-                      if (editingPersonal) {
-                        personalForm.submit();
-                      } else {
-                        setEditingPersonal(true);
-                      }
-                    }}
-                  >
-                    {editingPersonal ? "Lưu thay đổi" : "Chỉnh sửa"}
-                  </Button>
-                }
               >
-                <Form
-                  form={personalForm}
-                  layout="vertical"
-                  onFinish={handlePersonalInfoSave}
-                  initialValues={{
-                    fullName: studentData.fullName,
-                    email: studentData.email,
-                  }}
-                >
-                  <Row gutter={[16, 0]}>
-                    <Col xs={24} md={12}>
-                      <Form.Item label="Họ và tên" name="fullName">
-                        <Input
-                          prefix={<UserOutlined />}
-                          disabled={!editingPersonal}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item label="Email" name="email">
-                        <Input
-                          prefix={<MailOutlined />}
-                          disabled={!editingPersonal}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item label="Số điện thoại" name="phone">
-                        <Input
-                          prefix={<PhoneOutlined />}
-                          disabled={!editingPersonal}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Form.Item label="Ngày sinh" name="dateOfBirth">
-                        <DatePicker
-                          style={{ width: "100%" }}
-                          disabled={!editingPersonal}
-                        />
-                      </Form.Item>
-                    </Col>
-                    <Col xs={24}>
-                      <Form.Item label="Địa chỉ" name="address">
-                        <Input
-                          prefix={<EnvironmentOutlined />}
-                          disabled={!editingPersonal}
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </Form>
+                <Descriptions column={2} layout="vertical">
+                  <Descriptions.Item label="Mã sinh viên">
+                    {studentData.studentCode}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Họ và tên">
+                    {studentData.fullName}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Email">
+                    {studentData.email}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Ngày nhập học">
+                    {dayjs(studentData.enrollmentDate).format("DD/MM/YYYY")}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Ngày tạo tài khoản">
+                    {dayjs(studentData.createdAt).format("DD/MM/YYYY HH:mm")}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Trạng thái">
+                    {studentData.isActive ? "Hoạt động" : "Không hoạt động"}
+                  </Descriptions.Item>
+                </Descriptions>
               </Card>
             </Col>
 
@@ -505,8 +423,12 @@ const Profile: React.FC = () => {
                 dependencies={["newPassword"]}
                 rules={[
                   { required: true, message: "Vui lòng xác nhận mật khẩu mới" },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
+                  ({
+                    getFieldValue,
+                  }: {
+                    getFieldValue: (name: string) => string;
+                  }) => ({
+                    validator(_: unknown, value: string) {
                       if (!value || getFieldValue("newPassword") === value) {
                         return Promise.resolve();
                       }

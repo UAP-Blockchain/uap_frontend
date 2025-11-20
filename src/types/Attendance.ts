@@ -82,15 +82,15 @@ export interface ExcuseAbsenceRequest {
 }
 
 export interface AttendanceFilterRequest {
-  classId?: string;
-  studentId?: string;
-  subjectId?: string;
-  fromDate?: string;
-  toDate?: string;
-  isPresent?: boolean;
-  isExcused?: boolean;
-  pageNumber?: number;
-  pageSize?: number;
+  ClassId?: string;
+  StudentId?: string;
+  SubjectId?: string;
+  FromDate?: string;
+  ToDate?: string;
+  IsPresent?: boolean;
+  IsExcused?: boolean;
+  PageNumber?: number;
+  PageSize?: number;
 }
 
 
