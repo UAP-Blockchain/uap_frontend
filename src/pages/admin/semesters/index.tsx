@@ -16,6 +16,7 @@ import {
   Col,
   Tooltip,
 } from "antd";
+import { toast } from "react-toastify";
 import {
   PlusOutlined,
   EditOutlined,
@@ -177,10 +178,10 @@ const SemestersManagement: React.FC = () => {
       try {
         if (editingSemester) {
           await updateSemesterApi(editingSemester.id, payload);
-          message.success("Cập nhật học kì thành công!");
+          toast.success("Cập nhật học kì thành công!");
         } else {
           await createSemesterApi(payload);
-          message.success("Thêm học kì thành công!");
+          toast.success("Thêm học kì thành công!");
         }
         setIsModalVisible(false);
         fetchData(
@@ -188,7 +189,7 @@ const SemestersManagement: React.FC = () => {
           pagination.pageSize
         );
       } catch {
-        message.error("Không thể lưu học kì");
+        toast.error("Không thể lưu học kì");
       }
     });
   };
@@ -202,7 +203,7 @@ const SemestersManagement: React.FC = () => {
         // Use PATCH /api/Semesters/{id}/active to activate
         if (!record.isActive) {
           await activeSemesterApi(record.id);
-          message.success("Đã kích hoạt học kì!");
+          toast.success("Kích hoạt học kì thành công!");
           // If filtering by "inactive", switch to "all" to see the updated semester
           // Otherwise, refresh with current filter
           const newStatusFilter =
@@ -226,7 +227,7 @@ const SemestersManagement: React.FC = () => {
         // Use PATCH /api/Semesters/{id}/close to close
         if (!record.isClosed) {
           await closeSemesterApi(record.id);
-          message.success("Đã đóng học kì!");
+          toast.success("Đã đóng học kì!");
           // If filtering by "active" or "inactive", switch to "all" to see the updated semester
           // Otherwise, refresh with current filter
           const newStatusFilter =
@@ -243,12 +244,12 @@ const SemestersManagement: React.FC = () => {
             newStatusFilter
           );
         } else {
-          message.warning("Học kì đã được đóng");
+          toast.warning("Học kì đã được đóng");
           return;
         }
       }
     } catch {
-      message.error("Không thể cập nhật trạng thái");
+      toast.error("Không thể cập nhật trạng thái");
     }
   };
 
@@ -371,7 +372,7 @@ const SemestersManagement: React.FC = () => {
               onClick={() => showModal(record)}
             />
           </Tooltip>
-          {!record.isClosed && (
+          {!record.isClosed && !record.isActive && (
             <Tooltip title={record.isActive ? "Tắt kích hoạt" : "Kích hoạt"}>
               <Popconfirm
                 title={`Bạn có chắc muốn ${

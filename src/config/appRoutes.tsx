@@ -39,7 +39,6 @@ const CredentialsManagement = lazy(() => import("../pages/admin/credentials"));
 const ManagerProduct = lazy(() => import("../pages/admin/products"));
 const ReportsManagement = lazy(() => import("../pages/admin/reports"));
 const SecurityManagement = lazy(() => import("../pages/admin/security"));
-const TeachersManagement = lazy(() => import("../pages/admin/teachers"));
 const RegisterUser = lazy(() => import("../pages/admin/registerUser"));
 const BulkRegister = lazy(() => import("../pages/admin/bulkRegister"));
 const SemestersManagement = lazy(() => import("../pages/admin/semesters"));
@@ -107,17 +106,6 @@ export const adminRoutes: RouteConfig = {
       path: "/admin/dashboard",
       element: <Dashboard />,
       showInMenu: false,
-    },
-    {
-      path: "/admin/teachers",
-      element: <TeachersManagement />,
-      menuLabel: "Quản lý Giảng viên",
-      menuIcon: <TeamOutlined />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
-      requiredPermissions: [PERMISSIONS.MANAGE_TEACHERS],
-      menuIndex: 1,
-      menuSection: "main",
     },
     {
       path: "/admin/subjects",

@@ -101,13 +101,6 @@ export const useRoleAccess = () => {
   };
 
   /**
-   * Check if user can manage teachers
-   */
-  const canManageTeachers = (): boolean => {
-    return hasPermission(PERMISSIONS.MANAGE_TEACHERS);
-  };
-
-  /**
    * Check if user can manage classes
    */
   const canManageClasses = (): boolean => {
@@ -149,7 +142,6 @@ export const useRoleAccess = () => {
 
     // Common permission checks
     canManageStudents,
-    canManageTeachers,
     canManageClasses,
     canManageCredentials,
     canViewReports,

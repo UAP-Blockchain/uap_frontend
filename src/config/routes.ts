@@ -13,7 +13,6 @@ export const ROUTES = {
     BASE: "/admin",
     DASHBOARD: "/admin/dashboard",
     STUDENTS: "/admin/students",
-    TEACHERS: "/admin/teachers",
     CLASSES: "/admin/classes",
     SEMESTERS: "/admin/semesters",
     ROLES: "/admin/roles",
