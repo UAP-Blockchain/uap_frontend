@@ -16,7 +16,7 @@ import type { ColumnsType } from "antd/es/table";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
 import GradeServices from "../../../services/grade/api.service";
-import StudentServices from "../../../services/student/api.service";
+import StudentServices, { StudentGradeServices } from "../../../services/student/api.service";
 import type { SemesterDto } from "../../../types/Semester";
 import type { ComponentGradeDto, SubjectGradeDto } from "../../../types/Grade";
 import "./GradeReport.scss";
@@ -50,42 +50,10 @@ const GradeReport: React.FC = () => {
   const [isLoadingSubjects, setIsLoadingSubjects] = useState<
     Record<string, boolean>
   >({});
-  const [isLoadingStudent, setIsLoadingStudent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [studentId, setStudentId] = useState<string | null>(null);
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
-
-  // Load current student profile to get studentId
-  useEffect(() => {
-    const loadStudentProfile = async () => {
-      if (!accessToken) return;
-
-      setIsLoadingStudent(true);
-      try {
-        const student = await StudentServices.getCurrentStudentProfile();
-        setStudentId(student.id);
-        console.log("Loaded studentId from /api/Students/me:", student.id);
-      } catch (err) {
-        const errorMessage =
-          (
-            err as {
-              response?: { data?: { message?: string } };
-              message?: string;
-            }
-          ).response?.data?.message ||
-          (err as { message?: string }).message ||
-          "Không thể tải hồ sơ sinh viên";
-        setError(errorMessage);
-        message.error(errorMessage);
-      } finally {
-        setIsLoadingStudent(false);
-      }
-    };
-
-    loadStudentProfile();
-  }, [accessToken]);
 
   // Load semesters on mount
   useEffect(() => {
@@ -121,7 +89,7 @@ const GradeReport: React.FC = () => {
 
   // Load subjects when semester is opened (activeSemesterKey changes)
   useEffect(() => {
-    if (!studentId) return;
+    if (!accessToken) return;
 
     const semesterIds = Array.isArray(activeSemesterKey)
       ? activeSemesterKey
@@ -135,26 +103,17 @@ const GradeReport: React.FC = () => {
         return;
       }
 
-      // Load subjects for this semester
+      // Load subjects for this semester using /students/me/grades
       const loadSubjects = async () => {
         setIsLoadingSubjects((prev) => ({ ...prev, [semesterId]: true }));
         setError(null);
         try {
-          console.log(
-            "Loading subjects for semester:",
-            semesterId,
-            "studentId:",
-            studentId
-          );
-          const response = await GradeServices.getStudentGrades(studentId, {
+          const response = await StudentGradeServices.getMyGrades({
             SemesterId: semesterId,
           });
 
-          console.log("API response:", response);
-
           // Extract subjects from the grades response
           const subjects = response.subjects || [];
-          console.log("Extracted subjects:", subjects);
 
           setSubjectsBySemester((prev) => ({
             ...prev,
@@ -185,7 +144,7 @@ const GradeReport: React.FC = () => {
       loadSubjects();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeSemesterKey, studentId]);
+  }, [activeSemesterKey, accessToken]);
 
   // Load grades when subject is selected
   // The grades data is already loaded when semester is opened, so we just need to find and display it
@@ -394,7 +353,7 @@ const GradeReport: React.FC = () => {
     if (selectedSubject) break;
   }
 
-  if (isLoadingStudent || !studentId) {
+  if (!accessToken) {
     return (
       <div className="grade-report">
         <div className="page-header">
@@ -403,23 +362,12 @@ const GradeReport: React.FC = () => {
           </Title>
         </div>
         <Card>
-          {isLoadingStudent ? (
-            <Spin
-              size="large"
-              style={{
-                display: "block",
-                textAlign: "center",
-                padding: "40px 0",
-              }}
-            />
-          ) : (
             <Alert
               message="Yêu cầu xác thực"
               description="Vui lòng đăng nhập để xem báo cáo điểm của bạn."
               type="warning"
               showIcon
             />
-          )}
         </Card>
       </div>
     );

@@ -30,7 +30,9 @@ import {
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import StudentServices from "../../../services/student/api.service";
+import AuthServices from "../../../services/auth/api.service";
 import type { StudentDetailDto } from "../../../types/Student";
+import type { ChangePasswordWithOtpRequest } from "../../../types/Auth";
 import "./Profile.scss";
 
 dayjs.extend(relativeTime);
@@ -44,6 +46,8 @@ const Profile: React.FC = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [studentData, setStudentData] = useState<StudentDetailDto | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
 
   // Avatar từ public folder
   const tempAvatar = "/image/avatarEx.jpg";
@@ -63,7 +67,7 @@ const Profile: React.FC = () => {
       personalForm.setFieldsValue({
         fullName: data.fullName,
         email: data.email,
-  });
+      });
     } catch (error: unknown) {
       const err = error as {
         response?: { data?: { message?: string } };
@@ -81,22 +85,87 @@ const Profile: React.FC = () => {
 
   const handlePersonalInfoSave = async (values: Record<string, string>) => {
     try {
+      // TODO: Implement update profile API when available
+      // For now, just show success message
       console.log("Saving personal info:", values);
       message.success("Cập nhật thông tin cá nhân thành công!");
       setEditingPersonal(false);
-    } catch {
-      message.error("Cập nhật thông tin cá nhân thất bại");
+      // Refresh profile data
+      await fetchStudentProfile();
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Cập nhật thông tin cá nhân thất bại";
+      message.error(errorMessage);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!studentData?.email) {
+      message.error("Không tìm thấy email của bạn");
+      return;
+    }
+
+    try {
+      setSendingOtp(true);
+      await AuthServices.sendOtp({
+        email: studentData.email,
+        purpose: "ChangePassword",
+      });
+      setOtpSent(true);
+      message.success(
+        "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra email."
+      );
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errorMessage =
+        err.response?.data?.message || err.message || "Gửi mã OTP thất bại";
+      message.error(errorMessage);
+    } finally {
+      setSendingOtp(false);
     }
   };
 
   const handlePasswordChange = async (values: Record<string, string>) => {
     try {
-      console.log("Changing password:", values);
-      message.success("Đổi mật khẩu thành công!");
-      setShowPasswordModal(false);
-      passwordForm.resetFields();
-    } catch {
-      message.error("Đổi mật khẩu thất bại");
+      if (!values.otpCode) {
+        message.error("Vui lòng nhập mã OTP");
+        return;
+      }
+
+      const request: ChangePasswordWithOtpRequest = {
+        otpCode: values.otpCode,
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+        confirmPassword: values.confirmPassword,
+      };
+
+      const response = await AuthServices.changePasswordWithOtp(request);
+
+      if (response.success) {
+        message.success("Đổi mật khẩu thành công!");
+        setShowPasswordModal(false);
+        setOtpSent(false);
+        passwordForm.resetFields();
+      } else {
+        message.error(response.message || "Đổi mật khẩu thất bại");
+      }
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      const errorMessage =
+        err.response?.data?.message || err.message || "Đổi mật khẩu thất bại";
+      message.error(errorMessage);
     }
   };
 
@@ -148,12 +217,12 @@ const Profile: React.FC = () => {
           <Card className="profile-overview-card">
             <div className="profile-header">
               <div className="avatar-section">
-                    <Avatar
-                      size={100}
+                <Avatar
+                  size={100}
                   src={tempAvatar}
-                      icon={<UserOutlined />}
-                      className="profile-avatar"
-                    />
+                  icon={<UserOutlined />}
+                  className="profile-avatar"
+                />
               </div>
               <div className="profile-info">
                 <Title
@@ -295,29 +364,29 @@ const Profile: React.FC = () => {
                   </Space>
                 }
               >
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "12px 0",
-                      }}
-                    >
-                      <div>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 0",
+                  }}
+                >
+                  <div>
                     <Text strong>Mật khẩu</Text>
-                        <br />
+                    <br />
                     <Text type="secondary">
                       Cập nhật mật khẩu để bảo vệ tài khoản của bạn
                     </Text>
-                      </div>
-                      <Button
+                  </div>
+                  <Button
                     type="primary"
-                        icon={<LockOutlined />}
-                        onClick={() => setShowPasswordModal(true)}
-                      >
+                    icon={<LockOutlined />}
+                    onClick={() => setShowPasswordModal(true)}
+                  >
                     Đổi mật khẩu
-                      </Button>
-                    </div>
+                  </Button>
+                </div>
               </Card>
             </Col>
           </Row>
@@ -330,16 +399,25 @@ const Profile: React.FC = () => {
         open={showPasswordModal}
         onCancel={() => {
           setShowPasswordModal(false);
+          setOtpSent(false);
           passwordForm.resetFields();
         }}
         footer={[
-          <Button key="cancel" onClick={() => setShowPasswordModal(false)}>
+          <Button
+            key="cancel"
+            onClick={() => {
+              setShowPasswordModal(false);
+              setOtpSent(false);
+              passwordForm.resetFields();
+            }}
+          >
             Hủy
           </Button>,
           <Button
             key="submit"
             type="primary"
             onClick={() => passwordForm.submit()}
+            disabled={!otpSent}
           >
             Đổi mật khẩu
           </Button>,
@@ -350,45 +428,97 @@ const Profile: React.FC = () => {
           layout="vertical"
           onFinish={handlePasswordChange}
         >
-          <Form.Item
-            label="Mật khẩu hiện tại"
-            name="currentPassword"
-            rules={[
-              { required: true, message: "Vui lòng nhập mật khẩu hiện tại" },
-            ]}
-          >
-            <Input.Password placeholder="Nhập mật khẩu hiện tại" />
-          </Form.Item>
+          {!otpSent ? (
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <Text>
+                Để đổi mật khẩu, bạn cần nhận mã OTP qua email. Nhấn nút bên
+                dưới để gửi mã OTP.
+              </Text>
+              <br />
+              <Button
+                type="primary"
+                onClick={handleSendOtp}
+                loading={sendingOtp}
+                style={{ marginTop: 16 }}
+              >
+                Gửi mã OTP
+              </Button>
+            </div>
+          ) : (
+            <>
+              <Form.Item
+                label="Mã OTP"
+                name="otpCode"
+                rules={[
+                  { required: true, message: "Vui lòng nhập mã OTP" },
+                  {
+                    len: 6,
+                    message: "Mã OTP phải có 6 chữ số",
+                  },
+                ]}
+                extra={
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={handleSendOtp}
+                    loading={sendingOtp}
+                    style={{ padding: 0 }}
+                  >
+                    Gửi lại mã OTP
+                  </Button>
+                }
+              >
+                <Input
+                  placeholder="Nhập mã OTP 6 chữ số"
+                  maxLength={6}
+                  style={{ textAlign: "center", letterSpacing: "8px" }}
+                />
+              </Form.Item>
 
-          <Form.Item
-            label="Mật khẩu mới"
-            name="newPassword"
-            rules={[
-              { required: true, message: "Vui lòng nhập mật khẩu mới" },
-              { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" },
-            ]}
-          >
-            <Input.Password placeholder="Nhập mật khẩu mới" />
-          </Form.Item>
+              <Form.Item
+                label="Mật khẩu hiện tại"
+                name="currentPassword"
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập mật khẩu hiện tại",
+                  },
+                ]}
+              >
+                <Input.Password placeholder="Nhập mật khẩu hiện tại" />
+              </Form.Item>
 
-          <Form.Item
-            label="Xác nhận mật khẩu mới"
-            name="confirmPassword"
-            dependencies={["newPassword"]}
-            rules={[
-              { required: true, message: "Vui lòng xác nhận mật khẩu mới" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue("newPassword") === value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error("Mật khẩu không khớp!"));
-                },
-              }),
-            ]}
-          >
-            <Input.Password placeholder="Nhập lại mật khẩu mới" />
-          </Form.Item>
+              <Form.Item
+                label="Mật khẩu mới"
+                name="newPassword"
+                rules={[
+                  { required: true, message: "Vui lòng nhập mật khẩu mới" },
+                  { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" },
+                ]}
+              >
+                <Input.Password placeholder="Nhập mật khẩu mới" />
+              </Form.Item>
+
+              <Form.Item
+                label="Xác nhận mật khẩu mới"
+                name="confirmPassword"
+                dependencies={["newPassword"]}
+                rules={[
+                  { required: true, message: "Vui lòng xác nhận mật khẩu mới" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || getFieldValue("newPassword") === value) {
+                        return Promise.resolve();
+                      }
+                      return Promise.reject(new Error("Mật khẩu không khớp!"));
+                    },
+                  }),
+                ]}
+              >
+                <Input.Password placeholder="Nhập lại mật khẩu mới" />
+              </Form.Item>
+            </>
+          )}
         </Form>
       </Modal>
     </div>
