@@ -488,11 +488,7 @@ const SubjectsManagement: React.FC = () => {
                 size="large"
               />
             </Form.Item>
-
-          
           </div>
-
-         
 
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea
