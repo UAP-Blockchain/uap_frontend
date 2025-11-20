@@ -30,17 +30,17 @@ import {
 } from "@ant-design/icons";
 import "./index.scss";
 import type { ClassSummary, CreateClassRequest } from "../../../types/Class";
-import type { SubjectDto } from "../../../types/Subject";
 import type { TeacherOption } from "../../../types/Teacher";
 import {
   createClassApi,
   fetchClassesApi,
-  fetchSubjectsApi,
   fetchTeachersApi,
   getClassByIdApi,
   updateClassApi,
   deleteClassApi,
 } from "../../../services/admin/classes/api";
+import type { SubjectOffering } from "../../../types/SubjectOffering";
+import { fetchSubjectOfferingsApi } from "../../../services/admin/subjectOfferings/api";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -48,7 +48,11 @@ const { Option } = Select;
 const ClassesManagement: React.FC = () => {
   const navigate = useNavigate();
   const [classes, setClasses] = useState<ClassSummary[]>([]);
-  const [subjects, setSubjects] = useState<SubjectDto[]>([]);
+  const [subjectOfferings, setSubjectOfferings] = useState<SubjectOffering[]>(
+    []
+  );
+  const [selectedOfferingSemester, setSelectedOfferingSemester] =
+    useState<string>("all");
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [searchText, setSearchText] = useState("");
@@ -62,13 +66,13 @@ const ClassesManagement: React.FC = () => {
   const loadInitialData = async () => {
     setLoading(true);
     try {
-      const [classRes, subjectRes, teacherRes] = await Promise.all([
+      const [classRes, offeringsRes, teacherRes] = await Promise.all([
         fetchClassesApi(),
-        fetchSubjectsApi(),
+        fetchSubjectOfferingsApi(),
         fetchTeachersApi(),
       ]);
       setClasses(classRes);
-      setSubjects(subjectRes);
+      setSubjectOfferings(offeringsRes);
       setTeachers(teacherRes);
     } catch {
       toast.error("Không thể tải dữ liệu lớp học");
@@ -80,6 +84,22 @@ const ClassesManagement: React.FC = () => {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  const offeringSemesterOptions = useMemo(() => {
+    const semesters = Array.from(
+      new Set(subjectOfferings.map((offering) => offering.semesterName))
+    );
+    return semesters.sort((a, b) => a.localeCompare(b));
+  }, [subjectOfferings]);
+
+  useEffect(() => {
+    if (
+      selectedOfferingSemester !== "all" &&
+      !offeringSemesterOptions.includes(selectedOfferingSemester)
+    ) {
+      setSelectedOfferingSemester("all");
+    }
+  }, [offeringSemesterOptions, selectedOfferingSemester]);
 
   const semesterOptions = useMemo(() => {
     const semesters = Array.from(
@@ -109,6 +129,15 @@ const ClassesManagement: React.FC = () => {
       totalEnrollments,
     };
   }, [classes]);
+
+  const filteredSubjectOfferings = useMemo(() => {
+    if (selectedOfferingSemester === "all") {
+      return subjectOfferings;
+    }
+    return subjectOfferings.filter(
+      (offering) => offering.semesterName === selectedOfferingSemester
+    );
+  }, [subjectOfferings, selectedOfferingSemester]);
 
   const statsCards = [
     {
@@ -274,17 +303,20 @@ const ClassesManagement: React.FC = () => {
       const classDetail = await getClassByIdApi(classItem.id);
       setEditingClass(classDetail);
 
-      // Find subject and teacher IDs from the current data
-      const subject = subjects.find(
-        (s) => s.subjectCode === classItem.subjectCode
+      const subjectOffering = subjectOfferings.find(
+        (offering) => offering.id === classDetail.subjectOfferingId
       );
       const teacher = teachers.find(
         (t) => t.teacherCode === classItem.teacherCode
       );
 
+      if (subjectOffering?.semesterName) {
+        setSelectedOfferingSemester(subjectOffering.semesterName);
+      }
+
       form.setFieldsValue({
         classCode: classDetail.classCode,
-        subjectId: subject?.id,
+        subjectOfferingId: subjectOffering?.id,
         teacherId: teacher?.id,
       });
       setIsModalVisible(true);
@@ -374,6 +406,7 @@ const ClassesManagement: React.FC = () => {
               onClick={() => {
                 setEditingClass(null);
                 form.resetFields();
+                setSelectedOfferingSemester("all");
                 setIsModalVisible(true);
               }}
             >
@@ -513,10 +546,26 @@ const ClassesManagement: React.FC = () => {
           layout="vertical"
           initialValues={{
             classCode: "",
-            subjectId: undefined,
+            subjectOfferingId: undefined,
             teacherId: undefined,
           }}
         >
+          <Form.Item label="Kỳ học">
+            <Select
+              placeholder="Chọn kỳ học để lọc Subject Offering"
+              value={selectedOfferingSemester}
+              onChange={(value) => setSelectedOfferingSemester(value)}
+              allowClear={false}
+            >
+              <Option value="all">Tất cả kỳ học</Option>
+              {offeringSemesterOptions.map((semester) => (
+                <Option key={semester} value={semester}>
+                  {semester}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
           <Form.Item
             name="classCode"
             label="Mã lớp học"
@@ -526,23 +575,25 @@ const ClassesManagement: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            name="subjectId"
-            label="Môn học"
-            rules={[{ required: true, message: "Vui lòng chọn môn học" }]}
+            name="subjectOfferingId"
+            label="Subject Offering"
+            rules={[
+              { required: true, message: "Vui lòng chọn subject offering" },
+            ]}
           >
             <Select
-              placeholder="Chọn môn học"
+              placeholder="Chọn subject offering"
               showSearch
               optionFilterProp="label"
             >
-              {subjects.map((subject) => (
+              {filteredSubjectOfferings.map((offering) => (
                 <Option
-                  key={subject.id}
-                  value={subject.id}
-                  label={`${subject.subjectCode} ${subject.subjectName}`}
+                  key={offering.id}
+                  value={offering.id}
+                  label={`${offering.semesterName} – ${offering.subjectCode}`}
                 >
-                  {subject.subjectCode} - {subject.subjectName} (
-                  {subject.credits} tín chỉ)
+                  {offering.semesterName} – {offering.subjectCode} (
+                  {offering.subjectName})
                 </Option>
               ))}
             </Select>
