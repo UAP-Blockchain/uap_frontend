@@ -90,6 +90,7 @@ const TeacherDashboard = lazy(() => import("../pages/teacher/dashboard"));
 const TeacherGrading = lazy(() => import("../pages/teacher/grading"));
 const TeacherResults = lazy(() => import("../pages/teacher/results"));
 const TeacherSchedule = lazy(() => import("../pages/teacher/schedule"));
+const TeacherProfile = lazy(() => import("../pages/teacher/profile"));
 
 // Extended Route Config with Menu Metadata
 export interface RouteConfig {
@@ -400,6 +401,16 @@ export const teacherRoutes: RouteConfig = {
       menuSection: "main",
     },
     {
+      path: "/teacher/profile",
+      element: <TeacherProfile />,
+      menuLabel: "Hồ sơ",
+      menuIcon: <UserOutlined />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.TEACHER],
+      menuIndex: 2,
+      menuSection: "main",
+    },
+    {
       path: "/teacher/class-list/:courseCode",
       element: <TeacherClassStudentList />,
       showInMenu: false,
@@ -412,7 +423,7 @@ export const teacherRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.TEACHER],
       requiredPermissions: [PERMISSIONS.MANAGE_ATTENDANCE],
-      menuIndex: 2,
+      menuIndex: 3,
       menuSection: "main",
     },
     {
@@ -423,7 +434,7 @@ export const teacherRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.TEACHER],
       requiredPermissions: [PERMISSIONS.MANAGE_GRADES],
-      menuIndex: 3,
+      menuIndex: 4,
       menuSection: "main",
     },
     {
@@ -433,7 +444,7 @@ export const teacherRoutes: RouteConfig = {
       menuIcon: <LineChartOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.TEACHER],
-      menuIndex: 4,
+      menuIndex: 5,
       menuSection: "main",
     },
   ],

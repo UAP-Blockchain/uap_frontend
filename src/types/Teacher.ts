@@ -42,4 +42,30 @@ export interface TeacherOption {
   fullName: string;
 }
 
+export interface TeacherClassSummaryDto {
+  classId: string;
+  classCode: string;
+  subjectName: string;
+  subjectCode: string;
+  credits: number;
+  semesterName: string;
+  totalStudents: number;
+  totalSlots: number;
+}
+
+export interface TeacherProfileDto {
+  id: string;
+  teacherCode: string;
+  fullName: string;
+  email: string;
+  hireDate: string;
+  specialization: string;
+  phoneNumber: string;
+  isActive: boolean;
+  createdAt: string;
+  classes: TeacherClassSummaryDto[];
+  totalClasses: number;
+  totalStudents: number;
+}
+
 export type { Teacher, TeacherFormData };

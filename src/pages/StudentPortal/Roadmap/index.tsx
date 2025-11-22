@@ -1,5 +1,6 @@
 import {
   CalendarOutlined,
+  EyeOutlined,
   PlusOutlined,
   StarOutlined,
 } from "@ant-design/icons";
@@ -14,41 +15,37 @@ import {
   Statistic,
   Table,
   Tag,
+  Tooltip,
   Typography,
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import dayjs from "dayjs";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import RoadmapServices from "../../../services/roadmap/api.service";
-import type { StudentRoadmapDto } from "../../../types/Roadmap";
+import type { CurriculumRoadmapDto } from "../../../types/Roadmap";
 import "./Roadmap.scss";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 
-type CourseStatus = "PASSED" | "STUDYING" | "NOT_STARTED" | "FAILED";
+type CourseStatus = "Completed" | "InProgress" | "Open" | "Locked";
 
 interface RoadmapCourse {
+  subjectId: string;
   code: string;
   name: string;
   credits: number;
-  prerequisites: string[];
+  prerequisite: string | null;
+  prerequisitesMet: boolean;
   grade?: string;
   status: CourseStatus;
+  currentClassCode?: string | null;
+  currentSemesterName?: string | null;
 }
 
 interface RoadmapSemester {
-  id: string;
-  name: string;
-  label: string;
-  isCurrent?: boolean;
-  registration: {
-    start: string;
-    end: string;
-    isOpen: boolean;
-  };
+  semesterNumber: number;
   courses: RoadmapCourse[];
 }
 
@@ -56,23 +53,31 @@ const statusMap: Record<
   CourseStatus,
   { label: string; color: string; background: string }
 > = {
-  PASSED: { label: "Passed", color: "#1d4ed8", background: "#dbeafe" },
-  STUDYING: { label: "Studying", color: "#0ea5e9", background: "#e0f2fe" },
-  NOT_STARTED: {
-    label: "Not started",
+  Completed: {
+    label: "Đã hoàn thành",
+    color: "#1d4ed8",
+    background: "#dbeafe",
+  },
+  InProgress: {
+    label: "Đang học",
+    color: "#0ea5e9",
+    background: "#e0f2fe",
+  },
+  Open: {
+    label: "Có thể đăng ký",
+    color: "#10b981",
+    background: "#d1fae5",
+  },
+  Locked: {
+    label: "Chưa mở khóa",
     color: "#94a3b8",
     background: "#f8fafc",
-  },
-  FAILED: {
-    label: "Failed",
-    color: "#ef4444",
-    background: "#fee2e2",
   },
 };
 
 const Roadmap: React.FC = () => {
   const navigate = useNavigate();
-  const [roadmap, setRoadmap] = useState<StudentRoadmapDto | null>(null);
+  const [roadmap, setRoadmap] = useState<CurriculumRoadmapDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,7 +86,7 @@ const Roadmap: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const data = await RoadmapServices.getMyRoadmap();
+        const data = await RoadmapServices.getMyCurriculumRoadmap();
         setRoadmap(data);
       } catch (err) {
         const messageText =
@@ -105,83 +110,73 @@ const Roadmap: React.FC = () => {
 
   const semesters: RoadmapSemester[] = useMemo(() => {
     if (!roadmap) return [];
-    const now = dayjs();
 
-    return roadmap.semesterGroups.map((group) => {
-      const startDate = group.startDate || "";
-      const endDate = group.endDate || "";
-      const isOpen =
-        !!startDate &&
-        !!endDate &&
-        now.isAfter(dayjs(startDate)) &&
-        now.isBefore(dayjs(endDate).endOf("day"));
-
-      const courses = group.subjects
-        .slice()
-        .sort((a, b) => a.sequenceOrder - b.sequenceOrder)
-        .map((subject) => ({
-          code: subject.subjectCode,
-          name: subject.subjectName,
-          credits: subject.credits,
-          prerequisites: [],
-          grade:
-            subject.letterGrade ||
-            (subject.finalScore !== null && subject.finalScore !== undefined
-              ? subject.finalScore.toFixed(1)
-              : undefined),
-          status: mapBackendStatus(subject.status),
-        }));
-
-      return {
-        id: group.semesterId,
-        name: group.semesterName,
-        label: group.semesterCode,
-        isCurrent: group.isCurrentSemester,
-        registration: {
-          start: startDate,
-          end: endDate,
-          isOpen,
-        },
-        courses,
-      };
-    });
+    return roadmap.semesters.map((semester) => ({
+      semesterNumber: semester.semesterNumber,
+      courses: semester.subjects.map((subject) => ({
+        subjectId: subject.subjectId,
+        code: subject.subjectCode,
+        name: subject.subjectName,
+        credits: subject.credits,
+        prerequisite: subject.prerequisiteSubjectCode,
+        prerequisitesMet: subject.prerequisitesMet,
+        grade:
+          subject.finalScore !== null && subject.finalScore !== undefined
+            ? subject.finalScore.toFixed(2)
+            : undefined,
+        status: subject.status as CourseStatus,
+        currentClassCode: subject.currentClassCode,
+        currentSemesterName: subject.currentSemesterName,
+      })),
+    }));
   }, [roadmap]);
 
-  const currentSemester = useMemo(
-    () => semesters.find((sem) => sem.isCurrent) || semesters[0],
-    [semesters]
-  );
-
   const stats = useMemo(() => {
-    const completedCredits = semesters.reduce(
+    if (!roadmap) {
+      return {
+        completedCredits: 0,
+        totalCredits: 0,
+        gpa: 0,
+      };
+    }
+
+    const completedCredits = roadmap.semesters.reduce(
       (sum, semester) =>
         sum +
-        semester.courses
-          .filter((course) => course.status === "PASSED")
-          .reduce((acc, course) => acc + course.credits, 0),
+        semester.subjects
+          .filter((subject) => subject.status === "Completed")
+          .reduce((acc, subject) => acc + subject.credits, 0),
       0
     );
 
-    const totalCredits = semesters.reduce(
+    const totalCredits = roadmap.semesters.reduce(
       (sum, semester) =>
-        sum + semester.courses.reduce((acc, course) => acc + course.credits, 0),
+        sum +
+        semester.subjects.reduce((acc, subject) => acc + subject.credits, 0),
       0
     );
 
-    const completedCourses = semesters
-      .flatMap((semester) => semester.courses)
-      .filter((course) => course.status === "PASSED" && course.grade);
+    // Calculate GPA from completed subjects with finalScore
+    const completedSubjects = roadmap.semesters
+      .flatMap((semester) => semester.subjects)
+      .filter(
+        (subject) =>
+          subject.status === "Completed" &&
+          subject.finalScore !== null &&
+          subject.finalScore !== undefined
+      );
 
-    const totalScore = completedCourses.reduce((sum, course) => {
-      const numericGrade = Number(course.grade);
-      return sum + (Number.isFinite(numericGrade) ? numericGrade : 0);
-    }, 0);
+    const totalScore = completedSubjects.reduce(
+      (sum, subject) => sum + (subject.finalScore || 0),
+      0
+    );
 
-    const averageScore = completedCourses.length
-      ? totalScore / completedCourses.length
+    const averageScore = completedSubjects.length
+      ? totalScore / completedSubjects.length
       : 0;
 
-    const gpa = completedCourses.length
+    // Convert 10-point scale to 4-point GPA scale
+    const gpa = completedSubjects.length
       ? Number(((averageScore / 10) * 4).toFixed(2))
       : 0;
 
@@ -190,7 +185,7 @@ const Roadmap: React.FC = () => {
       totalCredits,
       gpa,
     };
-  }, [semesters]);
+  }, [roadmap]);
 
   const handleRegister = (courseCode: string) => {
     navigate("/student-portal/course-registration", {
@@ -198,58 +193,63 @@ const Roadmap: React.FC = () => {
     });
   };
 
+  const handleViewDetails = (subjectId: string) => {
+    // Navigate to grade report with subject filter
+    navigate("/student-portal/grade-report", {
+      state: { subjectId },
+    });
+  };
+
   const getColumns = (
     semester: RoadmapSemester
   ): ColumnsType<RoadmapCourse> => [
     {
-      title: "Subject Code",
+      title: "Mã môn học",
       dataIndex: "code",
       key: "code",
       width: 140,
       render: (code) => <Text strong>{code}</Text>,
     },
     {
-      title: "Prerequisite",
-      dataIndex: "prerequisites",
-      key: "prerequisites",
+      title: "Môn tiên quyết",
+      dataIndex: "prerequisite",
+      key: "prerequisite",
       width: 200,
-      render: (prerequisites: string[]) =>
-        prerequisites.length ? (
+      render: (prerequisite: string | null, record: RoadmapCourse) =>
+        prerequisite ? (
           <Space size={[4, 4]} wrap>
-            {prerequisites.map((item) => (
-              <Tag
-                key={item}
-                style={{
-                  background: "#f0f5ff",
-                  borderColor: "#91d5ff",
-                  color: "#1a94fc",
-                  borderRadius: "6px",
-                  fontWeight: 500,
-                  fontSize: "12px",
-                }}
-              >
-                {item}
-              </Tag>
-            ))}
+            <Tag
+              style={{
+                background: record.prerequisitesMet ? "#d1fae5" : "#fee2e2",
+                borderColor: record.prerequisitesMet ? "#10b981" : "#ef4444",
+                color: record.prerequisitesMet ? "#10b981" : "#ef4444",
+                borderRadius: "6px",
+                fontWeight: 500,
+                fontSize: "12px",
+              }}
+            >
+              {prerequisite}
+              {!record.prerequisitesMet}
+            </Tag>
           </Space>
         ) : (
-          <Text type="secondary">-</Text>
+          <Text type="secondary">—</Text>
         ),
     },
     {
-      title: "Subject Name",
+      title: "Tên môn học",
       dataIndex: "name",
       key: "name",
     },
     {
-      title: "Credit",
+      title: "Tín chỉ",
       dataIndex: "credits",
       key: "credits",
       width: 100,
       align: "center",
     },
     {
-      title: "Grade",
+      title: "Điểm",
       dataIndex: "grade",
       key: "grade",
       width: 120,
@@ -257,7 +257,7 @@ const Roadmap: React.FC = () => {
         grade ? <Text strong>{grade}</Text> : <Text type="secondary">—</Text>,
     },
     {
-      title: "Status",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: 150,
@@ -280,21 +280,35 @@ const Roadmap: React.FC = () => {
       ),
     },
     {
-      title: "Action",
+      title: "Hành động",
       key: "action",
-      width: 100,
+      width: 120,
       align: "center",
-      render: (_: unknown, record) => {
-        const canRegister =
-          record.status === "NOT_STARTED" &&
-          semester.isCurrent &&
-          semester.registration.isOpen;
+      render: (_: unknown, record: RoadmapCourse) => {
+        if (record.status === "Completed") {
+          return (
+            <Tooltip title="Xem chi tiết điểm">
+              <Button
+                type="link"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewDetails(record.subjectId)}
+                style={{
+                  color: "#1a94fc",
+                  fontWeight: 500,
+                }}
+              >
+                Xem
+              </Button>
+            </Tooltip>
+          );
+        }
 
-        if (canRegister) {
+        if (record.status === "Open" && record.prerequisitesMet) {
           return (
             <Button
               type="primary"
               size="small"
+              icon={<PlusOutlined />}
               onClick={() => handleRegister(record.code)}
               style={{
                 background: "linear-gradient(135deg, #1a94fc, #0ea5e9)",
@@ -304,10 +318,27 @@ const Roadmap: React.FC = () => {
                 boxShadow: "0 2px 8px rgba(26, 148, 252, 0.3)",
               }}
             >
-              <PlusOutlined /> Đăng ký
+              Đăng ký
             </Button>
           );
         }
+
+        if (record.status === "Locked" || !record.prerequisitesMet) {
+          return (
+            <Tooltip
+              title={
+                !record.prerequisitesMet && record.prerequisite
+                  ? `Chưa hoàn thành môn tiên quyết: ${record.prerequisite}`
+                  : "Môn học chưa được mở khóa"
+              }
+            >
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                —
+              </Text>
+            </Tooltip>
+          );
+        }
+
         return <Text type="secondary">—</Text>;
       },
     },
@@ -336,7 +367,7 @@ const Roadmap: React.FC = () => {
     );
   }
 
-  if (!semesters.length) {
+  if (!roadmap || !semesters.length) {
     return (
       <div className="student-roadmap">
         <Empty description="Chưa có dữ liệu lộ trình học tập" />
@@ -350,13 +381,13 @@ const Roadmap: React.FC = () => {
         <div className="roadmap-header-content">
           <div className="roadmap-title-section">
             <Text style={{ color: "rgba(255, 255, 255, 0.9)" }}>
-              STUDY ROADMAP
+              LỘ TRÌNH HỌC TẬP
             </Text>
             <Title level={2} style={{ margin: 0, color: "#ffffff" }}>
               Lộ trình học tập
             </Title>
             <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
-              Tập trung theo dõi tín chỉ, GPA và nhanh chóng xem trạng thái từng kỳ.
+              {roadmap.curriculumName} ({roadmap.curriculumCode})
             </Text>
           </div>
 
@@ -387,7 +418,7 @@ const Roadmap: React.FC = () => {
                     fontWeight: 500,
                   }}
                 >
-                  Đợt đăng ký đang mở
+                  Tổng quan
                 </Text>
                 <Title
                   level={4}
@@ -398,7 +429,7 @@ const Roadmap: React.FC = () => {
                     fontWeight: 700,
                   }}
                 >
-                  {currentSemester?.name || "N/A"}
+                  {roadmap.totalSubjects} môn học
                 </Title>
                 <Text
                   strong
@@ -407,14 +438,8 @@ const Roadmap: React.FC = () => {
                     fontSize: "14px",
                   }}
                 >
-                  {currentSemester?.registration.start &&
-                  currentSemester?.registration.end
-                    ? `${dayjs(currentSemester.registration.start).format(
-                        "DD/MM"
-                      )} – ${dayjs(currentSemester.registration.end).format(
-                        "DD/MM/YYYY"
-                      )}`
-                    : "—"}
+                  {roadmap.completedSubjects} đã hoàn thành ·{" "}
+                  {roadmap.inProgressSubjects} đang học
                 </Text>
               </div>
             </Card>
@@ -426,18 +451,22 @@ const Roadmap: React.FC = () => {
         accordion
         bordered={false}
         className="roadmap-collapse"
-        defaultActiveKey={currentSemester?.id}
+        defaultActiveKey={semesters[0]?.semesterNumber}
       >
         {semesters.map((semester) => (
           <Panel
             header={
               <div className="semester-panel-header">
                 <div>
-                  <Text strong>{semester.name}</Text>
-                  <div className="semester-label">{semester.label}</div>
+                  <Text strong>Kỳ {semester.semesterNumber}</Text>
+                  <div className="semester-label">
+                    {semester.courses.length} môn học
+                  </div>
                 </div>
                 <Space size={8}>
-                  {semester.isCurrent && (
+                  {semester.courses.some(
+                    (course) => course.status === "InProgress"
+                  ) && (
                     <Tag
                       icon={<StarOutlined />}
                       style={{
@@ -451,7 +480,7 @@ const Roadmap: React.FC = () => {
                         fontSize: "12px",
                       }}
                     >
-                      Kỳ hiện tại
+                      Đang học
                     </Tag>
                   )}
                   <Tag
@@ -464,23 +493,21 @@ const Roadmap: React.FC = () => {
                       borderRadius: "8px",
                     }}
                   >
-                    Đăng ký: {semester.registration.start
-                      ? dayjs(semester.registration.start).format("DD/MM")
-                      : "—"}
-                    {" "}–{" "}
-                    {semester.registration.end
-                      ? dayjs(semester.registration.end).format("DD/MM")
-                      : "—"}
+                    {
+                      semester.courses.filter((c) => c.status === "Completed")
+                        .length
+                    }{" "}
+                    đã hoàn thành
                   </Tag>
                 </Space>
               </div>
             }
-            key={semester.id}
+            key={semester.semesterNumber}
           >
             <Table
               columns={getColumns(semester)}
               dataSource={semester.courses}
-              rowKey={(record) => `${semester.id}-${record.code}`}
+              rowKey={(record) => `${semester.semesterNumber}-${record.code}`}
               pagination={false}
               size="small"
             />
@@ -492,18 +519,3 @@ const Roadmap: React.FC = () => {
 };
 
 export default Roadmap;
-
-const mapBackendStatus = (status: string): CourseStatus => {
-  switch (status) {
-    case "Completed":
-      return "PASSED";
-    case "InProgress":
-      return "STUDYING";
-    case "Planned":
-      return "NOT_STARTED";
-    case "Failed":
-      return "FAILED";
-    default:
-      return "NOT_STARTED";
-  }
-};
