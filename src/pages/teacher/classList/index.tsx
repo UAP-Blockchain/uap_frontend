@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { useLocation, useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Card,
   Table,
@@ -8,508 +8,630 @@ import {
   Avatar,
   Space,
   Input,
-  Form,
   Row,
   Col,
   Statistic,
   Tag,
-  Tooltip,
   Badge,
-  Modal,
+  Spin,
+  notification,
+  Radio,
+  Tooltip,
 } from "antd";
 import {
   ArrowLeftOutlined,
   UserOutlined,
-  SearchOutlined,
   TeamOutlined,
   BookOutlined,
+  SaveOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
+import AttendanceServices from "../../../services/attendance/api.service";
+import type {
+  SlotAttendanceDto,
+  StudentAttendanceDetailDto,
+} from "../../../types/Attendance";
 import "./index.scss";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 
-type SimpleAttendanceStatus = "present" | "absent" | "excused";
-
-interface StudentRow {
-  index: number;
-  image?: string;
-  member: string;
-  code: string;
-  surname: string;
-  middleName: string;
-  givenName: string;
-}
-
 const TeacherClassStudentList: React.FC = () => {
   const navigate = useNavigate();
-  const { courseCode = "COURSE" } = useParams();
   const location = useLocation();
+  const [api, contextHolder] = notification.useNotification();
   const state = (location.state || {}) as {
+    slot?: unknown;
+    slotId?: string;
+    classId?: string;
+    courseCode?: string;
+    courseName?: string;
+    date?: string;
+    startTime?: string;
+    endTime?: string;
     className?: string;
     room?: string;
-    date?: string;
   };
+
   const [searchText, setSearchText] = useState("");
-
-  const students: StudentRow[] = useMemo(
-    () => [
-      {
-        index: 1,
-        image: "",
-        member: "SE170101",
-        code: "Nguyễn",
-        surname: "Văn",
-        middleName: "A",
-        givenName: "",
-      },
-      {
-        index: 2,
-        image: "/api/placeholder/150/200",
-        member: "SE170102",
-        code: "Trần",
-        surname: "Thị",
-        middleName: "B",
-        givenName: "",
-      },
-      {
-        index: 3,
-        image: "/api/placeholder/150/200",
-        member: "SE170103",
-        code: "Lê",
-        surname: "Văn",
-        middleName: "C",
-        givenName: "",
-      },
-      {
-        index: 4,
-        image: "",
-        member: "SE170104",
-        code: "Phạm",
-        surname: "Thị",
-        middleName: "D",
-        givenName: "",
-      },
-      {
-        index: 5,
-        image: "/api/placeholder/150/200",
-        member: "SE170105",
-        code: "Hoàng",
-        surname: "Văn",
-        middleName: "E",
-        givenName: "",
-      },
-      {
-        index: 6,
-        image: "",
-        member: "SE170106",
-        code: "Đỗ",
-        surname: "Thị",
-        middleName: "F",
-        givenName: "",
-      },
-      {
-        index: 7,
-        image: "/api/placeholder/150/200",
-        member: "SE170107",
-        code: "Bùi",
-        surname: "Văn",
-        middleName: "G",
-        givenName: "",
-      },
-      {
-        index: 8,
-        image: "",
-        member: "SE170108",
-        code: "Phan",
-        surname: "Thị",
-        middleName: "H",
-        givenName: "",
-      },
-      {
-        index: 9,
-        image: "/api/placeholder/150/200",
-        member: "SE170109",
-        code: "Vũ",
-        surname: "Văn",
-        middleName: "I",
-        givenName: "",
-      },
-      {
-        index: 10,
-        image: "",
-        member: "SE170110",
-        code: "Đặng",
-        surname: "Thị",
-        middleName: "K",
-        givenName: "",
-      },
-      {
-        index: 11,
-        image: "/api/placeholder/150/200",
-        member: "SE170111",
-        code: "Ngô",
-        surname: "Bảo",
-        middleName: "Long",
-        givenName: "",
-      },
-      {
-        index: 12,
-        image: "",
-        member: "SE170112",
-        code: "Vũ",
-        surname: "Minh",
-        middleName: "Đức",
-        givenName: "",
-      },
-      {
-        index: 13,
-        image: "/api/placeholder/150/200",
-        member: "SE170113",
-        code: "Đặng",
-        surname: "Thị",
-        middleName: "Hoa",
-        givenName: "",
-      },
-      {
-        index: 14,
-        image: "",
-        member: "SE170114",
-        code: "Bùi",
-        surname: "Văn",
-        middleName: "Nam",
-        givenName: "",
-      },
-      {
-        index: 15,
-        image: "/api/placeholder/150/200",
-        member: "SE170115",
-        code: "Hoàng",
-        surname: "Thị",
-        middleName: "Lan",
-        givenName: "",
-      },
-      {
-        index: 16,
-        image: "",
-        member: "SE170116",
-        code: "Đinh",
-        surname: "Quang",
-        middleName: "Huy",
-        givenName: "",
-      },
-      {
-        index: 17,
-        image: "/api/placeholder/150/200",
-        member: "SE170117",
-        code: "Võ",
-        surname: "Thành",
-        middleName: "Đạt",
-        givenName: "",
-      },
-      {
-        index: 18,
-        image: "",
-        member: "SE170118",
-        code: "Lý",
-        surname: "Minh",
-        middleName: "Tuấn",
-        givenName: "",
-      },
-      {
-        index: 19,
-        image: "/api/placeholder/150/200",
-        member: "SE170119",
-        code: "Trịnh",
-        surname: "Thị",
-        middleName: "Mai",
-        givenName: "",
-      },
-      {
-        index: 20,
-        image: "",
-        member: "SE170120",
-        code: "Đỗ",
-        surname: "Văn",
-        middleName: "Phú",
-        givenName: "",
-      },
-    ],
-    []
-  );
-
-  const [attendance, setAttendance] = useState<
-    Record<string, SimpleAttendanceStatus>
+  const [slotAttendance, setSlotAttendance] =
+    useState<SlotAttendanceDto | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [savingAttendance, setSavingAttendance] = useState(false);
+  const [attendanceData, setAttendanceData] = useState<
+    Record<string, { isPresent: boolean; notes?: string }>
   >({});
-  const [attendanceNotes, setAttendanceNotes] = useState<
-    Record<string, string>
-  >({});
-  const [reasonModalVisible, setReasonModalVisible] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<StudentRow | null>(
-    null
-  );
-  const [form] = Form.useForm();
 
-  const getStatusText = (s: SimpleAttendanceStatus) =>
-    s === "present" ? "Có mặt" : s === "absent" ? "Vắng" : "Vắng mặt có phép";
-  const getBadgeStatus = (s: SimpleAttendanceStatus) =>
-    s === "present" ? "success" : s === "absent" ? "error" : "default";
+  useEffect(() => {
+    const fetchSlotAttendance = async () => {
+      const slotId = state.slotId;
+      if (!slotId) {
+        api.error({
+          message: "Lỗi",
+          description: "Không tìm thấy thông tin slot",
+          icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+          placement: "topRight",
+        });
+        navigate("/teacher/schedule");
+        return;
+      }
 
-  const filtered = students.filter(
-    (s) =>
-      s.member.toLowerCase().includes(searchText.toLowerCase()) ||
-      s.surname.toLowerCase().includes(searchText.toLowerCase()) ||
-      s.middleName.toLowerCase().includes(searchText.toLowerCase()) ||
-      s.code.toLowerCase().includes(searchText.toLowerCase())
-  );
+      setLoading(true);
+      try {
+        const data = await AttendanceServices.getSlotAttendance(slotId);
+        setSlotAttendance(data);
 
-  const columns: ColumnsType<StudentRow> = [
+        // Initialize attendance data from API response
+        // If hasAttendance is false, default all to absent (isPresent = false)
+        const initialData: Record<
+          string,
+          { isPresent: boolean; notes?: string }
+        > = {};
+        data.studentAttendances.forEach((attendance) => {
+          initialData[attendance.studentId] = {
+            isPresent: data.hasAttendance ? attendance.isPresent : false,
+            notes: attendance.notes || undefined,
+          };
+        });
+        setAttendanceData(initialData);
+      } catch (err) {
+        const errorMessage =
+          (err as { message?: string })?.message ||
+          "Không thể tải dữ liệu điểm danh";
+        api.error({
+          message: "Lỗi tải dữ liệu",
+          description: errorMessage,
+          icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+          placement: "topRight",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void fetchSlotAttendance();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.slotId, navigate]);
+
+  const handleMarkAllPresent = async () => {
+    const slotId = state.slotId;
+    if (!slotId || !slotAttendance) {
+      api.error({
+        message: "Lỗi",
+        description: "Không tìm thấy thông tin slot",
+        icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+        placement: "topRight",
+      });
+      return;
+    }
+
+    setSavingAttendance(true);
+    try {
+      await AttendanceServices.markAllPresent(slotId);
+
+      // Update local state
+      const updatedData: Record<
+        string,
+        { isPresent: boolean; notes?: string }
+      > = {};
+      slotAttendance.studentAttendances.forEach((attendance) => {
+        updatedData[attendance.studentId] = {
+          isPresent: true,
+          notes: attendanceData[attendance.studentId]?.notes,
+        };
+      });
+      setAttendanceData(updatedData);
+
+      api.success({
+        message: "Thành công",
+        description: `Đã đánh dấu tất cả ${slotAttendance.totalStudents} sinh viên có mặt`,
+        icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
+        placement: "topRight",
+        duration: 3,
+      });
+    } catch (err) {
+      const errorMessage =
+        (
+          err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (err as { message?: string })?.message ||
+        "Không thể đánh dấu tất cả có mặt";
+      api.error({
+        message: "Lỗi",
+        description: errorMessage,
+        icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+        placement: "topRight",
+      });
+    } finally {
+      setSavingAttendance(false);
+    }
+  };
+
+  const handleMarkAllAbsent = async () => {
+    const slotId = state.slotId;
+    if (!slotId || !slotAttendance) {
+      api.error({
+        message: "Lỗi",
+        description: "Không tìm thấy thông tin slot",
+        icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+        placement: "topRight",
+      });
+      return;
+    }
+
+    setSavingAttendance(true);
+    try {
+      await AttendanceServices.markAllAbsent(slotId);
+
+      // Update local state
+      const updatedData: Record<
+        string,
+        { isPresent: boolean; notes?: string }
+      > = {};
+      slotAttendance.studentAttendances.forEach((attendance) => {
+        updatedData[attendance.studentId] = {
+          isPresent: false,
+          notes: attendanceData[attendance.studentId]?.notes,
+        };
+      });
+      setAttendanceData(updatedData);
+
+      api.warning({
+        message: "Đã cập nhật",
+        description: `Đã đánh dấu tất cả ${slotAttendance.totalStudents} sinh viên vắng`,
+        icon: <ExclamationCircleOutlined style={{ color: "#faad14" }} />,
+        placement: "topRight",
+        duration: 3,
+      });
+    } catch (err) {
+      const errorMessage =
+        (
+          err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (err as { message?: string })?.message ||
+        "Không thể đánh dấu tất cả vắng";
+      api.error({
+        message: "Lỗi",
+        description: errorMessage,
+        icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+        placement: "topRight",
+      });
+    } finally {
+      setSavingAttendance(false);
+    }
+  };
+
+  const handleSaveAttendance = async () => {
+    const slotId = state.slotId;
+    if (!slotId || !slotAttendance) {
+      api.error({
+        message: "Lỗi",
+        description: "Không tìm thấy thông tin slot",
+        icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+        placement: "topRight",
+      });
+      return;
+    }
+
+    setSavingAttendance(true);
+    try {
+      const students = slotAttendance.studentAttendances.map((attendance) => ({
+        studentId: attendance.studentId,
+        isPresent: attendanceData[attendance.studentId]?.isPresent ?? false,
+        notes: attendanceData[attendance.studentId]?.notes,
+      }));
+
+      // Use PUT if already has attendance, POST if new
+      if (slotAttendance.hasAttendance) {
+        await AttendanceServices.updateSlotAttendance(slotId, students);
+      } else {
+        await AttendanceServices.takeSlotAttendance(slotId, students);
+      }
+
+      const presentCount = students.filter((s) => s.isPresent).length;
+      const absentCount = students.length - presentCount;
+
+      api.success({
+        message: slotAttendance.hasAttendance
+          ? "Cập nhật điểm danh thành công!"
+          : "Điểm danh thành công!",
+        description: (
+          <div>
+            <div>
+              {slotAttendance.hasAttendance
+                ? "Đã cập nhật điểm danh cho"
+                : "Đã lưu điểm danh cho"}{" "}
+              {slotAttendance.totalStudents} sinh viên
+            </div>
+            <div style={{ marginTop: 4, fontSize: "12px", color: "#8c8c8c" }}>
+              Có mặt: {presentCount} • Vắng: {absentCount}
+            </div>
+          </div>
+        ),
+        icon: <CheckCircleOutlined style={{ color: "#52c41a" }} />,
+        placement: "topRight",
+        duration: 4,
+      });
+
+      // Refresh data after saving
+      try {
+        const updatedData = await AttendanceServices.getSlotAttendance(slotId);
+        setSlotAttendance(updatedData);
+
+        // Update attendance data
+        const newAttendanceData: Record<
+          string,
+          { isPresent: boolean; notes?: string }
+        > = {};
+        updatedData.studentAttendances.forEach((attendance) => {
+          newAttendanceData[attendance.studentId] = {
+            isPresent: attendance.isPresent,
+            notes: attendance.notes || undefined,
+          };
+        });
+        setAttendanceData(newAttendanceData);
+      } catch (refreshErr) {
+        // If refresh fails, still navigate
+        console.error("Failed to refresh data:", refreshErr);
+      }
+
+      // Navigate after a short delay to show notification
+      setTimeout(() => {
+        navigate("/teacher/schedule");
+      }, 2000);
+    } catch (err) {
+      const errorMessage =
+        (
+          err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
+        (err as { message?: string })?.message ||
+        slotAttendance?.hasAttendance
+          ? "Không thể cập nhật điểm danh"
+          : "Không thể lưu điểm danh";
+      api.error({
+        message: "Lỗi",
+        description: errorMessage,
+        icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
+        placement: "topRight",
+      });
+    } finally {
+      setSavingAttendance(false);
+    }
+  };
+
+  const filtered =
+    slotAttendance?.studentAttendances.filter(
+      (s) =>
+        s.studentCode.toLowerCase().includes(searchText.toLowerCase()) ||
+        s.studentName.toLowerCase().includes(searchText.toLowerCase())
+    ) || [];
+
+  const columns: ColumnsType<StudentAttendanceDetailDto> = [
     {
-      title: "INDEX",
-      dataIndex: "index",
+      title: "STT",
       key: "index",
       width: 80,
       align: "center",
+      render: (_: unknown, __: unknown, index: number) => index + 1,
     },
     {
-      title: "IMAGE",
-      dataIndex: "image",
-      key: "image",
+      title: "Ảnh",
+      key: "avatar",
       width: 100,
       align: "center",
-      render: (image: string) => (
+      render: () => (
         <Avatar
           size={64}
-          src={image || undefined}
           icon={<UserOutlined />}
           style={{
-            background: image ? "none" : "#f0f0f0",
+            background: "#f0f0f0",
             border: "1px solid #d9d9d9",
           }}
         />
       ),
     },
     {
-      title: "MEMBER",
-      dataIndex: "member",
-      key: "member",
+      title: "Mã SV",
+      dataIndex: "studentCode",
+      key: "studentCode",
       width: 120,
-      render: (m: string) => <Text strong>{m}</Text>,
+      render: (code: string) => <Text strong>{code}</Text>,
     },
-    { title: "CODE", dataIndex: "code", key: "code", width: 100 },
-    { title: "SURNAME", dataIndex: "surname", key: "surname", width: 100 },
     {
-      title: "MIDDLE NAME",
-      dataIndex: "middleName",
-      key: "middleName",
-      width: 120,
+      title: "Họ và tên",
+      dataIndex: "studentName",
+      key: "studentName",
     },
-
     {
-      title: "STATUS",
+      title: "Điểm danh",
+      key: "attendance",
+      width: 200,
+      render: (_: unknown, record: StudentAttendanceDetailDto) => {
+        const isPresent = attendanceData[record.studentId]?.isPresent ?? false;
+        return (
+          <Radio.Group
+            value={isPresent}
+            onChange={(e) =>
+              setAttendanceData((prev) => ({
+                ...prev,
+                [record.studentId]: {
+                  isPresent: e.target.value,
+                  notes: prev[record.studentId]?.notes,
+                },
+              }))
+            }
+            buttonStyle="solid"
+          >
+            <Radio.Button value={false}>Vắng</Radio.Button>
+            <Radio.Button value={true}>Có mặt</Radio.Button>
+          </Radio.Group>
+        );
+      },
+    },
+    {
+      title: "Trạng thái",
       key: "status",
-      render: (_v, s) => {
-        const st = attendance[s.member] || "present";
+      width: 150,
+      render: (_: unknown, record: StudentAttendanceDetailDto) => {
+        const status = attendanceData[record.studentId]?.isPresent ?? false;
         return (
           <Badge
-            status={getBadgeStatus(st) as any}
-            text={<span style={{ fontWeight: 500 }}>{getStatusText(st)}</span>}
+            status={status ? "success" : "error"}
+            text={
+              <span style={{ fontWeight: 500 }}>
+                {status ? "Có mặt" : "Vắng"}
+                {record.isExcused && (
+                  <Tag color="orange" style={{ marginLeft: 8 }}>
+                    Có phép
+                  </Tag>
+                )}
+              </span>
+            }
           />
         );
       },
     },
     {
-      title: "ATTEND",
-      key: "actions",
-      fixed: "right",
-      render: (_v, s) => (
-        <Space>
-          <Tooltip title="Có mặt">
-            <Button
-              type={
-                (attendance[s.member] || "present") === "present"
-                  ? "primary"
-                  : "default"
-              }
-              icon={<CheckCircleOutlined />}
-              size="small"
-              onClick={() =>
-                setAttendance((p) => ({ ...p, [s.member]: "present" }))
-              }
-            />
-          </Tooltip>
-          <Tooltip title="Vắng">
-            <Button
-              danger={(attendance[s.member] || "present") === "absent"}
-              icon={<CloseCircleOutlined />}
-              size="small"
-              onClick={() =>
-                setAttendance((p) => ({ ...p, [s.member]: "absent" }))
-              }
-            />
-          </Tooltip>
-          <Tooltip title="Vắng mặt có phép">
-            <Button
-              type={
-                (attendance[s.member] || "present") === "excused"
-                  ? "primary"
-                  : "default"
-              }
-              icon={<ExclamationCircleOutlined />}
-              size="small"
-              onClick={() => {
-                setSelectedStudent(s);
-                form.setFieldsValue({
-                  excuseReason: attendanceNotes[s.member],
-                });
-                setReasonModalVisible(true);
-              }}
-            />
-          </Tooltip>
-        </Space>
-      ),
+      title: "Ghi chú",
+      key: "notes",
+      width: 200,
+      render: (_: unknown, record: StudentAttendanceDetailDto) => {
+        return (
+          <Input
+            placeholder="Ghi chú (tùy chọn)"
+            value={
+              attendanceData[record.studentId]?.notes || record.notes || ""
+            }
+            onChange={(e) =>
+              setAttendanceData((prev) => ({
+                ...prev,
+                [record.studentId]: {
+                  isPresent:
+                    prev[record.studentId]?.isPresent ?? record.isPresent,
+                  notes: e.target.value,
+                },
+              }))
+            }
+            size="small"
+          />
+        );
+      },
     },
   ];
 
   return (
-    <div className="teacher-class-student-list">
-      <div className="list-header">
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate(-1)}
-          style={{ marginBottom: 16 }}
-        >
-          Back
-        </Button>
+    <>
+      {contextHolder}
+      <div className="teacher-class-student-list">
+        <div className="list-header">
+          <Button
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate(-1)}
+            style={{ marginBottom: 16 }}
+          >
+            Back
+          </Button>
 
-        <Row
-          align="middle"
-          justify="space-between"
-          style={{ marginBottom: 24 }}
-        >
-          <Col>
-            <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-              Student List
-            </Title>
-            <Text type="secondary" style={{ fontSize: 16 }}>
-              {state.className || "Class"} • {courseCode}
-            </Text>
-          </Col>
-          <Col>
-            <Space>
-              <Search
-                placeholder="Search students..."
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                style={{ width: 250 }}
-                allowClear
+          <Row
+            align="middle"
+            justify="space-between"
+            style={{ marginBottom: 24 }}
+          >
+            <Col>
+              <Space direction="vertical" size="small">
+                <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
+                  Điểm danh -{" "}
+                  {slotAttendance?.classCode || state.courseCode || "Lớp học"}
+                  {slotAttendance?.hasAttendance && (
+                    <Tag
+                      color="success"
+                      style={{
+                        marginLeft: 12,
+                        fontSize: 14,
+                        padding: "2px 12px",
+                      }}
+                    >
+                      Đã điểm danh
+                    </Tag>
+                  )}
+                </Title>
+                <Text type="secondary" style={{ fontSize: 16 }}>
+                  {slotAttendance?.subjectName ||
+                    state.courseName ||
+                    state.className ||
+                    "Class"}
+                  {slotAttendance?.date && (
+                    <> • {dayjs(slotAttendance.date).format("DD/MM/YYYY")}</>
+                  )}
+                  {slotAttendance?.timeSlotName && (
+                    <> • {slotAttendance.timeSlotName}</>
+                  )}
+                </Text>
+              </Space>
+            </Col>
+            <Col>
+              <Space>
+                <Search
+                  placeholder="Tìm kiếm sinh viên..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  style={{ width: 250 }}
+                  allowClear
+                />
+                <Tooltip
+                  title={
+                    slotAttendance?.hasAttendance
+                      ? "Đã điểm danh. Vui lòng chỉnh sửa từng sinh viên và cập nhật."
+                      : "Đánh dấu tất cả sinh viên có mặt"
+                  }
+                >
+                  <Button
+                    onClick={handleMarkAllPresent}
+                    loading={savingAttendance}
+                    disabled={
+                      !state.slotId ||
+                      !slotAttendance ||
+                      slotAttendance.hasAttendance
+                    }
+                  >
+                    Tất cả có mặt
+                  </Button>
+                </Tooltip>
+                <Tooltip
+                  title={
+                    slotAttendance?.hasAttendance
+                      ? "Đã điểm danh. Vui lòng chỉnh sửa từng sinh viên và cập nhật."
+                      : "Đánh dấu tất cả sinh viên vắng"
+                  }
+                >
+                  <Button
+                    onClick={handleMarkAllAbsent}
+                    loading={savingAttendance}
+                    disabled={
+                      !state.slotId ||
+                      !slotAttendance ||
+                      slotAttendance.hasAttendance
+                    }
+                  >
+                    Tất cả vắng
+                  </Button>
+                </Tooltip>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  loading={savingAttendance}
+                  onClick={handleSaveAttendance}
+                  disabled={!state.slotId || !slotAttendance}
+                >
+                  {slotAttendance?.hasAttendance
+                    ? "Cập nhật điểm danh"
+                    : "Lưu điểm danh"}
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </div>
+
+        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+          <Col xs={12} sm={8}>
+            <Card>
+              <Statistic
+                title="Tổng số sinh viên"
+                value={slotAttendance?.totalStudents || 0}
+                prefix={<TeamOutlined style={{ color: "#1890ff" }} />}
               />
-            </Space>
+            </Card>
+          </Col>
+          <Col xs={12} sm={8}>
+            <Card>
+              <Statistic
+                title="Tỷ lệ điểm danh"
+                value={slotAttendance?.attendanceRate || 0}
+                suffix="%"
+                prefix={<BookOutlined style={{ color: "#52c41a" }} />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={8}>
+            <Card>
+              <Space direction="vertical" size="small">
+                <div>
+                  <Tag color="success">
+                    Có mặt: {slotAttendance?.presentCount || 0}
+                  </Tag>
+                  <Tag color="error">
+                    Vắng: {slotAttendance?.absentCount || 0}
+                  </Tag>
+                </div>
+                {slotAttendance?.hasAttendance &&
+                  slotAttendance?.recordedAt && (
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      Đã điểm danh:{" "}
+                      {dayjs(slotAttendance.recordedAt).format(
+                        "DD/MM/YYYY HH:mm"
+                      )}
+                    </Text>
+                  )}
+              </Space>
+            </Card>
           </Col>
         </Row>
+
+        <Card className="student-table-card">
+          <Spin spinning={loading}>
+            <Table
+              columns={columns}
+              dataSource={filtered}
+              rowKey="attendanceId"
+              pagination={{
+                total: filtered.length,
+                pageSize: 20,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (t, r) => `${r[0]}-${r[1]} của ${t} sinh viên`,
+              }}
+              scroll={{ x: 1000 }}
+              size="middle"
+              className="student-list-table"
+              bordered
+            />
+          </Spin>
+        </Card>
       </div>
-
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={12} sm={8}>
-          <Card>
-            <Statistic
-              title="Total Students"
-              value={students.length}
-              prefix={<TeamOutlined style={{ color: "#1890ff" }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={8}>
-          <Card>
-            <Statistic
-              title="Course"
-              value={courseCode}
-              prefix={<BookOutlined style={{ color: "#52c41a" }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={8}>
-          <Card>
-            <Tag color="blue" style={{ marginRight: 8 }}>
-              Room {state.room || "A101"}
-            </Tag>
-            <Tag color="purple">
-              {dayjs(state.date || new Date()).format("DD/MM/YYYY")}
-            </Tag>
-          </Card>
-        </Col>
-      </Row>
-
-      <Card className="student-table-card">
-        <Table
-          columns={columns}
-          dataSource={filtered}
-          rowKey="member"
-          pagination={{
-            total: filtered.length,
-            pageSize: 20,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (t, r) => `${r[0]}-${r[1]} of ${t} students`,
-          }}
-          scroll={{ x: 900 }}
-          size="middle"
-          className="student-list-table"
-          bordered
-        />
-      </Card>
-
-      <Modal
-        title={
-          selectedStudent
-            ? `Lý do vắng mặt có phép - ${selectedStudent.member}`
-            : "Lý do vắng mặt có phép"
-        }
-        open={reasonModalVisible}
-        onOk={() => {
-          form
-            .validateFields()
-            .then((values) => {
-              if (selectedStudent) {
-                setAttendance((p) => ({
-                  ...p,
-                  [selectedStudent.member]: "excused",
-                }));
-                setAttendanceNotes((p) => ({
-                  ...p,
-                  [selectedStudent.member]: values.excuseReason,
-                }));
-              }
-              setReasonModalVisible(false);
-              form.resetFields(["excuseReason"]);
-            })
-            .catch(() => {});
-        }}
-        onCancel={() => {
-          setReasonModalVisible(false);
-          form.resetFields(["excuseReason"]);
-        }}
-        width={520}
-      >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="excuseReason"
-            label="Lý do"
-            rules={[{ required: true, message: "Vui lòng nhập lý do" }]}
-          >
-            <Input.TextArea
-              rows={4}
-              placeholder="VD: Bệnh, có giấy phép, công tác..."
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </div>
+    </>
   );
 };
 

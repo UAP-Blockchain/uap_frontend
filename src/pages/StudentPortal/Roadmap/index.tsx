@@ -200,9 +200,7 @@ const Roadmap: React.FC = () => {
     });
   };
 
-  const getColumns = (
-    semester: RoadmapSemester
-  ): ColumnsType<RoadmapCourse> => [
+  const getColumns = (): ColumnsType<RoadmapCourse> => [
     {
       title: "Mã môn học",
       dataIndex: "code",
@@ -505,7 +503,7 @@ const Roadmap: React.FC = () => {
             key={semester.semesterNumber}
           >
             <Table
-              columns={getColumns(semester)}
+              columns={getColumns()}
               dataSource={semester.courses}
               rowKey={(record) => `${semester.semesterNumber}-${record.code}`}
               pagination={false}

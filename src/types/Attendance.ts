@@ -93,4 +93,33 @@ export interface AttendanceFilterRequest {
   PageSize?: number;
 }
 
+export interface StudentAttendanceDetailDto {
+  attendanceId: string;
+  studentId: string;
+  studentCode: string;
+  studentName: string;
+  studentEmail: string;
+  isPresent: boolean;
+  notes: string | null;
+  isExcused: boolean;
+  excuseReason: string | null;
+}
+
+export interface SlotAttendanceDto {
+  slotId: string;
+  classId: string;
+  classCode: string;
+  subjectName: string;
+  date: string;
+  timeSlotName: string;
+  teacherName: string;
+  hasAttendance: boolean;
+  recordedAt: string;
+  studentAttendances: StudentAttendanceDetailDto[];
+  totalStudents: number;
+  presentCount: number;
+  absentCount: number;
+  attendanceRate: number;
+}
+
 

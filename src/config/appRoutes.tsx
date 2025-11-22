@@ -172,13 +172,13 @@ export const adminRoutes: RouteConfig = {
     {
       path: "/admin/credentials",
       element: <CredentialsManagement />,
-      menuLabel: "Quản lý chứng chỉ",
+      menuLabel: "Quản lý Chứng chỉ",
       menuIcon: <TrophyOutlined />,
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
       requiredPermissions: [PERMISSIONS.MANAGE_CREDENTIALS],
-      menuIndex: 5,
-      menuSection: "main",
+      menuIndex: 0,
+      menuSection: "tools",
     },
     {
       path: "/admin/blockchain",

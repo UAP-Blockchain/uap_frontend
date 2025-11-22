@@ -15,6 +15,7 @@ import {
   Tag,
   Tooltip,
   Typography,
+  message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -213,6 +214,30 @@ const TeacherSchedule: React.FC = () => {
     }
   };
 
+  const handleOpenAttendanceModal = useCallback(
+    (info: ClassInfo) => {
+      if (!info.classId || !info.slotId) {
+        message.warning("Không tìm thấy thông tin lớp học hoặc slot");
+        return;
+      }
+
+      // Navigate to class list page with slot info
+      navigate(`/teacher/class-list/${info.classId}`, {
+        state: {
+          slot: info.rawSlot,
+          slotId: info.slotId,
+          classId: info.classId,
+          courseCode: info.courseCode,
+          courseName: info.courseName,
+          date: info.date,
+          startTime: info.startTime,
+          endTime: info.endTime,
+        },
+      });
+    },
+    [navigate]
+  );
+
   const handleNavigateClass = useCallback(
     (info: ClassInfo, dayKey: string) => {
       const targetId = info.classId || info.courseCode || dayKey;
@@ -237,7 +262,7 @@ const TeacherSchedule: React.FC = () => {
             <div
               key={`${info.slotId || info.classId}-${index}`}
               className="class-slot"
-              onClick={() => handleNavigateClass(info, dayKey || "t2")}
+              onClick={() => handleOpenAttendanceModal(info)}
               style={{
                 cursor: "pointer",
                 marginBottom: index < classes.length - 1 ? 8 : 0,
@@ -245,7 +270,7 @@ const TeacherSchedule: React.FC = () => {
             >
               <div className="course-code">
                 <Text strong>{info.courseCode}</Text>
-                <Tooltip title="Xem lớp học">
+                <Tooltip title="Xem danh sách lớp">
                   <Button
                     type="link"
                     size="small"
@@ -279,7 +304,7 @@ const TeacherSchedule: React.FC = () => {
         </div>
       );
     },
-    [handleNavigateClass]
+    [handleNavigateClass, handleOpenAttendanceModal]
   );
 
   const timetableData = useMemo(() => {
