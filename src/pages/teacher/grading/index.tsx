@@ -9,7 +9,6 @@ import {
   InputNumber,
   Row,
   Col,
-  Progress,
   Alert,
   message,
   Tooltip,
@@ -303,31 +302,6 @@ const TeacherGrading: React.FC = () => {
 
   const columns = buildColumns();
 
-  const selectedGradeComponentInfo = gradeComponents.find(
-    (c) => c.id === selectedGradeComponent
-  );
-
-  // Calculate statistics
-  const gradingStats = {
-    total: students.length,
-    graded: Object.values(studentGrades).filter((sg) =>
-      gradeComponents.some((c) => sg[c.id] && Number(sg[c.id]) > 0)
-    ).length,
-    averageScore: (() => {
-      if (selectedGradeComponent && students.length > 0) {
-        const total = students.reduce((sum, student) => {
-          const score =
-            Number(
-              studentGrades[student.studentId]?.[selectedGradeComponent]
-            ) || 0;
-          return sum + score;
-        }, 0);
-        return total / students.length;
-      }
-      return 0;
-    })(),
-  };
-
   return (
     <div className="teacher-grading">
       <div className="grading-header">
@@ -375,100 +349,6 @@ const TeacherGrading: React.FC = () => {
                 showIcon
                 style={{ marginBottom: 24 }}
               />
-            )}
-
-            {/* Grade Component Selection */}
-            {gradeComponents.length > 0 && (
-              <Card size="small" style={{ marginBottom: 16 }}>
-                <Row gutter={16} align="middle">
-                  <Col>
-                    <span style={{ fontWeight: 500 }}>
-                      Chọn điểm thành phần:
-                    </span>
-                  </Col>
-                  <Col flex={1}>
-                    <Select
-                      value={selectedGradeComponent}
-                      onChange={setSelectedGradeComponent}
-                      style={{ width: "100%" }}
-                      placeholder="Chọn điểm thành phần cần chấm"
-                    >
-                      {gradeComponents.map((component) => (
-                        <Option key={component.id} value={component.id}>
-                          {component.name} ({component.maxScore || "N/A"} điểm -{" "}
-                          {component.weightPercent}%)
-                        </Option>
-                      ))}
-                    </Select>
-                  </Col>
-                </Row>
-              </Card>
-            )}
-
-            {selectedGradeComponentInfo && (
-              <Card size="small" style={{ marginBottom: 16 }}>
-                <Row gutter={16}>
-                  <Col span={6}>
-                    <div style={{ textAlign: "center" }}>
-                      <div
-                        style={{
-                          fontSize: 20,
-                          fontWeight: 600,
-                          color: "#1890ff",
-                        }}
-                      >
-                        {selectedGradeComponentInfo.maxScore || "N/A"}
-                      </div>
-                      <div style={{ color: "#8c8c8c" }}>Điểm tối đa</div>
-                    </div>
-                  </Col>
-                  <Col span={6}>
-                    <div style={{ textAlign: "center" }}>
-                      <div
-                        style={{
-                          fontSize: 20,
-                          fontWeight: 600,
-                          color: "#52c41a",
-                        }}
-                      >
-                        {selectedGradeComponentInfo.weightPercent}%
-                      </div>
-                      <div style={{ color: "#8c8c8c" }}>Trọng số</div>
-                    </div>
-                  </Col>
-                  <Col span={6}>
-                    <div style={{ textAlign: "center" }}>
-                      <div
-                        style={{
-                          fontSize: 20,
-                          fontWeight: 600,
-                          color: "#fa8c16",
-                        }}
-                      >
-                        {gradingStats.averageScore.toFixed(1)}
-                      </div>
-                      <div style={{ color: "#8c8c8c" }}>Điểm trung bình</div>
-                    </div>
-                  </Col>
-                  <Col span={6}>
-                    <div style={{ textAlign: "center" }}>
-                      <Progress
-                        type="circle"
-                        percent={Math.round(
-                          (gradingStats.graded / gradingStats.total) * 100
-                        )}
-                        size={60}
-                        format={() =>
-                          `${gradingStats.graded}/${gradingStats.total}`
-                        }
-                      />
-                      <div style={{ color: "#8c8c8c", marginTop: 4 }}>
-                        Đã chấm
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-              </Card>
             )}
 
             {/* Grading Table */}
