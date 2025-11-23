@@ -59,7 +59,7 @@ const TeacherGrading: React.FC = () => {
     Record<string, StudentGrade>
   >({});
   const [gradeIdMap, setGradeIdMap] = useState<GradeIdMap>({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [loadingClassData, setLoadingClassData] = useState(false);
   const [activeTab, setActiveTab] = useState("grading");
@@ -164,18 +164,22 @@ const TeacherGrading: React.FC = () => {
     }
 
     const studentGrade = studentGrades[student.studentId] || {};
+    const studentGradeIds = gradeIdMap[student.studentId] || {};
+
+    // Only save grades that don't have gradeId yet (new grades)
     const gradesToSave = gradeComponents
       .map((component) => {
         const score = Number(studentGrade[component.id]) || 0;
-        if (score <= 0) return null;
+        const gradeId = studentGradeIds[component.id];
 
-        const gradeId = gradeIdMap[student.studentId]?.[component.id];
+        // Skip if already has gradeId (should use update instead)
+        if (gradeId || score <= 0) return null;
+
         return {
           studentId: student.studentId,
           subjectId: selectedClass.subjectId,
           gradeComponentId: component.id,
           score,
-          gradeId, // For tracking if exists
         };
       })
       .filter((g) => g !== null) as Array<{
@@ -183,59 +187,37 @@ const TeacherGrading: React.FC = () => {
       subjectId: string;
       gradeComponentId: string;
       score: number;
-      gradeId?: string;
     }>;
 
     if (gradesToSave.length === 0) {
-      message.warning("Vui lòng nhập điểm cho sinh viên này");
+      message.warning(
+        "Không có điểm mới để lưu. Nếu muốn cập nhật điểm đã có, vui lòng sử dụng nút 'Cập nhật'."
+      );
       return;
     }
 
-    setLoading(true);
+    setLoading((prev) => ({ ...prev, [student.studentId]: true }));
     try {
-      // Check if we have existing grades (need to update) or new grades (need to create)
-      const hasExistingGrades = gradesToSave.some((g) => g.gradeId);
-      const newGrades = gradesToSave.filter((g) => !g.gradeId);
-      const existingGrades = gradesToSave.filter((g) => g.gradeId);
+      // Create new grades using POST
+      const createRequest = {
+        grades: gradesToSave,
+      };
+      const response = await submitStudentGradesApi(createRequest);
 
-      if (hasExistingGrades && existingGrades.length > 0) {
-        // Update existing grades
-        const updateRequest = {
-          grades: existingGrades.map((g) => ({
-            gradeId: g.gradeId!,
-            score: g.score,
-          })),
-        };
-        await updateStudentGradesApi(updateRequest);
-      }
-
-      if (newGrades.length > 0) {
-        // Create new grades
-        const createRequest = {
-          grades: newGrades.map((g) => ({
-            studentId: g.studentId,
-            subjectId: g.subjectId,
-            gradeComponentId: g.gradeComponentId,
-            score: g.score,
-          })),
-        };
-        const response = await submitStudentGradesApi(createRequest);
-
-        // Update gradeIdMap with new grade IDs
-        if (
-          response.gradeIds &&
-          response.gradeIds.length === newGrades.length
-        ) {
-          const newGradeIdMap = { ...gradeIdMap };
-          if (!newGradeIdMap[student.studentId]) {
-            newGradeIdMap[student.studentId] = {};
-          }
-          newGrades.forEach((g, index) => {
-            newGradeIdMap[student.studentId][g.gradeComponentId] =
-              response.gradeIds![index];
-          });
-          setGradeIdMap(newGradeIdMap);
+      // Update gradeIdMap with new grade IDs
+      if (
+        response.gradeIds &&
+        response.gradeIds.length === gradesToSave.length
+      ) {
+        const newGradeIdMap = { ...gradeIdMap };
+        if (!newGradeIdMap[student.studentId]) {
+          newGradeIdMap[student.studentId] = {};
         }
+        gradesToSave.forEach((g, index) => {
+          newGradeIdMap[student.studentId][g.gradeComponentId] =
+            response.gradeIds![index];
+        });
+        setGradeIdMap(newGradeIdMap);
       }
 
       message.success(`Đã lưu điểm cho ${student.fullName}`);
@@ -243,7 +225,58 @@ const TeacherGrading: React.FC = () => {
       console.error("Error saving grades:", error);
       message.error("Có lỗi xảy ra khi lưu điểm!");
     } finally {
-      setLoading(false);
+      setLoading((prev) => ({ ...prev, [student.studentId]: false }));
+    }
+  };
+
+  const handleUpdateStudentGrades = async (student: ClassStudent) => {
+    if (!selectedClass || !selectedClass.subjectId) {
+      message.error("Vui lòng chọn lớp học");
+      return;
+    }
+
+    const studentGrade = studentGrades[student.studentId] || {};
+    const studentGradeIds = gradeIdMap[student.studentId] || {};
+
+    // Get grades that have gradeId (already saved)
+    const gradesToUpdate = gradeComponents
+      .map((component) => {
+        const score = Number(studentGrade[component.id]) || 0;
+        const gradeId = studentGradeIds[component.id];
+
+        if (!gradeId || score <= 0) return null;
+
+        return {
+          gradeId,
+          score,
+        };
+      })
+      .filter((g) => g !== null) as Array<{
+      gradeId: string;
+      score: number;
+    }>;
+
+    if (gradesToUpdate.length === 0) {
+      message.warning(
+        "Không có điểm nào đã được lưu để cập nhật. Vui lòng sử dụng nút 'Lưu điểm' trước."
+      );
+      return;
+    }
+
+    setLoading((prev) => ({ ...prev, [student.studentId]: true }));
+    try {
+      // Update existing grades using PUT
+      const updateRequest = {
+        grades: gradesToUpdate,
+      };
+      await updateStudentGradesApi(updateRequest);
+
+      message.success(`Đã cập nhật điểm cho ${student.fullName}`);
+    } catch (error) {
+      console.error("Error updating grades:", error);
+      message.error("Có lỗi xảy ra khi cập nhật điểm!");
+    } finally {
+      setLoading((prev) => ({ ...prev, [student.studentId]: false }));
     }
   };
 
@@ -322,18 +355,35 @@ const TeacherGrading: React.FC = () => {
       title: "Thao tác",
       key: "actions",
       fixed: "right",
-      width: 120,
+      width: 200,
       render: (_: unknown, student: ClassStudent) => {
+        const studentGradeIds = gradeIdMap[student.studentId] || {};
+        const hasExistingGrades = Object.keys(studentGradeIds).length > 0;
+        const studentLoading = loading[student.studentId] || false;
+
         return (
-          <Button
-            type="primary"
-            icon={<SaveOutlined />}
-            size="small"
-            onClick={() => handleSaveStudentGrades(student)}
-            loading={loading}
-          >
-            Lưu điểm
-          </Button>
+          <Space>
+            <Button
+              type="primary"
+              icon={<SaveOutlined />}
+              size="small"
+              onClick={() => handleSaveStudentGrades(student)}
+              loading={studentLoading}
+            >
+              Lưu điểm
+            </Button>
+            {hasExistingGrades && (
+              <Button
+                type="default"
+                icon={<SaveOutlined />}
+                size="small"
+                onClick={() => handleUpdateStudentGrades(student)}
+                loading={studentLoading}
+              >
+                Cập nhật
+              </Button>
+            )}
+          </Space>
         );
       },
     };
