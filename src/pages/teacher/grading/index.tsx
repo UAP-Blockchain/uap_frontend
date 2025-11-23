@@ -411,7 +411,7 @@ const TeacherGrading: React.FC = () => {
           </Spin>
         </TabPane>
 
-        <TabPane tab="Thống kê" key="statistics">
+        {/* <TabPane tab="Thống kê" key="statistics">
           <Row gutter={[16, 16]}>
             <Col xs={24} md={12}>
               <Card title="Phân bố điểm số" extra={<BarChartOutlined />}>
@@ -452,7 +452,7 @@ const TeacherGrading: React.FC = () => {
               </Card>
             </Col>
           </Row>
-        </TabPane>
+        </TabPane> */}
       </Tabs>
     </div>
   );

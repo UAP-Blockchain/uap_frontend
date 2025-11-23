@@ -22,3 +22,4 @@ export const fetchSubjectOfferingsApi = async (): Promise<SubjectOffering[]> => 
   return normalizeItems(response.data);
 };
 
+

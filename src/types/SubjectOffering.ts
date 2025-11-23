@@ -16,3 +16,4 @@ export interface SubjectOffering {
   totalStudents?: number;
 }
 
+
