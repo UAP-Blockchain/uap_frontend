@@ -35,7 +35,9 @@ import AdminLayout from "../layout";
 const ClassesManagement = lazy(() => import("../pages/admin/classes"));
 const ClassDetail = lazy(() => import("../pages/admin/classes/ClassDetail"));
 const SubjectsManagement = lazy(() => import("../pages/admin/subjects"));
-const SubjectDetail = lazy(() => import("../pages/admin/subjects/SubjectDetail"));
+const SubjectDetail = lazy(
+  () => import("../pages/admin/subjects/SubjectDetail")
+);
 const CredentialsManagement = lazy(() => import("../pages/admin/credentials"));
 const ManagerProduct = lazy(() => import("../pages/admin/products"));
 const ReportsManagement = lazy(() => import("../pages/admin/reports"));
@@ -43,7 +45,9 @@ const SecurityManagement = lazy(() => import("../pages/admin/security"));
 const RegisterUser = lazy(() => import("../pages/admin/registerUser"));
 const BulkRegister = lazy(() => import("../pages/admin/bulkRegister"));
 const SemestersManagement = lazy(() => import("../pages/admin/semesters"));
-const SemesterDetail = lazy(() => import("../pages/admin/semesters/SemesterDetail"));
+const SemesterDetail = lazy(
+  () => import("../pages/admin/semesters/SemesterDetail")
+);
 const AboutHelp = lazy(() => import("../pages/PublicPortal/AboutHelp"));
 const PublicHome = lazy(() => import("../pages/PublicPortal/Home"));
 const VerificationHistory = lazy(
