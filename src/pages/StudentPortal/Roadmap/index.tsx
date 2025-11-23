@@ -187,9 +187,14 @@ const Roadmap: React.FC = () => {
     };
   }, [roadmap]);
 
-  const handleRegister = (courseCode: string) => {
-    navigate("/student-portal/course-registration", {
-      state: { from: "roadmap", courseCode },
+  const handleRegister = (course: RoadmapCourse) => {
+    navigate("/student-portal/enroll-list", {
+      state: {
+        subjectId: course.subjectId,
+        subjectCode: course.code,
+        subjectName: course.name,
+        from: "roadmap",
+      },
     });
   };
 
@@ -307,7 +312,7 @@ const Roadmap: React.FC = () => {
               type="primary"
               size="small"
               icon={<PlusOutlined />}
-              onClick={() => handleRegister(record.code)}
+              onClick={() => handleRegister(record)}
               style={{
                 background: "linear-gradient(135deg, #1a94fc, #0ea5e9)",
                 border: "none",

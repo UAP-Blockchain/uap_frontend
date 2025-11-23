@@ -70,6 +70,7 @@ const ClassStudentList = lazy(
 const CourseRegistration = lazy(
   () => import("../pages/StudentPortal/CourseRegistration")
 );
+const EnrollList = lazy(() => import("../pages/StudentPortal/EnrollList"));
 const CredentialDetail = lazy(
   () => import("../pages/StudentPortal/CredentialDetail")
 );
@@ -322,6 +323,11 @@ export const studentPortalRoutes: RouteConfig = {
       allowedRoles: [ROLE_CODES.STUDENT],
       menuIndex: 9,
       menuSection: "main",
+    },
+    {
+      path: "enroll-list",
+      element: <EnrollList />,
+      showInMenu: false,
     },
     {
       path: "attendance-report",
