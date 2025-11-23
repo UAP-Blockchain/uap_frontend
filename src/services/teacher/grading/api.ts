@@ -51,10 +51,25 @@ export interface GradeInput {
   score: number;
 }
 
+export interface GradeUpdateInput {
+  gradeId: string;
+  score: number;
+}
+
 export interface SubmitGradesRequest {
-  subjectId: string;
-  studentId: string;
-  grades: GradeInput[];
+  grades: Array<{
+    studentId: string;
+    subjectId: string;
+    gradeComponentId: string;
+    score: number;
+  }>;
+}
+
+export interface UpdateGradesRequest {
+  grades: Array<{
+    gradeId: string;
+    score: number;
+  }>;
 }
 
 export interface SubmitGradesResponse {
@@ -105,68 +120,74 @@ export const getGradeComponentsApi = async (
 };
 
 /**
- * Submit grades for a student
- * POST /api/grades (multiple calls, one per grade component)
+ * Get existing grades for a class
+ * GET /api/classes/{classId}/grades
  */
-export const submitGradesApi = async (
-  request: SubmitGradesRequest
-): Promise<SubmitGradesResponse> => {
-  // Create multiple grade records (one per grade component)
-  const gradePromises = request.grades
-    .filter((grade) => grade.score > 0) // Only submit non-zero scores
-    .map((grade) =>
-      api.post("/grades", {
-        studentId: request.studentId,
-        subjectId: request.subjectId,
-        gradeComponentId: grade.gradeComponentId,
-        score: grade.score,
-      })
-    );
-
-  if (gradePromises.length === 0) {
-    return {
-      success: true,
-      message: "Không có điểm nào để lưu",
-    };
+export const getClassGradesApi = async (
+  classId: string
+): Promise<Array<{
+  studentId: string;
+  gradeComponentId: string;
+  gradeId: string;
+  score: number;
+}>> => {
+  const response = await api.get<{
+    students?: Array<{
+      studentId: string;
+      grades?: Array<{
+        gradeId?: string;
+        gradeComponentId: string;
+        score?: number;
+      }>;
+    }>;
+  }>(`/Classes/${classId}/grades`);
+  
+  const grades: Array<{
+    studentId: string;
+    gradeComponentId: string;
+    gradeId: string;
+    score: number;
+  }> = [];
+  
+  if (response.data?.students) {
+    response.data.students.forEach((student) => {
+      if (student.grades) {
+        student.grades.forEach((grade) => {
+          if (grade.gradeId && grade.score !== undefined && grade.score !== null) {
+            grades.push({
+              studentId: student.studentId,
+              gradeComponentId: grade.gradeComponentId,
+              gradeId: grade.gradeId,
+              score: Number(grade.score),
+            });
+          }
+        });
+      }
+    });
   }
-
-  const responses = await Promise.all(gradePromises);
-  const gradeIds = responses.map(
-    (res) => res.data.gradeId || res.data.id || ""
-  );
-
-  return {
-    success: true,
-    message: "Đã lưu điểm thành công",
-    gradeIds,
-  };
+  
+  return grades;
 };
 
 /**
- * Submit grades for multiple students in a class
- * POST /api/grades (multiple calls)
+ * Submit grades for a student
+ * POST /api/Grades
  */
-export const submitClassGradesApi = async (
-  classId: string,
-  grades: Array<{
-    studentId: string;
-    subjectId: string;
-    grades: GradeInput[];
-  }>
+export const submitStudentGradesApi = async (
+  request: SubmitGradesRequest
 ): Promise<SubmitGradesResponse> => {
-  const allPromises = grades.map((studentGrade) =>
-    submitGradesApi({
-      subjectId: studentGrade.subjectId,
-      studentId: studentGrade.studentId,
-      grades: studentGrade.grades,
-    })
-  );
+  const response = await api.post<SubmitGradesResponse>("/Grades", request);
+  return response.data;
+};
 
-  await Promise.all(allPromises);
-
-  return {
-    success: true,
-    message: `Đã lưu điểm cho ${grades.length} sinh viên`,
-  };
+/**
+ * Update grades for a student
+ * PUT /api/Grades
+ */
+export const updateStudentGradesApi = async (
+  request: UpdateGradesRequest
+): Promise<SubmitGradesResponse> => {
+  const response = await api.put<SubmitGradesResponse>("/Grades", request);
+  return response.data;
 };
 

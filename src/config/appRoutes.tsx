@@ -9,7 +9,6 @@ import {
   BookOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
-  CheckSquareOutlined,
   DashboardOutlined,
   EditOutlined,
   FileTextOutlined,
@@ -88,11 +87,9 @@ const SharePortal = lazy(() => import("../pages/StudentPortal/SharePortal"));
 const WeeklyTimetable = lazy(
   () => import("../pages/StudentPortal/WeeklyTimetable")
 );
-const TeacherAttendance = lazy(() => import("../pages/teacher/attendance"));
 const TeacherClassStudentList = lazy(
   () => import("../pages/teacher/classList")
 );
-const TeacherDashboard = lazy(() => import("../pages/teacher/dashboard"));
 const TeacherGrading = lazy(() => import("../pages/teacher/grading"));
 const TeacherResults = lazy(() => import("../pages/teacher/results"));
 const TeacherSchedule = lazy(() => import("../pages/teacher/schedule"));
@@ -394,21 +391,6 @@ export const teacherRoutes: RouteConfig = {
   ),
   children: [
     {
-      path: "/teacher",
-      element: <TeacherDashboard />,
-      menuLabel: "Bảng điều khiển",
-      menuIcon: <DashboardOutlined />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.TEACHER],
-      menuIndex: 0,
-      menuSection: "main",
-    },
-    {
-      path: "/teacher/dashboard",
-      element: <TeacherDashboard />,
-      showInMenu: false,
-    },
-    {
       path: "/teacher/schedule",
       element: <TeacherSchedule />,
       menuLabel: "Lịch giảng dạy",
@@ -432,17 +414,6 @@ export const teacherRoutes: RouteConfig = {
       path: "/teacher/class-list/:courseCode",
       element: <TeacherClassStudentList />,
       showInMenu: false,
-    },
-    {
-      path: "/teacher/attendance",
-      element: <TeacherAttendance />,
-      menuLabel: "Điểm danh",
-      menuIcon: <CheckSquareOutlined />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.TEACHER],
-      requiredPermissions: [PERMISSIONS.MANAGE_ATTENDANCE],
-      menuIndex: 3,
-      menuSection: "main",
     },
     {
       path: "/teacher/grading",

@@ -11,7 +11,6 @@ import {
   Col,
   Alert,
   message,
-  Tooltip,
   Tabs,
   Spin,
 } from "antd";
@@ -26,7 +25,9 @@ import {
   getTeacherProfileApi,
   getClassByIdApi,
   getGradeComponentsApi,
-  submitClassGradesApi,
+  getClassGradesApi,
+  submitStudentGradesApi,
+  updateStudentGradesApi,
   type TeachingClass,
   type ClassStudent,
   type GradeComponent,
@@ -39,7 +40,13 @@ const { TabPane } = Tabs;
 
 interface StudentGrade {
   studentId: string;
-  [key: string]: string | number; // gradeComponentId -> score
+  [key: string]: string | number; // gradeComponentId -> score hoặc gradeId
+}
+
+interface GradeIdMap {
+  [studentId: string]: {
+    [gradeComponentId: string]: string; // gradeComponentId -> gradeId
+  };
 }
 
 const TeacherGrading: React.FC = () => {
@@ -48,11 +55,10 @@ const TeacherGrading: React.FC = () => {
   const [selectedClass, setSelectedClass] = useState<ClassDetail | null>(null);
   const [students, setStudents] = useState<ClassStudent[]>([]);
   const [gradeComponents, setGradeComponents] = useState<GradeComponent[]>([]);
-  const [selectedGradeComponent, setSelectedGradeComponent] =
-    useState<string>("");
   const [studentGrades, setStudentGrades] = useState<
     Record<string, StudentGrade>
   >({});
+  const [gradeIdMap, setGradeIdMap] = useState<GradeIdMap>({});
   const [loading, setLoading] = useState(false);
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [loadingClassData, setLoadingClassData] = useState(false);
@@ -89,7 +95,11 @@ const TeacherGrading: React.FC = () => {
   const loadClassData = async (classId: string) => {
     setLoadingClassData(true);
     try {
-      const classData = await getClassByIdApi(classId);
+      const [classData, existingGrades] = await Promise.all([
+        getClassByIdApi(classId),
+        getClassGradesApi(classId).catch(() => []), // Load existing grades if available
+      ]);
+
       setSelectedClass(classData);
       setStudents(classData.students || []);
 
@@ -97,19 +107,33 @@ const TeacherGrading: React.FC = () => {
       if (classData.subjectId) {
         const components = await getGradeComponentsApi(classData.subjectId);
         setGradeComponents(components || []);
-        if (components && components.length > 0) {
-          setSelectedGradeComponent(components[0].id);
-        }
       }
 
-      // Initialize student grades
+      // Initialize student grades and gradeIdMap from existing grades
       const initialGrades: Record<string, StudentGrade> = {};
+      const initialGradeIdMap: GradeIdMap = {};
+
       (classData.students || []).forEach((student) => {
         initialGrades[student.studentId] = {
           studentId: student.studentId,
         };
+        initialGradeIdMap[student.studentId] = {};
       });
+
+      // Populate with existing grades
+      existingGrades.forEach((grade) => {
+        if (initialGrades[grade.studentId]) {
+          initialGrades[grade.studentId][grade.gradeComponentId] = grade.score;
+        }
+        if (!initialGradeIdMap[grade.studentId]) {
+          initialGradeIdMap[grade.studentId] = {};
+        }
+        initialGradeIdMap[grade.studentId][grade.gradeComponentId] =
+          grade.gradeId;
+      });
+
       setStudentGrades(initialGrades);
+      setGradeIdMap(initialGradeIdMap);
     } catch (error) {
       console.error("Error loading class data:", error);
       message.error("Không thể tải thông tin lớp học");
@@ -133,45 +157,94 @@ const TeacherGrading: React.FC = () => {
     }));
   };
 
-  const handleSaveGrades = async () => {
+  const handleSaveStudentGrades = async (student: ClassStudent) => {
     if (!selectedClass || !selectedClass.subjectId) {
       message.error("Vui lòng chọn lớp học");
       return;
     }
 
-    setLoading(true);
-    try {
-      const gradesToSubmit = students.map((student) => {
-        const studentGrade = studentGrades[student.studentId] || {};
-        const grades = gradeComponents.map((component) => ({
-          gradeComponentId: component.id,
-          score: Number(studentGrade[component.id]) || 0,
-        }));
+    const studentGrade = studentGrades[student.studentId] || {};
+    const gradesToSave = gradeComponents
+      .map((component) => {
+        const score = Number(studentGrade[component.id]) || 0;
+        if (score <= 0) return null;
 
+        const gradeId = gradeIdMap[student.studentId]?.[component.id];
         return {
           studentId: student.studentId,
           subjectId: selectedClass.subjectId,
-          grades,
+          gradeComponentId: component.id,
+          score,
+          gradeId, // For tracking if exists
         };
-      });
+      })
+      .filter((g) => g !== null) as Array<{
+      studentId: string;
+      subjectId: string;
+      gradeComponentId: string;
+      score: number;
+      gradeId?: string;
+    }>;
 
-      await submitClassGradesApi(selectedClass.id, gradesToSubmit);
-      message.success("Điểm số đã được lưu thành công!");
+    if (gradesToSave.length === 0) {
+      message.warning("Vui lòng nhập điểm cho sinh viên này");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Check if we have existing grades (need to update) or new grades (need to create)
+      const hasExistingGrades = gradesToSave.some((g) => g.gradeId);
+      const newGrades = gradesToSave.filter((g) => !g.gradeId);
+      const existingGrades = gradesToSave.filter((g) => g.gradeId);
+
+      if (hasExistingGrades && existingGrades.length > 0) {
+        // Update existing grades
+        const updateRequest = {
+          grades: existingGrades.map((g) => ({
+            gradeId: g.gradeId!,
+            score: g.score,
+          })),
+        };
+        await updateStudentGradesApi(updateRequest);
+      }
+
+      if (newGrades.length > 0) {
+        // Create new grades
+        const createRequest = {
+          grades: newGrades.map((g) => ({
+            studentId: g.studentId,
+            subjectId: g.subjectId,
+            gradeComponentId: g.gradeComponentId,
+            score: g.score,
+          })),
+        };
+        const response = await submitStudentGradesApi(createRequest);
+
+        // Update gradeIdMap with new grade IDs
+        if (
+          response.gradeIds &&
+          response.gradeIds.length === newGrades.length
+        ) {
+          const newGradeIdMap = { ...gradeIdMap };
+          if (!newGradeIdMap[student.studentId]) {
+            newGradeIdMap[student.studentId] = {};
+          }
+          newGrades.forEach((g, index) => {
+            newGradeIdMap[student.studentId][g.gradeComponentId] =
+              response.gradeIds![index];
+          });
+          setGradeIdMap(newGradeIdMap);
+        }
+      }
+
+      message.success(`Đã lưu điểm cho ${student.fullName}`);
     } catch (error) {
       console.error("Error saving grades:", error);
       message.error("Có lỗi xảy ra khi lưu điểm!");
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleQuickGrade = (
-    studentId: string,
-    gradeComponentId: string,
-    score: number
-  ) => {
-    updateStudentGrade(studentId, gradeComponentId, score);
-    message.success("Đã cập nhật điểm!");
   };
 
   // Build dynamic columns based on grade components
@@ -249,50 +322,18 @@ const TeacherGrading: React.FC = () => {
       title: "Thao tác",
       key: "actions",
       fixed: "right",
-      width: 200,
+      width: 120,
       render: (_: unknown, student: ClassStudent) => {
-        const selectedComponent = gradeComponents.find(
-          (c) => c.id === selectedGradeComponent
-        );
-        if (!selectedComponent) return null;
-
         return (
-          <Space>
-            <Tooltip title={`Chấm nhanh ${selectedComponent.maxScore || 10}`}>
-              <Button
-                size="small"
-                onClick={() =>
-                  handleQuickGrade(
-                    student.studentId,
-                    selectedComponent.id,
-                    selectedComponent.maxScore || 10
-                  )
-                }
-              >
-                {selectedComponent.maxScore || 10}
-              </Button>
-            </Tooltip>
-            <Tooltip title="Chấm nhanh 8">
-              <Button
-                size="small"
-                onClick={() =>
-                  handleQuickGrade(student.studentId, selectedComponent.id, 8)
-                }
-              >
-                8
-              </Button>
-            </Tooltip>
-            <Tooltip title="Chấm nhanh 5">
-              <Button
-                size="small"
-                onClick={() =>
-                  handleQuickGrade(student.studentId, selectedComponent.id, 5)
-                }
-              >
-                5
-              </Button>
-            </Tooltip>
-          </Space>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            size="small"
+            onClick={() => handleSaveStudentGrades(student)}
+            loading={loading}
+          >
+            Lưu điểm
+          </Button>
         );
       },
     };
@@ -323,15 +364,6 @@ const TeacherGrading: React.FC = () => {
                 ))}
               </Select>
             </Spin>
-            <Button
-              type="primary"
-              icon={<SaveOutlined />}
-              onClick={handleSaveGrades}
-              loading={loading}
-              disabled={!selectedClassId || students.length === 0}
-            >
-              Lưu tất cả điểm
-            </Button>
             <Button icon={<DownloadOutlined />} disabled={!selectedClassId}>
               Xuất bảng điểm
             </Button>

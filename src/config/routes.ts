@@ -44,9 +44,7 @@ export const ROUTES = {
   // Teacher Routes
   TEACHER: {
     BASE: "/teacher",
-    DASHBOARD: "/teacher/dashboard",
     SCHEDULE: "/teacher/schedule",
-    ATTENDANCE: "/teacher/attendance",
     GRADING: "/teacher/grading",
     RESULTS: "/teacher/results",
     CLASS_LIST: "/teacher/class-list/:courseCode",
