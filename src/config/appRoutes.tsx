@@ -35,7 +35,9 @@ import AdminLayout from "../layout";
 const ClassesManagement = lazy(() => import("../pages/admin/classes"));
 const ClassDetail = lazy(() => import("../pages/admin/classes/ClassDetail"));
 const SubjectsManagement = lazy(() => import("../pages/admin/subjects"));
-const SubjectDetail = lazy(() => import("../pages/admin/subjects/SubjectDetail"));
+const SubjectDetail = lazy(
+  () => import("../pages/admin/subjects/SubjectDetail")
+);
 const CredentialsManagement = lazy(() => import("../pages/admin/credentials"));
 const ManagerProduct = lazy(() => import("../pages/admin/products"));
 const ReportsManagement = lazy(() => import("../pages/admin/reports"));
@@ -43,7 +45,9 @@ const SecurityManagement = lazy(() => import("../pages/admin/security"));
 const RegisterUser = lazy(() => import("../pages/admin/registerUser"));
 const BulkRegister = lazy(() => import("../pages/admin/bulkRegister"));
 const SemestersManagement = lazy(() => import("../pages/admin/semesters"));
-const SemesterDetail = lazy(() => import("../pages/admin/semesters/SemesterDetail"));
+const SemesterDetail = lazy(
+  () => import("../pages/admin/semesters/SemesterDetail")
+);
 const AboutHelp = lazy(() => import("../pages/PublicPortal/AboutHelp"));
 const PublicHome = lazy(() => import("../pages/PublicPortal/Home"));
 const VerificationHistory = lazy(
@@ -67,6 +71,7 @@ const ClassStudentList = lazy(
 const CourseRegistration = lazy(
   () => import("../pages/StudentPortal/CourseRegistration")
 );
+const EnrollList = lazy(() => import("../pages/StudentPortal/EnrollList"));
 const CredentialDetail = lazy(
   () => import("../pages/StudentPortal/CredentialDetail")
 );
@@ -321,6 +326,11 @@ export const studentPortalRoutes: RouteConfig = {
       allowedRoles: [ROLE_CODES.STUDENT],
       menuIndex: 9,
       menuSection: "main",
+    },
+    {
+      path: "enroll-list",
+      element: <EnrollList />,
+      showInMenu: false,
     },
     {
       path: "attendance-report",
