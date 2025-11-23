@@ -82,6 +82,9 @@ const InstructorDetail = lazy(
 const MyCredentials = lazy(
   () => import("../pages/StudentPortal/MyCredentials")
 );
+const RequestCredential = lazy(
+  () => import("../pages/StudentPortal/RequestCredential")
+);
 const Profile = lazy(() => import("../pages/StudentPortal/Profile"));
 const Roadmap = lazy(() => import("../pages/StudentPortal/Roadmap"));
 const SharePortal = lazy(() => import("../pages/StudentPortal/SharePortal"));
@@ -303,6 +306,16 @@ export const studentPortalRoutes: RouteConfig = {
       path: "credentials/:id",
       element: <CredentialDetail />,
       showInMenu: false,
+    },
+    {
+      path: "request-credential",
+      element: <RequestCredential />,
+      menuLabel: "Yêu cầu cấp chứng chỉ",
+      menuIcon: <FileTextOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.STUDENT],
+      menuIndex: 7.5,
+      menuSection: "main",
     },
     {
       path: "timetable",
