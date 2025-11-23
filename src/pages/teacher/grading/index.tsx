@@ -339,7 +339,7 @@ const TeacherGrading: React.FC = () => {
 
         return (
           <Button
-            type={hasExistingGrades ? "default" : "primary"}
+            type="primary"
             icon={hasExistingGrades ? <EditOutlined /> : <SaveOutlined />}
             size="small"
             onClick={() => handleSaveOrUpdateStudentGrades(student)}
