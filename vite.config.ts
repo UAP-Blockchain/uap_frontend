@@ -39,11 +39,11 @@ export default defineConfig({
           
           // Feature chunks - Teacher
           'teacher-chunk': [
-            './src/pages/teacher/dashboard',
             './src/pages/teacher/schedule',
-            './src/pages/teacher/attendance',
+            './src/pages/teacher/classList',
             './src/pages/teacher/grading',
             './src/pages/teacher/results',
+            './src/pages/teacher/profile',
           ],
           
           // Feature chunks - Public Portal
