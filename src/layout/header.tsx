@@ -1,11 +1,9 @@
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  QuestionCircleOutlined,
   SearchOutlined,
   UserOutlined,
   LogoutOutlined,
-  GlobalOutlined,
   RightOutlined,
   LockOutlined,
 } from "@ant-design/icons";
@@ -131,30 +129,6 @@ const HeaderComponent: React.FC<HeaderProps> = ({
       },
     },
     {
-      key: "theme",
-      icon: <GlobalOutlined />,
-      label: (
-        <div className="theme-menu-item">
-          <span>Theme</span>
-          <RightOutlined className="theme-arrow" />
-        </div>
-      ),
-      children: [
-        {
-          key: "light",
-          label: "Light",
-        },
-        {
-          key: "dark",
-          label: "Dark",
-        },
-        {
-          key: "auto",
-          label: "Auto",
-        },
-      ],
-    },
-    {
       key: "change-password",
       icon: <LockOutlined />,
       label: "Change Password",
@@ -269,14 +243,6 @@ const HeaderComponent: React.FC<HeaderProps> = ({
       </div>
 
       <div className="header-right">
-        <Tooltip title="Trợ giúp">
-          <Button
-            type="text"
-            icon={<QuestionCircleOutlined />}
-            className="icon-button"
-          />
-        </Tooltip>
-
         <Dropdown
           menu={{ items: menuItems }}
           trigger={["click"]}

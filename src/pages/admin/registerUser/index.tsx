@@ -23,6 +23,7 @@ import {
   EditOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  FilterOutlined,
   TeamOutlined,
   BookOutlined,
 } from "@ant-design/icons";
@@ -31,6 +32,7 @@ import dayjs from "dayjs";
 import type { Dayjs } from "dayjs";
 import type {
   UserDto,
+  GetUsersRequest,
   UpdateUserRequest,
 } from "../../../services/admin/users/api";
 import {
@@ -95,12 +97,21 @@ const RegisterUser: React.FC = () => {
       search = searchText,
       role = roleFilter
     ) => {
+      if (!search || search.trim() === "") {
+        setUsers([]);
+        setPagination({
+          pageNumber: 1,
+          pageSize,
+          totalCount: 0,
+        });
+        return;
+      }
+
       setLoading(true);
       try {
         const response = await fetchUsersApi({
           roleName: role,
-          searchTerm:
-            search && search.trim() !== "" ? search.trim() : undefined,
+          searchTerm: search.trim(),
           page: pageNumber,
           pageSize,
         });
@@ -120,24 +131,31 @@ const RegisterUser: React.FC = () => {
     [pagination.pageSize, searchText, roleFilter]
   );
 
-  // Load initial data when component mounts
-  useEffect(() => {
-    fetchData(1, pagination.pageSize, "", roleFilter);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleSearch = (value: string) => {
     setSearchText(value);
-    fetchData(1, pagination.pageSize, value, roleFilter);
+    if (value && value.trim() !== "") {
+      fetchData(1, pagination.pageSize, value, roleFilter);
+    } else {
+      setUsers([]);
+      setPagination({
+        pageNumber: 1,
+        pageSize: pagination.pageSize,
+        totalCount: 0,
+      });
+    }
   };
 
   const handleRoleFilter = (value: string) => {
     setRoleFilter(value);
-    // If there's a search term, use it; otherwise load initial data
     if (searchText && searchText.trim() !== "") {
       fetchData(1, pagination.pageSize, searchText, value);
     } else {
-      fetchData(1, pagination.pageSize, "", value);
+      setUsers([]);
+      setPagination({
+        pageNumber: 1,
+        pageSize: pagination.pageSize,
+        totalCount: 0,
+      });
     }
   };
 
@@ -156,9 +174,7 @@ const RegisterUser: React.FC = () => {
             ? dayjs(userDetail.enrollmentDate)
             : undefined,
           teacherCode: userDetail.teacherCode,
-          hireDate: userDetail.hireDate
-            ? dayjs(userDetail.hireDate)
-            : undefined,
+          hireDate: userDetail.hireDate ? dayjs(userDetail.hireDate) : undefined,
           specialization: userDetail.specialization,
           phoneNumber: userDetail.phoneNumber,
         });
@@ -200,7 +216,8 @@ const RegisterUser: React.FC = () => {
         }
         if (values.specialization)
           payload.specialization = values.specialization.trim();
-        if (values.phoneNumber) payload.phoneNumber = values.phoneNumber.trim();
+        if (values.phoneNumber)
+          payload.phoneNumber = values.phoneNumber.trim();
       }
 
       try {
@@ -229,6 +246,11 @@ const RegisterUser: React.FC = () => {
     }
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
+    return dayjs(dateString).format("DD/MM/YYYY");
+  };
+
   const columns: ColumnsType<UserDto> = [
     {
       title: "Người dùng",
@@ -245,7 +267,6 @@ const RegisterUser: React.FC = () => {
       title: "Mã",
       key: "code",
       width: 120,
-      align: "center",
       render: (_, record) => (
         <span className="user-code">
           {record.studentCode || record.teacherCode || "-"}
@@ -256,7 +277,6 @@ const RegisterUser: React.FC = () => {
       title: "Vai trò",
       dataIndex: "roleName",
       key: "roleName",
-      align: "center",
       width: 120,
       render: (roleName: string) => (
         <Tag color={roleName === "Student" ? "blue" : "green"}>
@@ -265,16 +285,33 @@ const RegisterUser: React.FC = () => {
       ),
     },
     {
+      title: "Ngày",
+      key: "date",
+      width: 150,
+      render: (_, record) => (
+        <div className="date-info">
+          {record.enrollmentDate && (
+            <div>Nhập học: {formatDate(record.enrollmentDate)}</div>
+          )}
+          {record.hireDate && (
+            <div>Vào làm: {formatDate(record.hireDate)}</div>
+          )}
+          {!record.enrollmentDate && !record.hireDate && "-"}
+        </div>
+      ),
+    },
+    {
       title: "Thông tin thêm",
       key: "additional",
       width: 200,
-      align: "center",
       render: (_, record) => (
         <div className="additional-info">
           {record.specialization && (
             <div>Chuyên môn: {record.specialization}</div>
           )}
-          {record.phoneNumber && <div>Điện thoại: {record.phoneNumber}</div>}
+          {record.phoneNumber && (
+            <div>Điện thoại: {record.phoneNumber}</div>
+          )}
           {!record.specialization && !record.phoneNumber && "-"}
         </div>
       ),
@@ -283,7 +320,6 @@ const RegisterUser: React.FC = () => {
       title: "Trạng thái",
       key: "status",
       width: 120,
-      align: "center",
       render: (_, record) => (
         <div className="status-badge">
           {record.isActive ? (
@@ -302,7 +338,6 @@ const RegisterUser: React.FC = () => {
       title: "Thao tác",
       key: "actions",
       width: 150,
-      align: "center",
       fixed: "right",
       render: (_, record) => (
         <Space size="small">
@@ -485,10 +520,7 @@ const RegisterUser: React.FC = () => {
             <Input placeholder="Nhập email" />
           </Form.Item>
 
-          <Form.Item
-            noStyle
-            shouldUpdate={(prev, curr) => prev.roleName !== curr.roleName}
-          >
+          <Form.Item noStyle shouldUpdate={(prev, curr) => prev.roleName !== curr.roleName}>
             {({ getFieldValue }) => {
               const role = getFieldValue("roleName");
               if (role === "Student") {
