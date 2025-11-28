@@ -29,6 +29,7 @@ import {
   PlusOutlined,
   UserOutlined,
   DeleteOutlined,
+  ReloadOutlined,
 } from "@ant-design/icons";
 import "./index.scss";
 import type {
@@ -42,6 +43,8 @@ import {
   fetchClassesApi,
   fetchTeachersApi,
   deleteClassApi,
+  fetchTeachersForFilterApi,
+  type TeacherFilterOption,
 } from "../../../services/admin/classes/api";
 import type { SubjectOffering } from "../../../types/SubjectOffering";
 import { fetchSubjectOfferingsApi } from "../../../services/admin/subjectOfferings/api";
@@ -108,7 +111,6 @@ const createDefaultPatterns = (): AutoPattern[] =>
     timeSlotId: undefined,
   }));
 
-const { Search } = Input;
 const { Option } = Select;
 
 const ClassesManagement: React.FC = () => {
@@ -121,8 +123,11 @@ const ClassesManagement: React.FC = () => {
     useState<string>("all");
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [searchText, setSearchText] = useState("");
   const [semesterFilter, setSemesterFilter] = useState<string>("all");
+  const [teacherFilter, setTeacherFilter] = useState<string>("all");
+  const [teachersForFilter, setTeachersForFilter] = useState<
+    TeacherFilterOption[]
+  >([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingEnrollments, setPendingEnrollments] = useState<
@@ -223,18 +228,20 @@ const ClassesManagement: React.FC = () => {
   const loadClassList = async (overrides?: {
     page?: number;
     pageSize?: number;
-    searchTerm?: string;
     semesterId?: string;
+    teacherId?: string;
   }) => {
     setLoading(true);
     try {
       const response = await fetchClassesApi({
         page: overrides?.page ?? paginationState.current,
         pageSize: overrides?.pageSize ?? paginationState.pageSize,
-        searchTerm: overrides?.searchTerm ?? (searchText.trim() || undefined),
         semesterId:
           overrides?.semesterId ??
           (semesterFilter !== "all" ? semesterFilter : undefined),
+        teacherId:
+          overrides?.teacherId ??
+          (teacherFilter !== "all" ? teacherFilter : undefined),
       });
 
       setClasses(response.items);
@@ -254,13 +261,16 @@ const ClassesManagement: React.FC = () => {
 
   const loadInitialData = async () => {
     try {
-      const [offeringsRes, teacherRes, timeSlotRes] = await Promise.all([
-        fetchSubjectOfferingsApi(),
-        fetchTeachersApi(),
-        getAllTimeSlots(),
-      ]);
+      const [offeringsRes, teacherRes, teachersForFilterRes, timeSlotRes] =
+        await Promise.all([
+          fetchSubjectOfferingsApi(),
+          fetchTeachersApi(),
+          fetchTeachersForFilterApi(),
+          getAllTimeSlots(),
+        ]);
       setSubjectOfferings(offeringsRes);
       setTeachers(teacherRes);
+      setTeachersForFilter(teachersForFilterRes);
       setTimeSlots(timeSlotRes);
     } catch {
       toast.error("Không thể tải dữ liệu tham chiếu");
@@ -446,19 +456,22 @@ const ClassesManagement: React.FC = () => {
       fixed: "right",
       render: (_, record) => (
         <Popconfirm
-          title="Bạn có chắc chắn muốn xóa lớp học này?"
+          title="Xóa lớp học"
+          description="Bạn có chắc chắn muốn xóa lớp học này không?"
           onConfirm={() => handleDelete(record.id)}
-          okText="Có"
-          cancelText="Không"
+          okText="Xóa"
+          cancelText="Hủy"
+          okButtonProps={{ danger: true }}
         >
-          <Tooltip title="Xóa">
-            <Button
-              type="text"
-              icon={<DeleteOutlined />}
-              size="small"
-              className="action-btn-delete"
-            />
-          </Tooltip>
+          <Button
+            type="primary"
+            danger
+            ghost
+            icon={<DeleteOutlined />}
+            size="small"
+          >
+            Xóa
+          </Button>
         </Popconfirm>
       ),
     },
@@ -547,19 +560,29 @@ const ClassesManagement: React.FC = () => {
     }
   };
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-    loadClassList({
-      page: 1,
-      searchTerm: value.trim() || undefined,
-    });
-  };
-
   const handleSemesterFilterChange = (value: string) => {
     setSemesterFilter(value);
     loadClassList({
       page: 1,
       semesterId: value !== "all" ? value : undefined,
+      teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
+    });
+  };
+
+  const handleTeacherFilterChange = (value: string) => {
+    setTeacherFilter(value);
+    loadClassList({
+      page: 1,
+      teacherId: value !== "all" ? value : undefined,
+      semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
+    });
+  };
+
+  const handleReload = () => {
+    loadClassList({
+      page: 1,
+      semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
+      teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
     });
   };
 
@@ -1073,100 +1096,111 @@ const ClassesManagement: React.FC = () => {
   return (
     <div className="classes-management">
       <Card className="classes-panel">
-        <div className="overview-header">
-          <div className="title-block">
-            <div className="title-icon">
-              <BookOutlined />
-            </div>
-            <div>
-              <p className="eyebrow">Bảng quản trị</p>
-              <h2>Quản lý Lớp học</h2>
-            </div>
-          </div>
-          <div className="header-actions">
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              className="primary-action"
-              onClick={() => {
-                form.resetFields();
-                setSelectedOfferingSemester("all");
-                resetScheduleBuilder();
-                setCurrentStep(0);
-                setIsModalVisible(true);
+        <Row
+          justify="space-between"
+          align="middle"
+          style={{ marginBottom: 24 }}
+        >
+          <Col>
+            <h2 style={{ margin: 0, fontSize: "24px", fontWeight: 600 }}>
+              Quản lý Lớp học
+            </h2>
+            <p style={{ margin: "4px 0 0 0", color: "#999", fontSize: "14px" }}>
+              Quản lý các lớp học trong hệ thống
+            </p>
+          </Col>
+          <Col>
+            <Space>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={handleReload}
+                loading={loading}
+              >
+                Làm mới
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => {
+                  form.resetFields();
+                  setSelectedOfferingSemester("all");
+                  resetScheduleBuilder();
+                  setCurrentStep(0);
+                  setIsModalVisible(true);
+                }}
+                size="large"
+              >
+                Thêm lớp học
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Select
+              placeholder="Lọc theo kỳ học"
+              value={semesterFilter}
+              onChange={handleSemesterFilterChange}
+              style={{ width: "100%" }}
+              allowClear
+            >
+              <Option value="all">Tất cả kỳ học</Option>
+              {semesterOptions.map((semester) => (
+                <Option key={semester.id} value={semester.id}>
+                  {semester.name}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+          <Col xs={24} sm={12} md={8} lg={6}>
+            <Select
+              placeholder="Lọc theo giảng viên"
+              value={teacherFilter}
+              onChange={handleTeacherFilterChange}
+              style={{ width: "100%" }}
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              filterOption={(input, option) => {
+                const label = option?.label as string | undefined;
+                return (label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase());
               }}
             >
-              Thêm lớp học
-            </Button>
-          </div>
-        </div>
+              <Option value="all">Tất cả giảng viên</Option>
+              {teachersForFilter.map((teacher) => (
+                <Option
+                  key={teacher.id}
+                  value={teacher.id}
+                  label={teacher.fullName}
+                >
+                  {teacher.fullName} ({teacher.teacherCode})
+                </Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
 
-        <div className="stats-compact">
-          {statsCards.map((stat) => (
-            <div key={stat.label} className={`stat-chip ${stat.accent}`}>
-              <span className="value">{stat.value}</span>
-              <span className="label">{stat.label}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="filters-row compact-layout">
-          <Row gutter={[12, 12]} align="middle" className="filter-row-compact">
-            <Col xs={24} sm={24} md={12} lg={14} xl={16}>
-              <Search
-                placeholder="Tìm kiếm mã lớp, môn học, giảng viên..."
-                value={searchText}
-                onChange={(e) => {
-                  setSearchText(e.target.value);
-                  if (e.target.value === "") {
-                    handleSearch("");
-                  }
-                }}
-                onSearch={handleSearch}
-                allowClear
-                size="middle"
-                enterButton="Tìm"
-              />
-            </Col>
-            <Col xs={12} sm={12} md={6} lg={5} xl={4}>
-              <Select
-                value={semesterFilter}
-                onChange={handleSemesterFilterChange}
-                size="middle"
-                className="semester-select-compact"
-                style={{ width: "100%" }}
-              >
-                <Option value="all">Tất cả</Option>
-                {semesterOptions.map((semester) => (
-                  <Option key={semester.id} value={semester.id}>
-                    {semester.name}
-                  </Option>
-                ))}
-              </Select>
-            </Col>
-          </Row>
-        </div>
-
-        <div className="table-section">
-          <Table
-            columns={columns}
-            dataSource={classes}
-            loading={loading}
-            rowKey="id"
-            pagination={{
-              current: paginationState.current,
-              pageSize: paginationState.pageSize,
-              total: paginationState.total,
-              showSizeChanger: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total}`,
-              size: "small",
-            }}
-            onChange={handleTableChange}
-            scroll={{ x: 1000 }}
-            size="small"
-          />
-        </div>
+        <Table
+          columns={columns}
+          dataSource={classes}
+          loading={loading}
+          rowKey="id"
+          className="custom-table"
+          pagination={{
+            current: paginationState.current,
+            pageSize: paginationState.pageSize,
+            total: paginationState.total,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng ${total} lớp học`,
+            position: ["bottomRight"],
+            pageSizeOptions: ["10", "20", "50", "100"],
+          }}
+          onChange={handleTableChange}
+          scroll={{ x: 1000 }}
+        />
       </Card>
 
       <Modal

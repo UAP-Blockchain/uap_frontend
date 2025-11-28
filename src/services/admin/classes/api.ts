@@ -96,6 +96,35 @@ export const fetchTeachersApi = async (): Promise<TeacherOption[]> => {
   return normalizeItems<TeacherOption>(response.data);
 };
 
+// New API to fetch teachers with full details for filter
+export interface TeacherFilterOption {
+  id: string;
+  teacherCode: string;
+  fullName: string;
+  email: string;
+  hireDate: string;
+  specialization: string;
+  phoneNumber: string;
+  isActive: boolean;
+  totalClasses: number;
+  profileImageUrl?: string | null;
+}
+
+export interface TeachersResponse {
+  items: TeacherFilterOption[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export const fetchTeachersForFilterApi = async (): Promise<TeacherFilterOption[]> => {
+  const response = await api.get<TeachersResponse>("/teachers");
+  return response.data.items || [];
+};
+
 export const getClassByIdApi = async (id: string): Promise<ClassSummary> => {
   const response = await api.get<ClassSummary>(`/Classes/${id}`);
   return response.data;
