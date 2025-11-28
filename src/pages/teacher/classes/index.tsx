@@ -15,12 +15,7 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import {
-  BookOutlined,
-  CalendarOutlined,
-  TeamOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { BookOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
 import {
   getTeacherClassesApi,
   getClassByIdApi,
@@ -193,8 +188,8 @@ const TeacherTeachingClasses: React.FC = () => {
       {selectedClassSummary && (
         <Spin spinning={loadingDetail}>
           <Row gutter={[16, 16]} className="class-overview">
-            <Col xs={24} md={12} lg={8}>
-              <Card>
+            <Col xs={24} lg={12}>
+              <Card className="info-card">
                 <div className="card-heading">
                   <BookOutlined className="card-icon" />
                   <div>
@@ -202,52 +197,57 @@ const TeacherTeachingClasses: React.FC = () => {
                     <h3>{selectedClassSummary.classCode}</h3>
                   </div>
                 </div>
-                <ul className="info-list">
-                  <li>
-                    <span>Môn học</span>
+                <div className="info-grid">
+                  <div>
+                    <p>Môn học</p>
                     <strong>
                       {selectedClassSummary.subjectCode} -{" "}
                       {selectedClassSummary.subjectName}
                     </strong>
-                  </li>
-                  <li>
-                    <span>Tín chỉ</span>
-                    <strong>{selectedClassSummary.credits || 0}</strong>
-                  </li>
-                  <li>
-                    <span>Kỳ học</span>
-                    <strong>{selectedClassSummary.semesterName}</strong>
-                  </li>
-                </ul>
-              </Card>
-            </Col>
-            <Col xs={24} md={12} lg={8}>
-              <Card>
-                <div className="card-heading">
-                  <CalendarOutlined className="card-icon" />
-                  <div>
-                    <p className="eyebrow">Giảng viên phụ trách</p>
-                    <h3>{selectedClassSummary.teacherName || "Giảng viên"}</h3>
                   </div>
+                  <div>
+                    <p>Kỳ học</p>
+                    <strong>{selectedClassSummary.semesterName}</strong>
+                  </div>
+                  <div>
+                    <p>Tín chỉ</p>
+                    <strong>{selectedClassSummary.credits || 0}</strong>
+                  </div>
+                  {classDetail?.semesterStartDate && (
+                    <div>
+                      <p>Bắt đầu</p>
+                      <strong>{new Date(classDetail.semesterStartDate).toLocaleDateString()}</strong>
+                    </div>
+                  )}
+                  {classDetail?.semesterEndDate && (
+                    <div>
+                      <p>Kết thúc</p>
+                      <strong>{new Date(classDetail.semesterEndDate).toLocaleDateString()}</strong>
+                    </div>
+                  )}
+                  {classDetail?.room && (
+                    <div>
+                      <p>Phòng học</p>
+                      <strong>{classDetail.room}</strong>
+                    </div>
+                  )}
                 </div>
-                <ul className="info-list">
-                  <li>
-                    <span>Mã GV</span>
-                    <strong>{selectedClassSummary.teacherCode || "—"}</strong>
-                  </li>
-                  <li>
-                    <span>Email</span>
-                    <strong>{selectedClassSummary.teacherEmail || "—"}</strong>
-                  </li>
-                  <li>
-                    <span>Điện thoại</span>
-                    <strong>{selectedClassSummary.teacherPhone || "—"}</strong>
-                  </li>
-                </ul>
+                <div className="pill-row">
+                  {selectedClassSummary.status && (
+                    <span className="pill muted">
+                      {selectedClassSummary.status}
+                    </span>
+                  )}
+                  {classDetail?.subjectOfferingId && (
+                    <span className="pill">
+                      Offering: {classDetail.subjectOfferingId}
+                    </span>
+                  )}
+                </div>
               </Card>
             </Col>
-            <Col xs={24} lg={8}>
-              <Card className="stats-card">
+            <Col xs={24} lg={12}>
+              <Card className="stats-card minimalist">
                 <div className="card-heading">
                   <TeamOutlined className="card-icon" />
                   <div>
@@ -255,19 +255,25 @@ const TeacherTeachingClasses: React.FC = () => {
                     <h3>{totalStudents} sinh viên</h3>
                   </div>
                 </div>
-                <div className="stats-grid">
-                  <div>
-                    <p>Đăng ký</p>
-                    <strong>{selectedClassSummary.currentEnrollment ?? totalStudents}</strong>
+                <div className="stats-grid compact">
+                  <div className="stat">
+                    <span>Đăng ký</span>
+                    <strong>
+                      {selectedClassSummary.currentEnrollment ?? totalStudents}
+                    </strong>
                   </div>
-                  <div>
-                    <p>Chỉ tiêu</p>
+                  <div className="stat">
+                    <span>Chỉ tiêu</span>
                     <strong>{slots}</strong>
                   </div>
-                  <div>
-                    <p>Còn trống</p>
+                  <div className="stat">
+                    <span>Còn trống</span>
                     <strong>{Math.max(slots - totalStudents, 0)}</strong>
                   </div>
+                </div>
+                <div className="note">
+                  Tổng số sinh viên lấy từ roster mới nhất. Chỉ tiêu dựa trên
+                  max enrollment của lớp.
                 </div>
               </Card>
             </Col>
