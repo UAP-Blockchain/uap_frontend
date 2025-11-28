@@ -42,7 +42,6 @@ export default defineConfig({
             './src/pages/teacher/schedule',
             './src/pages/teacher/classList',
             './src/pages/teacher/grading',
-            './src/pages/teacher/results',
             './src/pages/teacher/profile',
           ],
           

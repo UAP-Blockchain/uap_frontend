@@ -10,6 +10,7 @@ import type {
 } from "../../../types/Class";
 import type { SubjectDto } from "../../../types/Subject";
 import type { TeacherOption } from "../../../types/Teacher";
+import type { SlotDto, CreateSlotRequest, UpdateSlotRequest } from "../../../types/Slot";
 
 const normalizeItems = <T>(payload: {
   data?: T[];
@@ -107,8 +108,29 @@ export const updateClassApi = async (
   await api.put(`/Classes/${id}`, payload);
 };
 
+export const getClassSlotsApi = async (id: string): Promise<SlotDto[]> => {
+  const response = await api.get<{ data?: SlotDto[]; items?: SlotDto[] }>(
+    `/Classes/${id}/slots`
+  );
+  return normalizeItems<SlotDto>(response.data);
+};
+
 export const deleteClassApi = async (id: string): Promise<void> => {
   await api.delete(`/Classes/${id}`);
+};
+
+export const createSlotApi = async (payload: CreateSlotRequest) => {
+  const response = await api.post("/Slots", payload);
+  return response.data;
+};
+
+export const updateSlotApi = async (id: string, payload: UpdateSlotRequest) => {
+  const response = await api.put(`/Slots/${id}`, payload);
+  return response.data;
+};
+
+export const deleteSlotApi = async (id: string) => {
+  await api.delete(`/Slots/${id}`);
 };
 
 export interface StudentRoster {

@@ -117,14 +117,16 @@ const SubjectDetail: React.FC = () => {
       }
       setClassesLoading(true);
       try {
-        const [subjectData, classesData] = await Promise.all([
+        const [subjectData, classesResponse] = await Promise.all([
           getSubjectByIdApi(id),
           fetchClassesApi(),
         ]);
 
         setSubject(subjectData);
 
-        const filteredClasses = classesData.filter(
+        const classItems = classesResponse.items ?? [];
+
+        const filteredClasses = classItems.filter(
           (cls) =>
             cls.subjectCode &&
             subjectData.subjectCode &&

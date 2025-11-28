@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -26,10 +26,8 @@ import { useNavigate } from "react-router-dom";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
 import {
   BookOutlined,
-  CalendarOutlined,
   PlusOutlined,
   UserOutlined,
-  EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
 import "./index.scss";
@@ -43,8 +41,6 @@ import {
   createClassApi,
   fetchClassesApi,
   fetchTeachersApi,
-  getClassByIdApi,
-  updateClassApi,
   deleteClassApi,
 } from "../../../services/admin/classes/api";
 import type { SubjectOffering } from "../../../types/SubjectOffering";
@@ -88,6 +84,18 @@ interface ManualSlotFormValues {
   notes?: string;
 }
 
+interface ScheduleTableRow {
+  key: string;
+  index: number;
+  dateText: string;
+  weekday: string;
+  timeSlotLabel: string;
+  teacherName: string;
+  substitutionReason?: string;
+  notes?: string;
+  entry: ScheduleEntry;
+}
+
 const generateTempId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? (crypto.randomUUID as () => string)()
@@ -117,8 +125,9 @@ const ClassesManagement: React.FC = () => {
   const [semesterFilter, setSemesterFilter] = useState<string>("all");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingClass, setEditingClass] = useState<ClassSummary | null>(null);
-  const [pendingEnrollments, setPendingEnrollments] = useState<Record<string, number>>({});
+  const [pendingEnrollments, setPendingEnrollments] = useState<
+    Record<string, number>
+  >({});
   const [form] = Form.useForm<CreateClassRequest>();
   const [manualSlotForm] = Form.useForm<ManualSlotFormValues>();
   const [timeSlots, setTimeSlots] = useState<TimeSlotDto[]>([]);
@@ -159,19 +168,27 @@ const ClassesManagement: React.FC = () => {
     setEditingScheduleEntryId(null);
   };
 
-  const getTimeSlotById = (id?: string) =>
-    timeSlots.find((slot) => slot.id === id);
+  const getTimeSlotById = useCallback(
+    (id?: string) => timeSlots.find((slot) => slot.id === id),
+    [timeSlots]
+  );
 
-  const getTimeSlotLabel = (id?: string) => {
-    const slot = getTimeSlotById(id);
-    if (!slot) return "—";
-    return `${slot.name} (${slot.startTime} - ${slot.endTime})`;
-  };
+  const getTimeSlotLabel = useCallback(
+    (id?: string) => {
+      const slot = getTimeSlotById(id);
+      if (!slot) return "—";
+      return `${slot.name} (${slot.startTime} - ${slot.endTime})`;
+    },
+    [getTimeSlotById]
+  );
 
-  const getTeacherName = (id?: string) => {
-    if (!id) return "";
-    return teachers.find((teacher) => teacher.id === id)?.fullName || "";
-  };
+  const getTeacherName = useCallback(
+    (id?: string) => {
+      if (!id) return "";
+      return teachers.find((teacher) => teacher.id === id)?.fullName || "";
+    },
+    [teachers]
+  );
 
   const sortScheduleEntries = (entries: ScheduleEntry[]) =>
     [...entries].sort((a, b) => a.date.valueOf() - b.date.valueOf());
@@ -203,21 +220,18 @@ const ClassesManagement: React.FC = () => {
     setPendingEnrollments(enrollmentCounts);
   };
 
-  const loadClassList = async (
-    overrides?: {
-      page?: number;
-      pageSize?: number;
-      searchTerm?: string;
-      semesterId?: string;
-    }
-  ) => {
+  const loadClassList = async (overrides?: {
+    page?: number;
+    pageSize?: number;
+    searchTerm?: string;
+    semesterId?: string;
+  }) => {
     setLoading(true);
     try {
       const response = await fetchClassesApi({
         page: overrides?.page ?? paginationState.current,
         pageSize: overrides?.pageSize ?? paginationState.pageSize,
-        searchTerm:
-          overrides?.searchTerm ?? (searchText.trim() || undefined),
+        searchTerm: overrides?.searchTerm ?? (searchText.trim() || undefined),
         semesterId:
           overrides?.semesterId ??
           (semesterFilter !== "all" ? semesterFilter : undefined),
@@ -303,7 +317,7 @@ const ClassesManagement: React.FC = () => {
         notes: entry.notes,
         entry,
       })),
-    [scheduleEntries, teachers, timeSlots]
+    [scheduleEntries, getTeacherName, getTimeSlotLabel]
   );
 
   const stats = useMemo(() => {
@@ -420,7 +434,9 @@ const ClassesManagement: React.FC = () => {
       width: 90,
       align: "center",
       render: (_, record) => (
-        <span className="number-value">{record.maxEnrollment - record.currentEnrollment}</span>
+        <span className="number-value">
+          {record.maxEnrollment - record.currentEnrollment}
+        </span>
       ),
     },
     {
@@ -429,42 +445,32 @@ const ClassesManagement: React.FC = () => {
       width: 100,
       fixed: "right",
       render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="Chỉnh sửa">
+        <Popconfirm
+          title="Bạn có chắc chắn muốn xóa lớp học này?"
+          onConfirm={() => handleDelete(record.id)}
+          okText="Có"
+          cancelText="Không"
+        >
+          <Tooltip title="Xóa">
             <Button
               type="text"
-              icon={<EditOutlined />}
+              icon={<DeleteOutlined />}
               size="small"
-              onClick={() => handleEdit(record)}
-              className="action-btn-edit"
+              className="action-btn-delete"
             />
           </Tooltip>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa lớp học này?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <Tooltip title="Xóa">
-              <Button
-                type="text"
-                icon={<DeleteOutlined />}
-                size="small"
-                className="action-btn-delete"
-              />
-            </Tooltip>
-          </Popconfirm>
-        </Space>
+        </Popconfirm>
       ),
     },
   ];
 
-  const scheduleColumns: ColumnsType<any> = [
+  const scheduleColumns: ColumnsType<ScheduleTableRow> = [
     {
       title: "#",
       dataIndex: "index",
       width: 60,
       align: "center",
+      render: (value: number) => value,
     },
     {
       title: "Ngày",
@@ -503,7 +509,7 @@ const ClassesManagement: React.FC = () => {
       title: "Hành động",
       key: "actions",
       width: 140,
-      render: (_: any, record) => (
+      render: (_: unknown, record) => (
         <Space size="small">
           <Button
             type="link"
@@ -527,38 +533,6 @@ const ClassesManagement: React.FC = () => {
       ),
     },
   ];
-
-  const handleEdit = async (classItem: ClassSummary) => {
-    try {
-      setLoading(true);
-      resetScheduleBuilder();
-      setCurrentStep(0);
-      const classDetail = await getClassByIdApi(classItem.id);
-      setEditingClass(classDetail);
-
-      const subjectOffering = subjectOfferings.find(
-        (offering) => offering.id === classDetail.subjectOfferingId
-      );
-      const teacher = teachers.find(
-        (t) => t.teacherCode === classItem.teacherCode
-      );
-
-      if (subjectOffering?.semesterName) {
-        setSelectedOfferingSemester(subjectOffering.semesterName);
-      }
-
-      form.setFieldsValue({
-        classCode: classDetail.classCode,
-        subjectOfferingId: subjectOffering?.id,
-        teacherId: teacher?.id,
-      });
-      setIsModalVisible(true);
-    } catch {
-      toast.error("Không thể tải thông tin lớp học");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDelete = async (id: string) => {
     try {
@@ -737,26 +711,21 @@ const ClassesManagement: React.FC = () => {
       const values = await form.validateFields();
       setIsSubmitting(true);
 
-      if (editingClass) {
-        await updateClassApi(editingClass.id, values);
-        toast.success("Cập nhật lớp học thành công");
-      } else {
-        if (scheduleEntries.length === 0) {
-          toast.error("Vui lòng thiết lập lịch học cho lớp");
-          setIsSubmitting(false);
-          setCurrentStep(1);
-          return;
-        }
-        const payload: CreateClassRequest = {
-          ...values,
-          initialSlots: mapEntriesToPayload(scheduleEntries),
-        };
-        await createClassApi(payload);
-        toast.success("Tạo lớp học thành công");
+      if (scheduleEntries.length === 0) {
+        toast.error("Vui lòng thiết lập lịch học cho lớp");
+        setIsSubmitting(false);
+        setCurrentStep(1);
+        return;
       }
 
+      const payload: CreateClassRequest = {
+        ...values,
+        initialSlots: mapEntriesToPayload(scheduleEntries),
+      };
+      await createClassApi(payload);
+      toast.success("Tạo lớp học thành công");
+
       setIsModalVisible(false);
-      setEditingClass(null);
       form.resetFields();
       resetScheduleBuilder();
       setCurrentStep(0);
@@ -765,11 +734,7 @@ const ClassesManagement: React.FC = () => {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error(
-          editingClass
-            ? "Không thể cập nhật lớp học"
-            : "Không thể tạo lớp học mới"
-        );
+        toast.error("Không thể tạo lớp học mới");
       }
     } finally {
       setIsSubmitting(false);
@@ -778,7 +743,6 @@ const ClassesManagement: React.FC = () => {
 
   const handleModalCancel = () => {
     setIsModalVisible(false);
-    setEditingClass(null);
     form.resetFields();
     resetScheduleBuilder();
     setCurrentStep(0);
@@ -1007,7 +971,9 @@ const ClassesManagement: React.FC = () => {
             {editingScheduleEntryId ? "Cập nhật buổi" : "Thêm buổi"}
           </Button>
           {editingScheduleEntryId && (
-            <Button onClick={handleCancelEditScheduleEntry}>Hủy chỉnh sửa</Button>
+            <Button onClick={handleCancelEditScheduleEntry}>
+              Hủy chỉnh sửa
+            </Button>
           )}
         </Space>
       </Form>
@@ -1020,82 +986,61 @@ const ClassesManagement: React.FC = () => {
         <Empty description="Chưa có TimeSlot để thiết lập lịch học" />
       ) : (
         <>
-      <Tabs
-        activeKey={activeScheduleTab}
-        onChange={(key) => setActiveScheduleTab(key as "auto" | "manual")}
-        items={[
-          {
-            key: "auto",
-            label: "Sinh tự động",
-            children: renderAutoTabContent(),
-          },
-          {
-            key: "manual",
-            label: "Nhập thủ công",
-            children: renderManualTabContent(),
-          },
-        ]}
-      />
+          <Tabs
+            activeKey={activeScheduleTab}
+            onChange={(key) => setActiveScheduleTab(key as "auto" | "manual")}
+            items={[
+              {
+                key: "auto",
+                label: "Sinh tự động",
+                children: renderAutoTabContent(),
+              },
+              {
+                key: "manual",
+                label: "Nhập thủ công",
+                children: renderManualTabContent(),
+              },
+            ]}
+          />
 
-      <Divider />
+          <Divider />
 
-      <div className="schedule-table-header">
-        <div>
-          <h4>Danh sách buổi học</h4>
-          <p>Hiện có {scheduleEntries.length} buổi</p>
-        </div>
-        {scheduleEntries.length > 0 && (
-          <Button type="text" danger onClick={handleClearScheduleEntries}>
-            Xóa tất cả
-          </Button>
-        )}
-      </div>
+          <div className="schedule-table-header">
+            <div>
+              <h4>Danh sách buổi học</h4>
+              <p>Hiện có {scheduleEntries.length} buổi</p>
+            </div>
+            {scheduleEntries.length > 0 && (
+              <Button type="text" danger onClick={handleClearScheduleEntries}>
+                Xóa tất cả
+              </Button>
+            )}
+          </div>
 
-      {scheduleEntries.length === 0 ? (
-        <Empty description="Chưa có buổi học nào" />
-      ) : (
-        <Table
-          columns={scheduleColumns}
-          dataSource={scheduleTableData}
-          pagination={false}
-          size="small"
-          className="schedule-table"
-        />
-      )}
+          {scheduleEntries.length === 0 ? (
+            <Empty description="Chưa có buổi học nào" />
+          ) : (
+            <Table
+              columns={scheduleColumns}
+              dataSource={scheduleTableData}
+              pagination={false}
+              size="small"
+              className="schedule-table"
+            />
+          )}
         </>
       )}
     </div>
   );
 
-  const renderModalContent = () => {
-    if (editingClass) {
-      return renderClassInfoForm();
-    }
-    return (
-      <>
-        {renderClassInfoForm(currentStep !== 0)}
-        {currentStep === 1 && renderScheduleBuilder()}
-      </>
-    );
-  };
+  const renderModalContent = () => (
+    <>
+      {renderClassInfoForm(currentStep !== 0)}
+      {currentStep === 1 && renderScheduleBuilder()}
+    </>
+  );
 
   const renderModalFooter = () => {
-    if (editingClass) {
-      return [
-        <Button key="cancel" onClick={handleModalCancel}>
-          Hủy
-        </Button>,
-        <Button
-          key="submit"
-          type="primary"
-          loading={isSubmitting}
-          onClick={handleSubmit}
-        >
-          Cập nhật
-        </Button>,
-      ];
-    }
-
     if (currentStep === 0) {
       return [
         <Button key="cancel" onClick={handleModalCancel}>
@@ -1144,11 +1089,10 @@ const ClassesManagement: React.FC = () => {
               icon={<PlusOutlined />}
               className="primary-action"
               onClick={() => {
-                setEditingClass(null);
                 form.resetFields();
                 setSelectedOfferingSemester("all");
-              resetScheduleBuilder();
-              setCurrentStep(0);
+                resetScheduleBuilder();
+                setCurrentStep(0);
                 setIsModalVisible(true);
               }}
             >
@@ -1226,24 +1170,19 @@ const ClassesManagement: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingClass ? "Chỉnh sửa lớp học" : "Tạo lớp học mới"}
+        title="Tạo lớp học mới"
         open={isModalVisible}
         onCancel={handleModalCancel}
         destroyOnClose
         width={920}
         footer={renderModalFooter()}
       >
-        {!editingClass && (
-          <Steps
-            size="small"
-            current={currentStep}
-            className="class-modal-steps"
-            items={[
-              { title: "Thông tin lớp" },
-              { title: "Thiết lập lịch" },
-            ]}
-          />
-        )}
+        <Steps
+          size="small"
+          current={currentStep}
+          className="class-modal-steps"
+          items={[{ title: "Thông tin lớp" }, { title: "Thiết lập lịch" }]}
+        />
         <div className="modal-step-content">{renderModalContent()}</div>
       </Modal>
     </div>

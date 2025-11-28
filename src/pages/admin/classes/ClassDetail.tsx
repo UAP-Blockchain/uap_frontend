@@ -13,6 +13,12 @@ import {
   Form,
   Input,
   Select,
+  Empty,
+  DatePicker,
+  Divider,
+  Row,
+  Col,
+  InputNumber,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -35,6 +41,10 @@ import {
   updateClassApi,
   fetchSubjectsApi,
   fetchTeachersApi,
+  getClassSlotsApi,
+  createSlotApi,
+  updateSlotApi,
+  deleteSlotApi,
   type StudentRoster,
 } from "../../../services/admin/classes/api";
 import type { EligibleStudent } from "../../../types/Class";
@@ -47,10 +57,28 @@ import {
 import type { ClassSummary } from "../../../types/Class";
 import type { SubjectDto } from "../../../types/Subject";
 import type { TeacherOption } from "../../../types/Teacher";
+import type { SlotDto, UpdateSlotRequest } from "../../../types/Slot";
+import { getAllTimeSlots } from "../../../services/admin/timeSlots/api";
+import type { TimeSlotDto } from "../../../types/TimeSlot";
+import dayjs, { Dayjs } from "dayjs";
 import "./ClassDetail.scss";
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
+
+interface AdditionalSlotFormValues {
+  date: Dayjs;
+  timeSlotId: string;
+  substituteTeacherId?: string;
+  substitutionReason?: string;
+  notes?: string;
+}
+
+const SLOT_STATUS_OPTIONS: UpdateSlotRequest["status"][] = [
+  "Scheduled",
+  "Completed",
+  "Cancelled",
+];
 
 const ClassDetail: React.FC = () => {
   const { classCode } = useParams<{ classCode: string }>();
@@ -85,7 +113,23 @@ const ClassDetail: React.FC = () => {
     classCode: string;
     subjectOfferingId: string;
     teacherId: string;
+    maxEnrollment: number;
   }>();
+  const [scheduleSlots, setScheduleSlots] = useState<SlotDto[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState<boolean>(false);
+  const [timeSlots, setTimeSlots] = useState<TimeSlotDto[]>([]);
+  const [slotForm] = Form.useForm<AdditionalSlotFormValues>();
+  const [editSlotForm] = Form.useForm<{
+    date: Dayjs;
+    timeSlotId?: string;
+    substituteTeacherId?: string;
+    substitutionReason?: string;
+    notes?: string;
+    status: UpdateSlotRequest["status"];
+  }>();
+  const [slotModalVisible, setSlotModalVisible] = useState(false);
+  const [slotModalLoading, setSlotModalLoading] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<SlotDto | null>(null);
 
   const setFormValuesFromClassInfo = useCallback(
     (
@@ -107,6 +151,7 @@ const ClassDetail: React.FC = () => {
         classCode: info.classCode,
         subjectOfferingId: matchedSubject?.id ?? info.subjectOfferingId ?? info.subjectCode,
         teacherId: matchedTeacher?.id ?? info.teacherCode,
+        maxEnrollment: info.maxEnrollment,
       });
     },
     [form, subjects, teachers]
@@ -119,12 +164,15 @@ const ClassDetail: React.FC = () => {
         setLoading(true);
       }
       try {
-        const [classData, rosterData] = await Promise.all([
+        setSlotsLoading(true);
+        const [classData, rosterData, slotData] = await Promise.all([
           getClassByIdApi(id),
           getClassRosterApi(id),
+          getClassSlotsApi(id),
         ]);
         setClassInfo(classData);
         setStudents(rosterData);
+        setScheduleSlots(slotData);
       } catch {
         toast.error("Không thể tải thông tin lớp học");
         navigate("/admin/classes");
@@ -132,6 +180,7 @@ const ClassDetail: React.FC = () => {
         if (shouldShowLoading) {
           setLoading(false);
         }
+        setSlotsLoading(false);
       }
     },
     [navigate]
@@ -173,6 +222,18 @@ const ClassDetail: React.FC = () => {
 
     loadClassDetail(classId);
   }, [classId, loadClassDetail, navigate]);
+
+  useEffect(() => {
+    const loadTimeSlots = async () => {
+      try {
+        const slots = await getAllTimeSlots();
+        setTimeSlots(slots);
+      } catch {
+        toast.error("Không thể tải danh sách ca học");
+      }
+    };
+    loadTimeSlots();
+  }, []);
 
   const handleOpenEnrollmentsModal = () => {
     if (!classId) {
@@ -218,16 +279,16 @@ const ClassDetail: React.FC = () => {
       }
     }
 
-    setFormValuesFromClassInfo(classInfo, subjectsData, teachersData);
     setIsEditing(true);
+    setTimeout(() => {
+      setFormValuesFromClassInfo(classInfo, subjectsData, teachersData);
+      slotForm.resetFields();
+    }, 0);
   };
 
   const handleCancelEdit = () => {
-    if (classInfo) {
-      setFormValuesFromClassInfo(classInfo);
-    } else {
-      form.resetFields();
-    }
+    form.resetFields();
+    slotForm.resetFields();
     setIsEditing(false);
   };
 
@@ -235,6 +296,7 @@ const ClassDetail: React.FC = () => {
     classCode: string;
     subjectOfferingId: string;
     teacherId: string;
+    maxEnrollment: number;
   }) => {
     if (!classInfo || !classId) {
       return;
@@ -244,6 +306,7 @@ const ClassDetail: React.FC = () => {
       classCode: values.classCode.trim(),
       subjectOfferingId: values.subjectOfferingId,
       teacherId: values.teacherId,
+      maxEnrollment: values.maxEnrollment,
     };
 
     setIsSaving(true);
@@ -354,6 +417,107 @@ const ClassDetail: React.FC = () => {
     } finally {
       setAssigningStudents(false);
     }
+  };
+
+  const handleAddNewSlot = async () => {
+    if (!classInfo) {
+      toast.error("Không tìm thấy thông tin lớp học");
+      return;
+    }
+    try {
+      const values = await slotForm.validateFields();
+      setSlotsLoading(true);
+      await createSlotApi({
+        classId: classInfo.id,
+        date: values.date.toISOString(),
+        timeSlotId: values.timeSlotId,
+        substituteTeacherId: values.substituteTeacherId,
+        substitutionReason: values.substitutionReason?.trim() || undefined,
+        notes: values.notes?.trim() || undefined,
+      });
+      toast.success("Đã thêm buổi học mới");
+      slotForm.resetFields();
+      await loadClassDetail(classInfo.id, { showLoading: false });
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return;
+      }
+      toast.error(error?.message || "Không thể thêm buổi học");
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const handleEditSlot = (slot: SlotDto) => {
+    setSelectedSlot(slot);
+    const safeStatus = SLOT_STATUS_OPTIONS.includes(
+      slot.status as UpdateSlotRequest["status"]
+    )
+      ? (slot.status as UpdateSlotRequest["status"])
+      : "Scheduled";
+
+    editSlotForm.setFieldsValue({
+      date: dayjs(slot.date),
+      timeSlotId: slot.timeSlotId,
+      substituteTeacherId: slot.substituteTeacherId,
+      substitutionReason: slot.substitutionReason,
+      notes: slot.notes,
+      status: safeStatus,
+    });
+    setSlotModalVisible(true);
+  };
+
+  const handleUpdateSlot = async () => {
+    if (!selectedSlot) return;
+    try {
+      const values = await editSlotForm.validateFields();
+      setSlotModalLoading(true);
+      await updateSlotApi(selectedSlot.id, {
+        date: values.date.toISOString(),
+        timeSlotId: values.timeSlotId,
+        substituteTeacherId: values.substituteTeacherId,
+        substitutionReason: values.substitutionReason?.trim() || undefined,
+        status: values.status,
+        notes: values.notes?.trim() || undefined,
+      });
+      toast.success("Cập nhật buổi học thành công");
+      setSlotModalVisible(false);
+      if (classInfo) {
+        await loadClassDetail(classInfo.id, { showLoading: false });
+      }
+    } catch (error: any) {
+      if (error?.errorFields) {
+        return;
+      }
+      toast.error(error?.message || "Không thể cập nhật buổi học");
+    } finally {
+      setSlotModalLoading(false);
+    }
+  };
+
+  const handleDeleteSlot = (slotId: string) => {
+    if (!classInfo) return;
+    Modal.confirm({
+      title: "Xóa buổi học",
+      content: "Bạn có chắc chắn muốn xóa buổi học này?",
+      okText: "Xóa",
+      cancelText: "Hủy",
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          setSlotsLoading(true);
+          await deleteSlotApi(slotId);
+          toast.success("Đã xóa buổi học");
+          await loadClassDetail(classInfo.id, { showLoading: false });
+        } catch (error) {
+          if (error instanceof Error) {
+            toast.error(error.message);
+          }
+        } finally {
+          setSlotsLoading(false);
+        }
+      },
+    });
   };
 
   const columns: ColumnsType<StudentRoster> = [
@@ -485,6 +649,48 @@ const ClassDetail: React.FC = () => {
       dataIndex: "major",
       key: "major",
       width: 160,
+      render: (value?: string) => value || "-",
+    },
+  ];
+
+  const scheduleColumns: ColumnsType<SlotDto> = [
+    {
+      title: "#",
+      dataIndex: "index",
+      width: 60,
+      render: (_: any, __: SlotDto, index: number) => index + 1,
+    },
+    {
+      title: "Ngày",
+      dataIndex: "date",
+      width: 140,
+      render: (date: string) => new Date(date).toLocaleDateString("vi-VN"),
+    },
+    {
+      title: "Ca học",
+      dataIndex: "timeSlotName",
+      width: 160,
+      render: (value?: string) => value || "-",
+    },
+    {
+      title: "Khung giờ",
+      key: "timeRange",
+      width: 160,
+      render: (_, record) =>
+        record.startTime && record.endTime
+          ? `${record.startTime} - ${record.endTime}`
+          : "-",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      width: 120,
+      render: (status: string) => <Tag color="blue">{status}</Tag>,
+    },
+    {
+      title: "GV thay thế",
+      dataIndex: "substituteTeacherName",
+      width: 200,
       render: (value?: string) => value || "-",
     },
   ];
@@ -632,6 +838,19 @@ const ClassDetail: React.FC = () => {
                   ))}
                 </Select>
               </Form.Item>
+              <Form.Item
+                name="maxEnrollment"
+                label="Sĩ số tối đa"
+                rules={[{ required: true, message: "Vui lòng nhập sĩ số tối đa!" }]}
+              >
+                <InputNumber
+                  min={10}
+                  max={500}
+                  size="large"
+                  style={{ width: "100%" }}
+                  placeholder="Nhập số lượng"
+                />
+              </Form.Item>
             </div>
           </Form>
         ) : (
@@ -720,6 +939,188 @@ const ClassDetail: React.FC = () => {
           size="small"
         />
       </Card>
+
+      <Card className="schedule-card">
+        <div className="schedule-header">
+          <div>
+            <Title level={4} className="schedule-title">
+              Lịch học
+            </Title>
+            <Text type="secondary">{scheduleSlots.length} buổi</Text>
+          </div>
+        </div>
+        {slotsLoading ? (
+          <div className="schedule-loading">
+            <Spin />
+          </div>
+        ) : scheduleSlots.length === 0 ? (
+          <Empty description="Chưa có lịch học" />
+        ) : (
+          <Table
+            columns={[
+              ...scheduleColumns,
+              ...(isEditing
+                ? [
+                    {
+                      title: "Hành động",
+                      key: "actions",
+                      width: 170,
+                      render: (_: any, record: SlotDto) => (
+                        <Space size="small">
+                          <Button size="small" onClick={() => handleEditSlot(record)}>
+                            Sửa
+                          </Button>
+                          <Button
+                            size="small"
+                            danger
+                            onClick={() => handleDeleteSlot(record.id)}
+                          >
+                            Xóa
+                          </Button>
+                        </Space>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+            dataSource={scheduleSlots}
+            rowKey="id"
+            pagination={{
+              pageSize: 10,
+              size: "small",
+            }}
+            size="small"
+          />
+        )}
+
+        {isEditing && (
+          <>
+            <Divider />
+            <Form form={slotForm} layout="vertical" className="additional-slot-form">
+              <Row gutter={16}>
+                <Col xs={24} md={8}>
+                  <Form.Item
+                    name="date"
+                    label="Ngày học"
+                    rules={[{ required: true, message: "Vui lòng chọn ngày" }]}
+                  >
+                    <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Form.Item
+                    name="timeSlotId"
+                    label="Ca học"
+                    rules={[{ required: true, message: "Vui lòng chọn ca học" }]}
+                  >
+                    <Select placeholder="Chọn ca học">
+                      {timeSlots.map((slot) => (
+                        <Option key={slot.id} value={slot.id}>
+                          {slot.name} ({slot.startTime} - {slot.endTime})
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={8}>
+                  <Form.Item name="substituteTeacherId" label="GV thay thế">
+                    <Select placeholder="Chọn giảng viên" allowClear>
+                      {teachers.map((teacher) => (
+                        <Option key={teacher.id} value={teacher.id}>
+                          {teacher.fullName}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row gutter={16}>
+                <Col xs={24} md={12}>
+                  <Form.Item name="substitutionReason" label="Lý do thay thế">
+                    <Input placeholder="Nhập lý do (nếu có)" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} md={12}>
+                  <Form.Item name="notes" label="Ghi chú">
+                    <Input placeholder="Nhập ghi chú" />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Space>
+                <Button type="primary" onClick={handleAddNewSlot}>
+                  Thêm buổi học
+                </Button>
+              </Space>
+            </Form>
+          </>
+        )}
+      </Card>
+
+      <Modal
+        title="Chỉnh sửa buổi học"
+        open={slotModalVisible}
+        onCancel={() => {
+          setSlotModalVisible(false);
+          setSelectedSlot(null);
+          editSlotForm.resetFields();
+        }}
+        onOk={handleUpdateSlot}
+        confirmLoading={slotModalLoading}
+        okText="Lưu"
+        cancelText="Hủy"
+        destroyOnHidden
+      >
+        <Form form={editSlotForm} layout="vertical">
+          <Form.Item
+            name="date"
+            label="Ngày học"
+            rules={[{ required: true, message: "Vui lòng chọn ngày" }]}
+          >
+            <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+          </Form.Item>
+          <Form.Item
+            name="timeSlotId"
+            label="Ca học"
+            rules={[{ required: true, message: "Vui lòng chọn ca học" }]}
+          >
+            <Select placeholder="Chọn ca học" allowClear>
+              {timeSlots.map((slot) => (
+                <Option key={slot.id} value={slot.id}>
+                  {slot.name} ({slot.startTime} - {slot.endTime})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="substituteTeacherId" label="GV thay thế">
+            <Select placeholder="Chọn giảng viên" allowClear>
+              {teachers.map((teacher) => (
+                <Option key={teacher.id} value={teacher.id}>
+                  {teacher.fullName}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+          <Form.Item name="substitutionReason" label="Lý do thay thế">
+            <Input placeholder="Nhập lý do (nếu có)" />
+          </Form.Item>
+          <Form.Item name="notes" label="Ghi chú">
+            <Input placeholder="Nhập ghi chú" />
+          </Form.Item>
+          <Form.Item
+            name="status"
+            label="Trạng thái"
+            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
+          >
+            <Select placeholder="Chọn trạng thái">
+              {SLOT_STATUS_OPTIONS.map((status) => (
+                <Option key={status} value={status}>
+                  {status}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
 
       <Modal
         title="Thêm sinh viên vào lớp"
