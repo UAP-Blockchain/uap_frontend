@@ -88,6 +88,75 @@ export const getTeacherProfileApi = async (): Promise<TeacherProfile> => {
 };
 
 /**
+ * Get classes taught by current teacher
+ * GET /api/teachers/me/classes
+ */
+export const getTeacherClassesApi = async (): Promise<TeachingClass[]> => {
+  const response = await api.get("/teachers/me/classes");
+  const payload = response.data;
+
+  const extractArray = (
+    input: unknown
+  ): Record<string, unknown>[] => {
+    if (Array.isArray(input)) {
+      return input as Record<string, unknown>[];
+    }
+    if (input && typeof input === "object") {
+      const obj = input as Record<string, unknown>;
+      if (Array.isArray(obj.data)) {
+        return obj.data as Record<string, unknown>[];
+      }
+      if (Array.isArray(obj.classes)) {
+        return obj.classes as Record<string, unknown>[];
+      }
+    }
+    return [];
+  };
+
+  const rawClasses = extractArray(payload);
+
+  const toStringSafe = (value: unknown): string => {
+    if (typeof value === "string") return value;
+    if (value === null || value === undefined) return "";
+    return String(value);
+  };
+
+  const toNumberSafe = (value: unknown): number => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  return rawClasses.map((cls) => {
+    const subject =
+      (cls.subject as Record<string, unknown> | undefined) ?? undefined;
+    const semester =
+      (cls.semester as Record<string, unknown> | undefined) ?? undefined;
+
+    return {
+      classId: toStringSafe(cls.id ?? cls.classId),
+      classCode: toStringSafe(cls.classCode),
+      subjectName: toStringSafe(
+        cls.subjectName ?? subject?.name ?? subject?.subjectName
+      ),
+      subjectCode: toStringSafe(
+        cls.subjectCode ?? subject?.code ?? subject?.subjectCode
+      ),
+      credits: toNumberSafe(cls.credits ?? subject?.credits),
+      semesterName: toStringSafe(
+        cls.semesterName ?? semester?.name ?? semester?.semesterName
+      ),
+      totalStudents: toNumberSafe(
+        cls.currentEnrollment ?? cls.totalStudents
+      ),
+      totalSlots: toNumberSafe(cls.maxEnrollment ?? cls.totalSlots),
+    } as TeachingClass;
+  });
+};
+
+/**
  * Get class details including students
  * GET /api/Classes/{classId}
  */

@@ -7,8 +7,6 @@ import {
   Space,
   Avatar,
   InputNumber,
-  Row,
-  Col,
   Alert,
   message,
   Tabs,
@@ -17,13 +15,11 @@ import {
 import {
   SaveOutlined,
   EditOutlined,
-  TrophyOutlined,
-  BarChartOutlined,
   DownloadOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import {
-  getTeacherProfileApi,
+  getTeacherClassesApi,
   getClassByIdApi,
   getGradeComponentsApi,
   getClassGradesApi,
@@ -80,10 +76,13 @@ const TeacherGrading: React.FC = () => {
   const loadTeacherClasses = async () => {
     setLoadingClasses(true);
     try {
-      const profile = await getTeacherProfileApi();
-      setClasses(profile.classes || []);
-      if (profile.classes && profile.classes.length > 0) {
-        setSelectedClassId(profile.classes[0].classId);
+      const teacherClasses = await getTeacherClassesApi();
+      const normalizedClasses = Array.isArray(teacherClasses)
+        ? teacherClasses
+        : [];
+      setClasses(normalizedClasses);
+      if (normalizedClasses.length > 0) {
+        setSelectedClassId(normalizedClasses[0].classId);
       }
     } catch (error) {
       console.error("Error loading teacher classes:", error);
