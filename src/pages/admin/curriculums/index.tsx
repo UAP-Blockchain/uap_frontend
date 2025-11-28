@@ -3,6 +3,7 @@ import {
   Alert,
   Button,
   Card,
+  Col,
   Descriptions,
   Divider,
   Drawer,
@@ -11,9 +12,11 @@ import {
   Input,
   InputNumber,
   Modal,
+  Row,
   Select,
   Space,
   Spin,
+  Steps,
   Table,
   Tag,
   Tooltip,
@@ -24,6 +27,7 @@ import {
   BookOutlined,
   DeleteOutlined,
   ExclamationCircleOutlined,
+  MinusCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
   SearchOutlined,
@@ -73,9 +77,17 @@ const CurriculumManagementPage: React.FC = () => {
   const [subjectOptions, setSubjectOptions] = useState<SubjectDto[]>([]);
   const [subjectLoading, setSubjectLoading] = useState(false);
   const [subjectSubmitting, setSubjectSubmitting] = useState(false);
+  const [creationWizardOpen, setCreationWizardOpen] = useState(false);
+  const [creationStep, setCreationStep] = useState(0);
+  const [newCurriculum, setNewCurriculum] = useState<CurriculumListItem | null>(null);
+  const [creationLoading, setCreationLoading] = useState(false);
+  const [batchSubjectSubmitting, setBatchSubjectSubmitting] = useState(false);
 
   const [form] = Form.useForm<CreateCurriculumRequest>();
   const [subjectForm] = Form.useForm<AddSubjectToCurriculumRequest>();
+  const [creationForm] = Form.useForm<CreateCurriculumRequest>();
+  const [subjectBatchForm] =
+    Form.useForm<{ subjects: AddSubjectToCurriculumRequest[] }>();
 
   const loadCurriculums = useCallback(async () => {
     setLoading(true);
@@ -128,6 +140,21 @@ const CurriculumManagementPage: React.FC = () => {
       loadSubjectOptions();
     }
   }, [subjectModalOpen, subjectOptions.length, loadSubjectOptions]);
+
+  useEffect(() => {
+    if (
+      creationWizardOpen &&
+      creationStep === 1 &&
+      subjectOptions.length === 0
+    ) {
+      loadSubjectOptions();
+    }
+  }, [
+    creationWizardOpen,
+    creationStep,
+    subjectOptions.length,
+    loadSubjectOptions,
+  ]);
 
   const stats = useMemo(() => {
     const total = curriculums.length;
@@ -191,8 +218,11 @@ const CurriculumManagementPage: React.FC = () => {
 
   const openCreateModal = () => {
     setEditingCurriculum(null);
-    form.resetFields();
-    setIsModalVisible(true);
+    creationForm.resetFields();
+    subjectBatchForm.setFieldsValue({ subjects: [{}] });
+    setCreationStep(0);
+    setNewCurriculum(null);
+    setCreationWizardOpen(true);
   };
 
   const openEditModal = (record: CurriculumListItem) => {
@@ -225,6 +255,73 @@ const CurriculumManagementPage: React.FC = () => {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const closeCreationWizard = () => {
+    setCreationWizardOpen(false);
+    setCreationStep(0);
+    setNewCurriculum(null);
+    creationForm.resetFields();
+    subjectBatchForm.resetFields();
+  };
+
+  const handleCreateCurriculumStep = async () => {
+    try {
+      const values = await creationForm.validateFields();
+      setCreationLoading(true);
+      const created = await createCurriculumApi(values);
+      toast.success("Đã tạo khung chương trình. Tiếp tục thêm môn học.");
+      setNewCurriculum(created);
+      setCreationStep(1);
+      subjectBatchForm.setFieldsValue({ subjects: [{}] });
+      await loadCurriculums();
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    } finally {
+      setCreationLoading(false);
+    }
+  };
+
+  const handleSubmitSubjectsStep = async () => {
+    if (!newCurriculum) {
+      toast.error("Vui lòng tạo khung chương trình trước khi thêm môn.");
+      return;
+    }
+    try {
+      const values = await subjectBatchForm.validateFields();
+      const payloads =
+        values.subjects?.filter(
+          (subject) => subject?.subjectId && subject?.semesterNumber
+        ) || [];
+
+      if (payloads.length === 0) {
+        toast.warning("Vui lòng nhập ít nhất một môn học.");
+        return;
+      }
+
+      setBatchSubjectSubmitting(true);
+
+      for (const payload of payloads) {
+        await addSubjectToCurriculumApi(newCurriculum.id, {
+          subjectId: payload.subjectId,
+          semesterNumber: payload.semesterNumber,
+          prerequisiteSubjectId: payload.prerequisiteSubjectId || undefined,
+        });
+      }
+
+      toast.success("Đã thêm môn học vào khung chương trình");
+      await loadCurriculumDetail(newCurriculum.id);
+      await loadCurriculums();
+      closeCreationWizard();
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+    } finally {
+      setBatchSubjectSubmitting(false);
     }
   };
 
@@ -565,6 +662,193 @@ const CurriculumManagementPage: React.FC = () => {
           <Empty description="Chọn một khung chương trình để xem chi tiết" />
         )}
       </Drawer>
+
+      <Modal
+        open={creationWizardOpen}
+        title="Tạo khung chương trình mới"
+        onCancel={closeCreationWizard}
+        footer={null}
+        width={900}
+        destroyOnClose
+        className="curriculum-creation-modal"
+      >
+        <Steps
+          current={creationStep}
+          items={[
+            { title: "Tạo khung chương trình" },
+            { title: "Thêm môn học" },
+          ]}
+          style={{ marginBottom: 24 }}
+        />
+
+        {creationStep === 0 && (
+          <Form form={creationForm} layout="vertical">
+            <Form.Item
+              label="Mã khung"
+              name="code"
+              rules={[{ required: true, message: "Vui lòng nhập mã khung" }]}
+            >
+              <Input placeholder="Ví dụ: SE-PRO-2024" />
+            </Form.Item>
+            <Form.Item
+              label="Tên khung"
+              name="name"
+              rules={[{ required: true, message: "Vui lòng nhập tên khung" }]}
+            >
+              <Input placeholder="Tên chương trình đào tạo" />
+            </Form.Item>
+            <Form.Item label="Mô tả" name="description">
+              <Input.TextArea rows={3} placeholder="Mô tả ngắn gọn về khung" />
+            </Form.Item>
+            <Form.Item
+              label="Tổng tín chỉ"
+              name="totalCredits"
+              rules={[{ required: true, message: "Vui lòng nhập số tín chỉ" }]}
+            >
+              <InputNumber min={1} style={{ width: "100%" }} />
+            </Form.Item>
+            <Space style={{ justifyContent: "flex-end", width: "100%" }}>
+              <Button onClick={closeCreationWizard}>Hủy</Button>
+              <Button
+                type="primary"
+                loading={creationLoading}
+                onClick={handleCreateCurriculumStep}
+              >
+                Tạo & tiếp tục
+              </Button>
+            </Space>
+          </Form>
+        )}
+
+        {creationStep === 1 && (
+          <>
+            <Alert
+              type="success"
+              showIcon
+              message={`Khung chương trình ${newCurriculum?.code} đã được tạo thành công`}
+              description="Chọn các môn học và học kỳ tương ứng để thêm vào khung."
+              style={{ marginBottom: 16 }}
+            />
+            {subjectLoading ? (
+              <div className="modal-loading">
+                <Spin />
+              </div>
+            ) : subjectOptions.length === 0 ? (
+              <Alert
+                type="warning"
+                showIcon
+                message="Chưa có dữ liệu môn học"
+                description="Hãy tạo môn học trước khi thêm vào khung chương trình."
+              />
+            ) : (
+              <Form
+                form={subjectBatchForm}
+                layout="vertical"
+                initialValues={{ subjects: [{}] }}
+              >
+                <Form.List name="subjects">
+                  {(fields, { add, remove }) => (
+                    <>
+                      {fields.map((field, index) => (
+                        <Card
+                          key={field.key}
+                          size="small"
+                          className="subject-entry-card"
+                        >
+                          <div className="subject-entry-header">
+                            <strong>Môn #{index + 1}</strong>
+                            {fields.length > 1 && (
+                              <Button
+                                type="text"
+                                danger
+                                icon={<MinusCircleOutlined />}
+                                onClick={() => remove(field.name)}
+                              />
+                            )}
+                          </div>
+                          <Row gutter={12}>
+                            <Col xs={24} md={12}>
+                              <Form.Item
+                                label="Môn học"
+                                name={[field.name, "subjectId"]}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Vui lòng chọn môn học",
+                                  },
+                                ]}
+                              >
+                                <Select
+                                  showSearch
+                                  placeholder="Chọn môn học"
+                                  optionFilterProp="label"
+                                  options={subjectOptions.map((subject) => ({
+                                    label: `${subject.subjectCode} - ${subject.subjectName} (${subject.credits} TC)`,
+                                    value: subject.id,
+                                  }))}
+                                />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} md={6}>
+                              <Form.Item
+                                label="Học kỳ"
+                                name={[field.name, "semesterNumber"]}
+                                rules={[
+                                  {
+                                    required: true,
+                                    message: "Vui lòng nhập học kỳ",
+                                  },
+                                ]}
+                              >
+                                <InputNumber min={1} style={{ width: "100%" }} />
+                              </Form.Item>
+                            </Col>
+                            <Col xs={24} md={6}>
+                              <Form.Item
+                                label="Môn tiên quyết"
+                                name={[field.name, "prerequisiteSubjectId"]}
+                              >
+                                <Select
+                                  allowClear
+                                  placeholder="Chọn (nếu có)"
+                                  optionFilterProp="label"
+                                  options={subjectOptions.map((subject) => ({
+                                    label: `${subject.subjectCode} - ${subject.subjectName}`,
+                                    value: subject.id,
+                                  }))}
+                                />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        </Card>
+                      ))}
+                      <Button
+                        type="dashed"
+                        onClick={() => add({})}
+                        block
+                        icon={<PlusOutlined />}
+                        style={{ marginBottom: 16 }}
+                      >
+                        Thêm môn khác
+                      </Button>
+                    </>
+                  )}
+                </Form.List>
+                <Space style={{ justifyContent: "flex-end", width: "100%" }}>
+                  <Button onClick={closeCreationWizard}>Hủy</Button>
+                  <Button
+                    type="primary"
+                    loading={batchSubjectSubmitting}
+                    onClick={handleSubmitSubjectsStep}
+                  >
+                    Hoàn tất
+                  </Button>
+                </Space>
+              </Form>
+            )}
+          </>
+        )}
+      </Modal>
 
       <Modal
         open={isModalVisible}

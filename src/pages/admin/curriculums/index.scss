@@ -160,6 +160,22 @@
     padding: 40px 0;
   }
 
+  .curriculum-creation-modal {
+    .subject-entry-card {
+      margin-bottom: 16px;
+      border-radius: 12px;
+      background: #fafbff;
+      border: 1px solid #eef1f7;
+    }
+
+    .subject-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+  }
+
   .drawer-content {
     .semester-block {
       border: 1px solid #edf2ff;
