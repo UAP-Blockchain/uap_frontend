@@ -16,7 +16,6 @@ import {
   FlagOutlined,
   HomeOutlined,
   IdcardOutlined,
-  LineChartOutlined,
   RiseOutlined,
   ScheduleOutlined,
   SettingOutlined,
@@ -97,7 +96,7 @@ const TeacherClassStudentList = lazy(
   () => import("../pages/teacher/classList")
 );
 const TeacherGrading = lazy(() => import("../pages/teacher/grading"));
-const TeacherResults = lazy(() => import("../pages/teacher/results"));
+
 const TeacherSchedule = lazy(() => import("../pages/teacher/schedule"));
 const TeacherProfile = lazy(() => import("../pages/teacher/profile"));
 
@@ -457,16 +456,7 @@ export const teacherRoutes: RouteConfig = {
       menuIndex: 4,
       menuSection: "main",
     },
-    {
-      path: "/teacher/results",
-      element: <TeacherResults />,
-      menuLabel: "Kết quả học tập",
-      menuIcon: <LineChartOutlined />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.TEACHER],
-      menuIndex: 5,
-      menuSection: "main",
-    },
+   
   ],
 };
 
