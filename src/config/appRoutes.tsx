@@ -39,9 +39,7 @@ const SubjectDetail = lazy(
   () => import("../pages/admin/subjects/SubjectDetail")
 );
 const CredentialsManagement = lazy(() => import("../pages/admin/credentials"));
-const CurriculumManagement = lazy(
-  () => import("../pages/admin/curriculums")
-);
+const CurriculumManagement = lazy(() => import("../pages/admin/curriculums"));
 const ManagerProduct = lazy(() => import("../pages/admin/products"));
 const ReportsManagement = lazy(() => import("../pages/admin/reports"));
 const SecurityManagement = lazy(() => import("../pages/admin/security"));
@@ -136,7 +134,7 @@ export const adminRoutes: RouteConfig = {
       menuIndex: 0,
       menuSection: "main",
       // Dashboard for admin roles only (not student)
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
+      allowedRoles: [ROLE_CODES.ADMIN],
     },
     {
       path: "/admin/dashboard",
@@ -149,7 +147,7 @@ export const adminRoutes: RouteConfig = {
       menuLabel: "Quản lý Môn học",
       menuIcon: <BookOutlined />,
       showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
+      allowedRoles: [ROLE_CODES.ADMIN],
       menuIndex: 2,
       menuSection: "main",
     },
@@ -157,7 +155,7 @@ export const adminRoutes: RouteConfig = {
       path: "/admin/subjects/:subjectCode",
       element: <SubjectDetail />,
       showInMenu: false,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
+      allowedRoles: [ROLE_CODES.ADMIN],
     },
     {
       path: "/admin/classes",
@@ -165,7 +163,7 @@ export const adminRoutes: RouteConfig = {
       menuLabel: "Quản lý Lớp học",
       menuIcon: <BookOutlined />,
       showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
+      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
       requiredPermissions: [PERMISSIONS.MANAGE_CLASSES],
       menuIndex: 3,
       menuSection: "main",
@@ -184,7 +182,7 @@ export const adminRoutes: RouteConfig = {
       path: "/admin/classes/:classCode",
       element: <ClassDetail />,
       showInMenu: false,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
+      allowedRoles: [ROLE_CODES.ADMIN],
     },
     {
       path: "/admin/semesters",
@@ -192,7 +190,7 @@ export const adminRoutes: RouteConfig = {
       menuLabel: "Quản lý Học kì",
       menuIcon: <CalendarOutlined />,
       showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
+      allowedRoles: [ROLE_CODES.ADMIN],
       menuIndex: 4,
       menuSection: "main",
     },
@@ -200,7 +198,7 @@ export const adminRoutes: RouteConfig = {
       path: "/admin/semesters/:semesterId",
       element: <SemesterDetail />,
       showInMenu: false,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
+      allowedRoles: [ROLE_CODES.ADMIN],
     },
     {
       path: "/admin/credentials",
@@ -208,7 +206,7 @@ export const adminRoutes: RouteConfig = {
       menuLabel: "Quản lý Chứng chỉ",
       menuIcon: <TrophyOutlined />,
       showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
+      allowedRoles: [ROLE_CODES.ADMIN],
       requiredPermissions: [PERMISSIONS.MANAGE_CREDENTIALS],
       menuIndex: 0,
       menuSection: "tools",
@@ -219,7 +217,7 @@ export const adminRoutes: RouteConfig = {
       menuLabel: "Giám sát Blockchain",
       menuIcon: <BellOutlined />,
       showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
+      allowedRoles: [ROLE_CODES.ADMIN],
       menuIndex: 1,
       menuSection: "tools",
     },
@@ -229,7 +227,7 @@ export const adminRoutes: RouteConfig = {
       menuLabel: "Báo cáo & Thống kê",
       menuIcon: <FileTextOutlined />,
       showInMenu: true,
-      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER, ROLE_CODES.TEACHER],
+      allowedRoles: [ROLE_CODES.ADMIN],
       requiredPermissions: [PERMISSIONS.VIEW_REPORTS],
       menuIndex: 2,
       menuSection: "tools",
