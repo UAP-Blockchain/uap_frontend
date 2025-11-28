@@ -12,18 +12,13 @@ import {
   Tabs,
   Spin,
 } from "antd";
-import {
-  SaveOutlined,
-  EditOutlined,
-  DownloadOutlined,
-} from "@ant-design/icons";
+import { EditOutlined, DownloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import {
   getTeacherClassesApi,
   getClassByIdApi,
   getGradeComponentsApi,
   getClassGradesApi,
-  submitStudentGradesApi,
   updateStudentGradesApi,
   type TeachingClass,
   type ClassStudent,
@@ -157,7 +152,7 @@ const TeacherGrading: React.FC = () => {
     }));
   };
 
-  const handleSaveOrUpdateStudentGrades = async (student: ClassStudent) => {
+  const handleUpdateStudentGrades = async (student: ClassStudent) => {
     if (!selectedClass || !selectedClass.subjectId) {
       message.error("Vui lòng chọn lớp học");
       return;
@@ -166,90 +161,50 @@ const TeacherGrading: React.FC = () => {
     const studentGrade = studentGrades[student.studentId] || {};
     const studentGradeIds = gradeIdMap[student.studentId] || {};
 
-    // Separate grades into new (POST) and existing (PUT)
-    const gradesToSave: Array<{
-      studentId: string;
-      subjectId: string;
-      gradeComponentId: string;
-      score: number;
-    }> = [];
     const gradesToUpdate: Array<{
       gradeId: string;
       score: number;
     }> = [];
+    const missingGradeComponents: string[] = [];
 
     gradeComponents.forEach((component) => {
-      const score = Number(studentGrade[component.id]) || 0;
+      const scoreRaw = studentGrade[component.id];
+      const score =
+        typeof scoreRaw === "number" ? scoreRaw : Number(scoreRaw) || 0;
       const gradeId = studentGradeIds[component.id];
 
-      if (score <= 0) return; // Skip empty scores
-
       if (gradeId) {
-        // Already saved, use PUT
         gradesToUpdate.push({
           gradeId,
           score,
         });
       } else {
-        // New grade, use POST
-        gradesToSave.push({
-          studentId: student.studentId,
-          subjectId: selectedClass.subjectId,
-          gradeComponentId: component.id,
-          score,
-        });
+        missingGradeComponents.push(component.name);
       }
     });
 
-    if (gradesToSave.length === 0 && gradesToUpdate.length === 0) {
-      message.warning("Vui lòng nhập điểm để lưu");
+    if (missingGradeComponents.length > 0) {
+      message.warning(
+        `Không tìm thấy mã điểm cho: ${missingGradeComponents.join(", ")}`
+      );
+    }
+
+    if (gradesToUpdate.length === 0) {
+      message.warning("Không có điểm nào để cập nhật");
       return;
     }
 
     setLoading((prev) => ({ ...prev, [student.studentId]: true }));
     try {
-      // Create new grades using POST if any
-      if (gradesToSave.length > 0) {
-        const createRequest = {
-          grades: gradesToSave,
-        };
-        const response = await submitStudentGradesApi(createRequest);
+      const updateRequest = {
+        grades: gradesToUpdate,
+      };
+      await updateStudentGradesApi(updateRequest);
 
-        // Update gradeIdMap with new grade IDs
-        if (
-          response.gradeIds &&
-          response.gradeIds.length === gradesToSave.length
-        ) {
-          const newGradeIdMap = { ...gradeIdMap };
-          if (!newGradeIdMap[student.studentId]) {
-            newGradeIdMap[student.studentId] = {};
-          }
-          gradesToSave.forEach((g, index) => {
-            newGradeIdMap[student.studentId][g.gradeComponentId] =
-              response.gradeIds![index];
-          });
-          setGradeIdMap(newGradeIdMap);
-        }
-      }
-
-      // Update existing grades using PUT if any
-      if (gradesToUpdate.length > 0) {
-        const updateRequest = {
-          grades: gradesToUpdate,
-        };
-        await updateStudentGradesApi(updateRequest);
-      }
-
-      const actionText =
-        gradesToSave.length > 0 && gradesToUpdate.length > 0
-          ? "lưu và cập nhật"
-          : gradesToSave.length > 0
-          ? "lưu"
-          : "cập nhật";
-      message.success(`Đã ${actionText} điểm cho ${student.fullName}`);
+      message.success(`Đã cập nhật điểm cho ${student.fullName}`);
     } catch (error) {
       console.error("Error saving/updating grades:", error);
-      message.error("Có lỗi xảy ra khi lưu điểm!");
+      message.error("Có lỗi xảy ra khi cập nhật điểm!");
     } finally {
       setLoading((prev) => ({ ...prev, [student.studentId]: false }));
     }
@@ -332,19 +287,17 @@ const TeacherGrading: React.FC = () => {
       fixed: "right",
       width: 150,
       render: (_: unknown, student: ClassStudent) => {
-        const studentGradeIds = gradeIdMap[student.studentId] || {};
-        const hasExistingGrades = Object.keys(studentGradeIds).length > 0;
         const studentLoading = loading[student.studentId] || false;
 
         return (
           <Button
             type="primary"
-            icon={hasExistingGrades ? <EditOutlined /> : <SaveOutlined />}
+            icon={<EditOutlined />}
             size="small"
-            onClick={() => handleSaveOrUpdateStudentGrades(student)}
+            onClick={() => handleUpdateStudentGrades(student)}
             loading={studentLoading}
           >
-            {hasExistingGrades ? "Cập nhật điểm" : "Lưu điểm"}
+            Cập nhật điểm
           </Button>
         );
       },
