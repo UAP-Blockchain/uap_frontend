@@ -1,9 +1,7 @@
 @use "../../../styles/theme-variables" as *;
 
 .curriculum-management {
-  padding: 24px;
-  background: #f5f7fb;
-  min-height: calc(100vh - 64px);
+
 
   .curriculum-panel {
     border-radius: 16px;
@@ -158,6 +156,22 @@
     align-items: center;
     justify-content: center;
     padding: 40px 0;
+  }
+
+  .curriculum-creation-modal {
+    .subject-entry-card {
+      margin-bottom: 16px;
+      border-radius: 12px;
+      background: #fafbff;
+      border: 1px solid #eef1f7;
+    }
+
+    .subject-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
   }
 
   .drawer-content {
