@@ -95,6 +95,7 @@ const WeeklyTimetable = lazy(
 const TeacherClassStudentList = lazy(
   () => import("../pages/teacher/classList")
 );
+const TeacherTeachingClasses = lazy(() => import("../pages/teacher/classes"));
 const TeacherGrading = lazy(() => import("../pages/teacher/grading"));
 
 const TeacherSchedule = lazy(() => import("../pages/teacher/schedule"));
@@ -441,6 +442,16 @@ export const teacherRoutes: RouteConfig = {
       menuSection: "main",
     },
     {
+      path: "/teacher/classes",
+      element: <TeacherTeachingClasses />,
+      menuLabel: "Lớp giảng dạy",
+      menuIcon: <BookOutlined />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.TEACHER],
+      menuIndex: 3,
+      menuSection: "main",
+    },
+    {
       path: "/teacher/class-list/:courseCode",
       element: <TeacherClassStudentList />,
       showInMenu: false,
@@ -456,7 +467,6 @@ export const teacherRoutes: RouteConfig = {
       menuIndex: 4,
       menuSection: "main",
     },
-   
   ],
 };
 

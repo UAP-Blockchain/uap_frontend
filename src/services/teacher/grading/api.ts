@@ -7,9 +7,19 @@ export interface TeachingClass {
   subjectName: string;
   subjectCode: string;
   credits: number;
+  semesterId?: string;
   semesterName: string;
+  subjectOfferingId?: string;
+  teacherId?: string;
+  teacherCode?: string;
+  teacherName?: string;
+  teacherEmail?: string;
+  teacherPhone?: string;
   totalStudents: number;
   totalSlots: number;
+  currentEnrollment?: number;
+  maxEnrollment?: number;
+  status?: string;
 }
 
 export interface TeacherProfile {
@@ -33,8 +43,21 @@ export interface ClassDetail {
   subjectId: string;
   subjectName: string;
   subjectCode: string;
+  subjectOfferingId?: string;
+  credits?: number;
   semesterId: string;
   semesterName: string;
+  semesterStartDate?: string;
+  semesterEndDate?: string;
+  teacherId?: string;
+  teacherCode?: string;
+  teacherName?: string;
+  teacherEmail?: string;
+  teacherPhone?: string;
+  maxEnrollment?: number;
+  currentEnrollment?: number;
+  status?: string;
+  room?: string;
   students: ClassStudent[];
 }
 
@@ -132,6 +155,8 @@ export const getTeacherClassesApi = async (): Promise<TeachingClass[]> => {
   return rawClasses.map((cls) => {
     const subject =
       (cls.subject as Record<string, unknown> | undefined) ?? undefined;
+    const teacher =
+      (cls.teacher as Record<string, unknown> | undefined) ?? undefined;
     const semester =
       (cls.semester as Record<string, unknown> | undefined) ?? undefined;
 
@@ -144,14 +169,28 @@ export const getTeacherClassesApi = async (): Promise<TeachingClass[]> => {
       subjectCode: toStringSafe(
         cls.subjectCode ?? subject?.code ?? subject?.subjectCode
       ),
+      subjectOfferingId: toStringSafe(
+        cls.subjectOfferingId ?? subject?.subjectOfferingId
+      ),
       credits: toNumberSafe(cls.credits ?? subject?.credits),
+      teacherId: toStringSafe(cls.teacherId ?? teacher?.id),
+      teacherCode: toStringSafe(cls.teacherCode ?? teacher?.code),
+      teacherName: toStringSafe(
+        cls.teacherName ?? teacher?.name ?? teacher?.fullName
+      ),
+      teacherEmail: toStringSafe(cls.teacherEmail ?? teacher?.email),
+      teacherPhone: toStringSafe(cls.teacherPhone ?? teacher?.phone),
+      semesterId: toStringSafe(cls.semesterId ?? semester?.id),
       semesterName: toStringSafe(
         cls.semesterName ?? semester?.name ?? semester?.semesterName
       ),
-      totalStudents: toNumberSafe(
+      totalStudents: toNumberSafe(cls.totalStudents ?? cls.currentEnrollment),
+      totalSlots: toNumberSafe(cls.totalSlots ?? cls.maxEnrollment),
+      currentEnrollment: toNumberSafe(
         cls.currentEnrollment ?? cls.totalStudents
       ),
-      totalSlots: toNumberSafe(cls.maxEnrollment ?? cls.totalSlots),
+      maxEnrollment: toNumberSafe(cls.maxEnrollment ?? cls.totalSlots),
+      status: toStringSafe(cls.status ?? cls.classStatus),
     } as TeachingClass;
   });
 };
