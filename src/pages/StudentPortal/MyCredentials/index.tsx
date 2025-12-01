@@ -162,7 +162,9 @@ const MyCredentials: React.FC = () => {
           gap: 6,
         }}
       >
-        <span style={{ display: "flex", alignItems: "center" }}>{meta.icon}</span>
+        <span style={{ display: "flex", alignItems: "center" }}>
+          {meta.icon}
+        </span>
         {meta.label}
       </Tag>
     );
@@ -217,7 +219,9 @@ const MyCredentials: React.FC = () => {
           <Avatar icon={getCredentialIcon(record.certificateType)} size={48} />
           <div>
             <Text strong style={{ display: "block" }}>
-              {record.subjectName || record.roadmapName || record.certificateType}
+              {record.subjectName ||
+                record.roadmapName ||
+                record.certificateType}
             </Text>
             <Space size={8} wrap>
               <Text type="secondary">{record.credentialId}</Text>
@@ -320,39 +324,42 @@ const MyCredentials: React.FC = () => {
   ];
 
   return (
-    <div className="my-credentials">
+    <div className="my-credentials student-roadmap">
       <Space direction="vertical" size={16} style={{ display: "flex" }}>
-        <div className="page-header">
-          <Title level={3} style={{ margin: 0 }}>
-            Chứng chỉ của tôi
-          </Title>
-          <Text type="secondary">
-            Theo dõi các chứng chỉ học tập đã phát hành và trạng thái xác thực.
-          </Text>
-        </div>
+        <div className="roadmap-header">
+          <div className="roadmap-header-content">
+            <div className="roadmap-title-section">
+              <Text style={{ color: "rgba(255, 255, 255, 0.9)" }}>
+                CHỨNG CHỈ
+              </Text>
+              <Title
+                level={2}
+                style={{ margin: 0, color: "#ffffff", marginBottom: 4 }}
+              >
+                Chứng chỉ của tôi
+              </Title>
+              <Text style={{ color: "rgba(255, 255, 255, 0.85)" }}>
+                Theo dõi các chứng chỉ học tập đã phát hành và trạng thái xác
+                thực.
+              </Text>
+            </div>
 
-        <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
-            <Card bordered={false} className="credential-stat-card">
-              <Statistic title="Tổng số" value={summary.total} suffix="chứng chỉ" />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card bordered={false} className="credential-stat-card">
-              <Statistic title="Đã phát hành" value={summary.issued} />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card bordered={false} className="credential-stat-card">
-              <Statistic title="Đang xử lý" value={summary.pending} />
-            </Card>
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Card bordered={false} className="credential-stat-card">
-              <Statistic title="Lên blockchain" value={summary.blockchain} />
-            </Card>
-          </Col>
-        </Row>
+            <div className="roadmap-metrics">
+              <Card className="metric-card compact">
+                <Statistic title="Tổng số chứng chỉ" value={summary.total} />
+              </Card>
+              <Card className="metric-card compact">
+                <Statistic title="Đã phát hành" value={summary.issued} />
+              </Card>
+              <Card className="metric-card compact">
+                <Statistic title="Đang xử lý" value={summary.pending} />
+              </Card>
+              <Card className="metric-card compact">
+                <Statistic title="Lên blockchain" value={summary.blockchain} />
+              </Card>
+            </div>
+          </div>
+        </div>
 
         <Card style={{ marginBottom: 8 }}>
           <Row gutter={[16, 16]} align="middle">

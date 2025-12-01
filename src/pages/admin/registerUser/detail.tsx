@@ -75,39 +75,35 @@ const StudentDetailPage: React.FC = () => {
     void fetchDetail();
   }, [fetchDetail]);
 
- const handleUpload = async (options: UploadRequestOption) => {
-   if (!userId) return;
-   const { file, onError, onSuccess } = options;
+  const handleUpload = async (options: UploadRequestOption) => {
+    if (!userId) return;
+    const { file, onError, onSuccess } = options;
 
-   try {
-     setUploading(true);
-     const res = await uploadUserProfilePictureApi(userId, file as File);
+    try {
+      setUploading(true);
+      // Service uploadUserProfilePictureApi đã chuẩn hóa trả về { url: string }
+      const res = await uploadUserProfilePictureApi(userId, file as File);
 
-     // Lấy đúng url từ response
-     const imageUrl =
-       res.data?.imageUrl ?? // nếu service trả { data: { imageUrl } }
-       res.data?.data?.imageUrl ?? // nếu axios trả { data: { success, data: { imageUrl } } }
-       res.imageUrl; // fallback
+      const imageUrl = res.url;
+      if (!imageUrl) {
+        throw new Error("Không tìm thấy đường dẫn ảnh trong phản hồi");
+      }
 
-     if (!imageUrl) {
-       throw new Error("Không tìm thấy imageUrl trong response");
-     }
+      message.success("Cập nhật ảnh đại diện thành công");
 
-     message.success("Cập nhật ảnh đại diện thành công");
+      setUser((prev) =>
+        prev ? { ...prev, profilePictureUrl: imageUrl } : prev
+      );
 
-     setUser((prev) =>
-       prev ? { ...prev, profilePictureUrl: imageUrl } : prev
-     );
-
-     onSuccess?.(res, new XMLHttpRequest());
-   } catch (error) {
-     console.error(error);
-     message.error("Không thể cập nhật ảnh đại diện");
-     onError?.(error as Error);
-   } finally {
-     setUploading(false);
-   }
- };
+      onSuccess?.(res, new XMLHttpRequest());
+    } catch (error) {
+      console.error(error);
+      message.error("Không thể cập nhật ảnh đại diện");
+      onError?.(error as Error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
 
   const currentClassColumns: ColumnsType<ClassInfo> = [
