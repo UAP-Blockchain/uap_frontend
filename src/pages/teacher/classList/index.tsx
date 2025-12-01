@@ -76,7 +76,7 @@ const TeacherClassStudentList: React.FC = () => {
           icon: <CloseCircleOutlined style={{ color: "#ff4d4f" }} />,
           placement: "topRight",
         });
-        navigate("/teacher/schedule");
+        // navigate("/teacher/schedule");
         return;
       }
 
@@ -305,10 +305,7 @@ const TeacherClassStudentList: React.FC = () => {
         console.error("Failed to refresh data:", refreshErr);
       }
 
-      // Navigate after a short delay to show notification
-      setTimeout(() => {
-        navigate("/teacher/schedule");
-      }, 2000);
+      // Remain on the class list page after saving so user can continue working
     } catch (err) {
       const errorMessage =
         (

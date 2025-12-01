@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Avatar,
   Card,
   Col,
   Descriptions,
-  List,
   Row,
+  Select,
   Space,
   Spin,
   Statistic,
   Tag,
   Typography,
   message,
+  Empty,
 } from "antd";
 import {
   BookOutlined,
@@ -30,6 +31,7 @@ const { Title, Text } = Typography;
 const TeacherProfile: React.FC = () => {
   const [profile, setProfile] = useState<TeacherProfileDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -37,6 +39,9 @@ const TeacherProfile: React.FC = () => {
         setIsLoading(true);
         const data = await TeacherServices.getMyProfile();
         setProfile(data);
+        if (data.classes && data.classes.length > 0) {
+          setSelectedClassId(data.classes[0].classId);
+        }
       } catch (err) {
         const messageText =
           (
@@ -55,6 +60,36 @@ const TeacherProfile: React.FC = () => {
 
     void fetchProfile();
   }, []);
+
+  const stats = useMemo(() => {
+    if (!profile) {
+      return [];
+    }
+    return [
+      {
+        title: "Tổng số lớp",
+        value: profile.totalClasses,
+        icon: <BookOutlined />,
+      },
+      {
+        title: "Tổng sinh viên",
+        value: profile.totalStudents,
+        icon: <TeamOutlined />,
+      },
+      {
+        title: "Chuyên môn chính",
+        value: profile.specialization,
+        icon: <UserOutlined />,
+        isText: true,
+      },
+    ];
+  }, [profile]);
+
+  const selectedClass = useMemo(() => {
+    if (!profile || profile.classes.length === 0) return null;
+    const found = profile.classes.find((cls) => cls.classId === selectedClassId);
+    return found ?? profile.classes[0];
+  }, [profile, selectedClassId]);
 
   if (isLoading) {
     return (
@@ -75,25 +110,6 @@ const TeacherProfile: React.FC = () => {
       </div>
     );
   }
-
-  const stats = [
-    {
-      title: "Tổng số lớp",
-      value: profile.totalClasses,
-      icon: <BookOutlined />,
-    },
-    {
-      title: "Tổng sinh viên",
-      value: profile.totalStudents,
-      icon: <TeamOutlined />,
-    },
-    {
-      title: "Chuyên môn chính",
-      value: profile.specialization,
-      icon: <UserOutlined />,
-      isText: true,
-    },
-  ];
 
   return (
     <div className="teacher-profile">
@@ -177,37 +193,61 @@ const TeacherProfile: React.FC = () => {
             ))}
           </Row>
 
-          <Card
-            title="Danh sách lớp giảng dạy"
-            bordered={false}
-            className="classes-card"
-          >
-            <List
-              dataSource={profile.classes}
-              locale={{ emptyText: "Không có lớp nào" }}
-              renderItem={(cls) => (
-                <List.Item className="class-item">
-                  <List.Item.Meta
-                    title={
-                      <Space size={8}>
-                        <Text strong>{cls.classCode}</Text>
-                        <Tag color="blue">{cls.semesterName}</Tag>
-                      </Space>
-                    }
-                    description={
-                      <div className="class-info">
-                        <Text strong>{cls.subjectName}</Text>
-                        <div className="class-meta">
-                          <span>Tín chỉ: {cls.credits}</span>
-                          <span>Sĩ số: {cls.totalStudents}</span>
-                          <span>Tổng ca: {cls.totalSlots}</span>
-                        </div>
+          <Card bordered={false} className="classes-card">
+            <div className="classes-header">
+              <h4>Danh sách lớp giảng dạy</h4>
+              <Select
+                className="class-selector"
+                placeholder="Chọn lớp"
+                size="large"
+                popupMatchSelectWidth={false}
+                value={selectedClassId ?? undefined}
+                onChange={setSelectedClassId}
+              >
+                {profile.classes.map((cls) => (
+                  <Select.Option key={cls.classId} value={cls.classId}>
+                    <div className="class-option">
+                      <span>{cls.classCode}</span>
+                      <Tag color="blue">{cls.semesterName}</Tag>
+                    </div>
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
+
+            {profile.classes.length === 0 ? (
+              <Empty description="Không có lớp nào" />
+            ) : (
+              selectedClass && (
+                <div className="class-detail-card">
+                  <div className="class-detail-header">
+                    <div>
+                      <Text strong className="class-code">
+                        {selectedClass.classCode}
+                      </Text>
+                      <Tag color="blue">{selectedClass.semesterName}</Tag>
+                      <div className="class-title">
+                        {selectedClass.subjectName}
                       </div>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
+                    </div>
+                  </div>
+                  <div className="class-meta-grid">
+                    <div>
+                      <p>Tín chỉ</p>
+                      <strong>{selectedClass.credits}</strong>
+                    </div>
+                    <div>
+                      <p>Sĩ số</p>
+                      <strong>{selectedClass.totalStudents}</strong>
+                    </div>
+                    <div>
+                      <p>Tổng ca</p>
+                      <strong>{selectedClass.totalSlots}</strong>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
           </Card>
         </Col>
       </Row>
