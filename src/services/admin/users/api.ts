@@ -22,7 +22,12 @@ export interface UserDto {
   specialization?: string;
   phoneNumber?: string;
   isActive: boolean;
-  profilePictureUrl?: string;
+  createdAt?: string;
+  studentId?: string;
+  teacherId?: string;
+  student?: { id: string; studentCode?: string };
+  teacher?: { id: string; teacherCode?: string };
+  profileImageUrl?: string;
 }
 
 export interface PagedUsersResponse {

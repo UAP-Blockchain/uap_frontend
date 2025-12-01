@@ -14,6 +14,7 @@ import {
   Tag,
   Upload,
   Table,
+  Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
@@ -53,12 +54,25 @@ const StudentDetailPage: React.FC = () => {
       setUser(userDetail);
 
       if (userDetail.roleName === "Student") {
-        try {
-          const studentDetail = await StudentServices.getStudentById(userId);
-          setStudent(studentDetail);
-        } catch (error) {
-          console.error("Failed to load student detail:", error);
-          message.error("Không thể tải chi tiết sinh viên");
+        const resolvedStudentId =
+          userDetail.studentId || userDetail.student?.id;
+
+        if (resolvedStudentId) {
+          try {
+            const studentDetail = await StudentServices.getStudentById(
+              resolvedStudentId
+            );
+            setStudent(studentDetail);
+          } catch (error) {
+            console.error("Failed to load student detail:", error);
+            message.error("Không thể tải chi tiết sinh viên");
+            setStudent(null);
+          }
+        } else {
+          message.warning(
+            "Không tìm thấy mã sinh viên tương ứng. Vui lòng kiểm tra dữ liệu."
+          );
+          setStudent(null);
         }
       } else {
         setStudent(null);
@@ -75,40 +89,49 @@ const StudentDetailPage: React.FC = () => {
     void fetchDetail();
   }, [fetchDetail]);
 
- const handleUpload = async (options: UploadRequestOption) => {
-   if (!userId) return;
-   const { file, onError, onSuccess } = options;
+  type UploadApiResponse = {
+    imageUrl?: string;
+    data?: {
+      imageUrl?: string;
+      data?: {
+        imageUrl?: string;
+      };
+    };
+  };
 
-   try {
-     setUploading(true);
-     const res = await uploadUserProfilePictureApi(userId, file as File);
+  const handleUpload = async (options: UploadRequestOption) => {
+    if (!userId) return;
+    const { file, onError, onSuccess } = options;
 
-     // Lấy đúng url từ response
-     const imageUrl =
-       res.data?.imageUrl ?? // nếu service trả { data: { imageUrl } }
-       res.data?.data?.imageUrl ?? // nếu axios trả { data: { success, data: { imageUrl } } }
-       res.imageUrl; // fallback
+    try {
+      setUploading(true);
+      const res = (await uploadUserProfilePictureApi(
+        userId,
+        file as File
+      )) as UploadApiResponse;
 
-     if (!imageUrl) {
-       throw new Error("Không tìm thấy imageUrl trong response");
-     }
+      const imageUrl =
+        res.data?.imageUrl ?? res.data?.data?.imageUrl ?? res.imageUrl;
 
-     message.success("Cập nhật ảnh đại diện thành công");
+      if (!imageUrl) {
+        throw new Error("Không tìm thấy imageUrl trong response");
+      }
 
-     setUser((prev) =>
-       prev ? { ...prev, profilePictureUrl: imageUrl } : prev
-     );
+      message.success("Cập nhật ảnh đại diện thành công");
 
-     onSuccess?.(res, new XMLHttpRequest());
-   } catch (error) {
-     console.error(error);
-     message.error("Không thể cập nhật ảnh đại diện");
-     onError?.(error as Error);
-   } finally {
-     setUploading(false);
-   }
- };
+      setUser((prev) =>
+        prev ? { ...prev, profilePictureUrl: imageUrl } : prev
+      );
 
+      onSuccess?.(res, new XMLHttpRequest());
+    } catch (error) {
+      console.error(error);
+      message.error("Không thể cập nhật ảnh đại diện");
+      onError?.(error as Error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const currentClassColumns: ColumnsType<ClassInfo> = [
     {
@@ -214,6 +237,9 @@ const StudentDetailPage: React.FC = () => {
     );
   }
 
+  const avatarSrc = user?.profileImageUrl || student?.profileImage;
+  const TypographyText = Typography.Text;
+
   return (
     <div className="user-detail-page">
       <Button
@@ -232,7 +258,7 @@ const StudentDetailPage: React.FC = () => {
                 <div className="avatar-section">
                   <Avatar
                     size={120}
-                    src={user.profilePictureUrl}
+                    src={avatarSrc}
                     style={{ backgroundColor: "#1677ff" }}
                   >
                     {user.fullName?.charAt(0)}
@@ -257,6 +283,11 @@ const StudentDetailPage: React.FC = () => {
                     <MailOutlined />
                     <span>{user.email}</span>
                   </Space>
+                  {student?.studentCode && (
+                    <TypographyText type="secondary">
+                      Mã sinh viên: {student.studentCode}
+                    </TypographyText>
+                  )}
                   <Tag color={user.isActive ? "success" : "default"}>
                     {user.isActive ? "Đang hoạt động" : "Vô hiệu hóa"}
                   </Tag>
@@ -281,67 +312,99 @@ const StudentDetailPage: React.FC = () => {
             </Col>
 
             <Col xs={24} md={16}>
-              <Card title="Thông tin học sinh">
-                {student ? (
-                  <>
-                    <Descriptions column={2} bordered size="small">
-                      <Descriptions.Item label="Mã sinh viên">
-                        {student.studentCode}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="GPA">
-                        {student.gpa?.toFixed(2)}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Ngày nhập học">
-                        {dayjs(student.enrollmentDate).format("DD/MM/YYYY")}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Trạng thái">
-                        <Tag color={student.isActive ? "success" : "default"}>
-                          {student.isActive ? "Đang học" : "Tạm ngưng"}
-                        </Tag>
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Tốt nghiệp">
-                        {student.isGraduated ? (
-                          <Tag color="blue">Đã tốt nghiệp</Tag>
-                        ) : (
-                          <Tag>Chưa tốt nghiệp</Tag>
-                        )}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Ngày tạo">
-                        {dayjs(student.createdAt).format("DD/MM/YYYY HH:mm")}
-                      </Descriptions.Item>
-                    </Descriptions>
-                    <Divider />
-                    <h3>Lớp đang học</h3>
-                    {student.currentClasses &&
-                    student.currentClasses.length > 0 ? (
-                      <Table<ClassInfo>
-                        columns={currentClassColumns}
-                        dataSource={student.currentClasses}
-                        size="small"
-                        rowKey="classId"
-                        pagination={false}
-                      />
-                    ) : (
-                      <Empty description="Chưa có lớp đang học" />
-                    )}
-                    <Divider />
-                    <h3>Lịch sử đăng ký</h3>
-                    {student.enrollments && student.enrollments.length > 0 ? (
-                      <Table<EnrollmentInfo>
-                        columns={enrollmentColumns}
-                        dataSource={student.enrollments}
-                        size="small"
-                        rowKey="id"
-                        pagination={{ pageSize: 5 }}
-                      />
-                    ) : (
-                      <Empty description="Chưa có đăng ký nào" />
-                    )}
-                  </>
-                ) : (
-                  <Empty description="Chỉ áp dụng cho vai trò Sinh viên" />
-                )}
-              </Card>
+              <Space
+                direction="vertical"
+                size="large"
+                style={{ width: "100%" }}
+              >
+                <Card title="Thông tin liên hệ">
+                  <Descriptions bordered column={2} size="small">
+                    <Descriptions.Item label="Họ tên">
+                      {user.fullName}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Email">
+                      {user.email}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Vai trò">
+                      {user.roleName === "Student" ? "Sinh viên" : "Giảng viên"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Trạng thái">
+                      <Tag color={user.isActive ? "success" : "default"}>
+                        {user.isActive ? "Đang hoạt động" : "Vô hiệu hóa"}
+                      </Tag>
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Ngày tạo">
+                      {user.createdAt
+                        ? dayjs(user.createdAt).format("DD/MM/YYYY HH:mm")
+                        : "—"}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
+
+                <Card title="Thông tin học sinh">
+                  {student ? (
+                    <>
+                      <Descriptions column={2} bordered size="small">
+                        <Descriptions.Item label="Mã sinh viên">
+                          {student.studentCode}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="GPA">
+                          {typeof student.gpa === "number"
+                            ? student.gpa.toFixed(2)
+                            : "Chưa có"}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Ngày nhập học">
+                          {dayjs(student.enrollmentDate).format("DD/MM/YYYY")}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Trạng thái">
+                          <Tag color={student.isActive ? "success" : "default"}>
+                            {student.isActive ? "Đang học" : "Tạm ngưng"}
+                          </Tag>
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Tốt nghiệp">
+                          {student.isGraduated ? (
+                            <Tag color="blue">Đã tốt nghiệp</Tag>
+                          ) : (
+                            <Tag>Chưa tốt nghiệp</Tag>
+                          )}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Địa chỉ ví Blockchain">
+                          {student.walletAddress || "Chưa cập nhật"}
+                        </Descriptions.Item>
+                      </Descriptions>
+                      <Divider />
+                      <h3>Lớp đang học</h3>
+                      {student.currentClasses &&
+                      student.currentClasses.length > 0 ? (
+                        <Table<ClassInfo>
+                          columns={currentClassColumns}
+                          dataSource={student.currentClasses}
+                          size="small"
+                          rowKey="classId"
+                          pagination={false}
+                        />
+                      ) : (
+                        <Empty description="Chưa có lớp đang học" />
+                      )}
+                      <Divider />
+                      <h3>Lịch sử đăng ký</h3>
+                      {student.enrollments && student.enrollments.length > 0 ? (
+                        <Table<EnrollmentInfo>
+                          columns={enrollmentColumns}
+                          dataSource={student.enrollments}
+                          size="small"
+                          rowKey="id"
+                          pagination={{ pageSize: 5 }}
+                        />
+                      ) : (
+                        <Empty description="Chưa có đăng ký nào" />
+                      )}
+                    </>
+                  ) : (
+                    <Empty description="Chỉ áp dụng cho vai trò Sinh viên" />
+                  )}
+                </Card>
+              </Space>
             </Col>
           </Row>
         ) : (

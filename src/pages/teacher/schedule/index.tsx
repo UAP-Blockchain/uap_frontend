@@ -8,9 +8,11 @@ import {
   Col,
   DatePicker,
   Row,
+  Select,
   Space,
   Spin,
   Table,
+  Tag,
   Tooltip,
   Typography,
   message,
@@ -18,9 +20,10 @@ import {
 import type { ColumnsType } from "antd/es/table";
 import {
   CalendarOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
   ReloadOutlined,
-  LeftOutlined,
-  RightOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
@@ -35,6 +38,8 @@ import "./index.scss";
 dayjs.extend(weekOfYear);
 
 const { Title, Text } = Typography;
+const { Option } = Select;
+
 type DayKey =
   | "monday"
   | "tuesday"
@@ -91,12 +96,6 @@ const DEFAULT_TIME_SLOTS: TimetableSlot[] = [
   { slotIndex: 3, time: "12:30 - 14:20", label: "Ca 3" },
   { slotIndex: 4, time: "14:30 - 16:20", label: "Ca 4" },
 ];
-
-const attendanceStatusText: Record<string, string> = {
-  attended: "Đã dạy",
-  absent: "Vắng",
-  not_yet: "Sắp diễn ra",
-};
 
 const TeacherSchedule: React.FC = () => {
   const navigate = useNavigate();
@@ -190,6 +189,31 @@ const TeacherSchedule: React.FC = () => {
     fetchWeeklySchedule(selectedWeek);
   }, [fetchWeeklySchedule, selectedWeek]);
 
+  const getStatusTag = (attendance?: string) => {
+    switch (attendance) {
+      case "attended":
+        return (
+          <Tag color="success" icon={<CheckCircleOutlined />}>
+            Đã dạy
+          </Tag>
+        );
+      case "absent":
+        return (
+          <Tag color="error" icon={<CloseCircleOutlined />}>
+            Vắng
+          </Tag>
+        );
+      case "not_yet":
+        return (
+          <Tag color="warning" icon={<ExclamationCircleOutlined />}>
+            Chưa dạy
+          </Tag>
+        );
+      default:
+        return null;
+    }
+  };
+
   const handleOpenAttendanceModal = useCallback(
     (info: ClassInfo) => {
       if (!info.classId || !info.slotId) {
@@ -234,60 +258,53 @@ const TeacherSchedule: React.FC = () => {
 
       return (
         <div className="class-slot-container">
-          {classes.map((info, index) => {
-            const status = info.attendance || "not_yet";
-            const dateLabel =
-              info.date && dayjs(info.date).isValid()
-                ? dayjs(info.date).format("DD/MM/YYYY")
-                : "—";
-            const timeLabel = formatTimeRange(info.startTime, info.endTime);
-
-            return (
-              <div
-                key={`${info.slotId || info.classId}-${index}`}
-                className="class-slot"
-                data-status={status}
-                onClick={() => handleOpenAttendanceModal(info)}
-                style={{
-                  cursor: "pointer",
-                  marginBottom: index < classes.length - 1 ? 8 : 0,
-                }}
-              >
-                <div className="class-slot__header">
-                  <span className="code">{info.courseCode}</span>
-                  <span className={`status-chip status-${status}`}>
-                    {attendanceStatusText[status] || "Lớp học"}
-                  </span>
-                </div>
-                <div className="class-slot__name">{info.courseName}</div>
-                <div className="class-slot__meta">
-                  {info.location && (
-                    <span className="meta-tag">{info.location}</span>
-                  )}
-                  <span className="meta-tag">{timeLabel}</span>
-                </div>
-                <div className="class-slot__footer">
-                  <span>{dateLabel}</span>
-                  <Tooltip title="Xem chi tiết lớp">
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleNavigateClass(info, dayKey || "t2");
-                      }}
-                    >
-                      Chi tiết
-                    </Button>
-                  </Tooltip>
-                </div>
+          {classes.map((info, index) => (
+            <div
+              key={`${info.slotId || info.classId}-${index}`}
+              className="class-slot"
+              onClick={() => handleOpenAttendanceModal(info)}
+              style={{
+                cursor: "pointer",
+                marginBottom: index < classes.length - 1 ? 8 : 0,
+              }}
+            >
+              <div className="course-code">
+                <Text strong>{info.courseCode}</Text>
+                <Tooltip title="Xem danh sách lớp">
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNavigateClass(info, dayKey || "t2");
+                    }}
+                  >
+                    Chi tiết lớp
+                  </Button>
+                </Tooltip>
               </div>
-            );
-          })}
+              <div className="course-info">
+                <Text style={{ fontSize: 12 }}>
+                  {info.courseName}
+                  {info.location ? ` • ${info.location}` : ""}
+                </Text>
+              </div>
+              <div className="attendance-status">
+                {getStatusTag(info.attendance)}
+              </div>
+              <div className="time-info">
+                <Text type="secondary" style={{ fontSize: 11 }}>
+                  {info.date && dayjs(info.date).isValid()
+                    ? dayjs(info.date).format("DD/MM/YYYY")
+                    : "—"}
+                </Text>
+              </div>
+            </div>
+          ))}
         </div>
       );
     },
-    [formatTimeRange, handleNavigateClass, handleOpenAttendanceModal]
+    [handleNavigateClass, handleOpenAttendanceModal]
   );
 
   const timetableData = useMemo(() => {
@@ -346,55 +363,6 @@ const TeacherSchedule: React.FC = () => {
     return rows.length > 0 ? rows : DEFAULT_TIME_SLOTS;
   }, [weeklySchedule, convertSlotToClassInfo, formatTimeRange]);
 
-  const summaryStats = useMemo(() => {
-    const total = weeklySchedule?.totalSlots ?? 0;
-    const slots = weeklySchedule
-      ? weeklySchedule.days.flatMap((day) => day.slots)
-      : [];
-
-    const completed = slots.filter((slot) => {
-      const status = slot.status?.toLowerCase();
-      if (status === "completed") return true;
-      if (slot.isPresent === true) return true;
-      return false;
-    }).length;
-
-    const cancelled = slots.filter(
-      (slot) => slot.status?.toLowerCase() === "cancelled"
-    ).length;
-
-    const upcoming = Math.max(total - completed - cancelled, 0);
-    const completedPercent =
-      total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    return [
-      {
-        label: "Tổng ca",
-        value: total,
-        subtext: "Trong tuần này",
-        accent: "primary",
-      },
-      {
-        label: "Đã dạy",
-        value: completed,
-        subtext: `${completedPercent}% hoàn thành`,
-        accent: "success",
-      },
-      {
-        label: "Sắp diễn ra",
-        value: upcoming,
-        subtext: "Cần chuẩn bị",
-        accent: "warning",
-      },
-      {
-        label: "Hủy/Vắng",
-        value: cancelled,
-        subtext: "Kiểm tra lại lịch",
-        accent: "danger",
-      },
-    ];
-  }, [weeklySchedule]);
-
   const columns: ColumnsType<TimetableSlot> = useMemo(() => {
     const base: ColumnsType<TimetableSlot> = [
       {
@@ -438,14 +406,6 @@ const TeacherSchedule: React.FC = () => {
     return base;
   }, [weeklySchedule, renderClassCell]);
 
-  const formattedWeekRange =
-    weeklySchedule?.weekLabel ||
-    `${getMondayOfWeek(selectedWeek).format("DD/MM")} - ${getMondayOfWeek(
-      selectedWeek
-    )
-      .add(6, "day")
-      .format("DD/MM/YYYY")}`;
-
   const handleWeekChange = (direction: "prev" | "next") => {
     setSelectedWeek((prev) =>
       direction === "prev" ? prev.subtract(1, "week") : prev.add(1, "week")
@@ -453,68 +413,76 @@ const TeacherSchedule: React.FC = () => {
   };
 
   return (
-    <div className="teacher-schedule-page weekly-timetable teacher-view">
-      <div className="hero-card">
-        <div className="hero-card__text">
-          <p className="eyebrow">Lịch giảng dạy</p>
-          <Title level={3} style={{ marginBottom: 8 }}>
-            Tuần: {formattedWeekRange}
-          </Title>
-          <Text type="secondary">
-            Tổng số ca dạy: {weeklySchedule?.totalSlots ?? 0}
-          </Text>
-        </div>
-        <div className="hero-card__actions">
-          <Space className="hero-card__nav">
-            <Tooltip title="Tuần trước">
-              <Button
-                shape="circle"
-                icon={<LeftOutlined />}
-                onClick={() => handleWeekChange("prev")}
-              />
-            </Tooltip>
-            <Tooltip title="Tuần sau">
-              <Button
-                shape="circle"
-                icon={<RightOutlined />}
-                onClick={() => handleWeekChange("next")}
-              />
-            </Tooltip>
-          </Space>
-          <Space size="middle">
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={() => setSelectedWeek(dayjs())}
-            >
-              Về tuần hiện tại
-            </Button>
-            <DatePicker.WeekPicker
-              value={selectedWeek}
-              onChange={(date: dayjs.Dayjs | null) =>
-                date && setSelectedWeek(date)
-              }
-              className="week-picker"
-              format="YYYY-[Tuần] wo"
-              placeholder="Chọn tuần"
-              allowClear={false}
-            />
-          </Space>
-        </div>
+    <div className="weekly-timetable teacher-view">
+      <div className="timetable-header">
+        <Card className="week-nav-card">
+          <Row align="middle" justify="space-between">
+            <Col>
+              <Space>
+                <Button type="primary" onClick={() => handleWeekChange("prev")}>
+                  ← Tuần trước
+                </Button>
+                <Button onClick={() => handleWeekChange("next")}>
+                  Tuần sau →
+                </Button>
+              </Space>
+            </Col>
+            <Col>
+              <div className="week-info">
+                <Title level={4} style={{ margin: 0 }}>
+                  {weeklySchedule?.weekLabel ||
+                    `Tuần: ${getMondayOfWeek(selectedWeek).format(
+                      "DD/MM"
+                    )} - ${getMondayOfWeek(selectedWeek)
+                      .add(6, "day")
+                      .format("DD/MM/YYYY")}`}
+                </Title>
+                <Text type="secondary">
+                  Tổng số ca dạy: {weeklySchedule?.totalSlots ?? 0}
+                </Text>
+              </div>
+            </Col>
+            <Col>
+              <div className="date-controls">
+                <Space size="middle">
+                  <Button
+                    icon={<ReloadOutlined />}
+                    onClick={() => setSelectedWeek(dayjs())}
+                    className="current-week-btn"
+                  >
+                    Tuần hiện tại
+                  </Button>
+                  <div className="date-select-group">
+                    <Select
+                      value={selectedWeek.format("YYYY")}
+                      className="year-select"
+                      suffixIcon={null}
+                      onChange={(year: string) =>
+                        setSelectedWeek((prev) => prev.year(Number(year)))
+                      }
+                    >
+                      <Option value="2024">2024</Option>
+                      <Option value="2025">2025</Option>
+                    </Select>
+                    <DatePicker.WeekPicker
+                      value={selectedWeek}
+                      onChange={(date: dayjs.Dayjs | null) =>
+                        date && setSelectedWeek(date)
+                      }
+                      className="week-picker"
+                      format="YYYY-wo"
+                      placeholder="Chọn tuần"
+                      allowClear={false}
+                    />
+                  </div>
+                </Space>
+              </div>
+            </Col>
+          </Row>
+        </Card>
       </div>
 
-      <Row gutter={[16, 16]} className="summary-grid">
-        {summaryStats.map((stat) => (
-          <Col xs={12} md={6} key={stat.label}>
-            <Card className={`stat-card ${stat.accent}`}>
-              <p>{stat.label}</p>
-              <h3>{stat.value}</h3>
-              <span>{stat.subtext}</span>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      <Card className="timetable-card elevated">
+      <Card className="timetable-card">
         {error && (
           <Alert
             type="error"
@@ -539,15 +507,19 @@ const TeacherSchedule: React.FC = () => {
         </Spin>
       </Card>
 
-      <Card className="legend-card">
-        <div className="legend-card__header">
-          <Text strong>Chú thích</Text>
-        </div>
-        <Space size="large" wrap>
-          <Badge color="#52c41a" text="Đã dạy - lớp đã hoàn thành" />
-          <Badge color="#ff4d4f" text="Vắng - lớp bị hủy/vắng" />
-          <Badge color="#faad14" text="Sắp diễn ra" />
-        </Space>
+      <Card style={{ marginTop: 24 }}>
+        <Row gutter={[16, 8]} align="middle">
+          <Col>
+            <Text strong>Chú thích:</Text>
+          </Col>
+          <Col>
+            <Space>
+              <Badge color="#52c41a" text="Đã dạy - Lớp đã hoàn thành" />
+              <Badge color="#ff4d4f" text="Vắng - Lớp bị hủy/vắng" />
+              <Badge color="#faad14" text="Chưa dạy - Lớp sắp diễn ra" />
+            </Space>
+          </Col>
+        </Row>
       </Card>
     </div>
   );

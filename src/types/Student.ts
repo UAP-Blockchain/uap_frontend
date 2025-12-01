@@ -51,13 +51,13 @@ interface ClassInfo {
 }
 
 interface StudentDetailDto {
-  walletAddress: string;
+  walletAddress?: string;
   id: string;
   studentCode: string;
   fullName: string;
   email: string;
   enrollmentDate: string;
-  gpa: number;
+  gpa?: number;
   isGraduated: boolean;
   graduationDate?: string | null;
   isActive: boolean;
@@ -70,6 +70,7 @@ interface StudentDetailDto {
   totalClasses: number;
   totalGrades: number;
   totalAttendances: number;
+  profileImage?: string;
 }
 
 export type { Student, StudentFormData, StudentDetailDto, EnrollmentInfo, ClassInfo };
