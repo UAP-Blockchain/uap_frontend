@@ -116,7 +116,16 @@ interface CredentialStats {
 // Legacy type for backward compatibility
 interface Credential extends CredentialDetailDto {}
 
-interface StudentCredentialDto extends CredentialDto {}
+interface StudentCredentialDto extends CredentialDetailDto {
+  // Alias fields used in frontend components
+  credentialId: string;
+  issuedDate?: string;
+  verificationHash?: string;
+  shareableUrl?: string;
+  isOnBlockchain?: boolean;
+  viewCount?: number;
+  fileUrl?: string;
+}
 
 export type {
   Credential,

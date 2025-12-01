@@ -139,6 +139,22 @@ const RegisterUser: React.FC = () => {
     fetchData(1, pagination.pageSize, searchText, value);
   };
 
+  const openEditModal = (user: UserDto) => {
+    setEditingUser(user);
+    form.setFieldsValue({
+      fullName: user.fullName,
+      email: user.email,
+      roleName: user.roleName,
+      studentCode: user.studentCode,
+      enrollmentDate: user.enrollmentDate ? dayjs(user.enrollmentDate) : undefined,
+      teacherCode: user.teacherCode,
+      hireDate: user.hireDate ? dayjs(user.hireDate) : undefined,
+      specialization: user.specialization,
+      phoneNumber: user.phoneNumber,
+    });
+    setIsModalVisible(true);
+  };
+
   const handleOk = () => {
     form.validateFields().then(async (values) => {
       if (!editingUser) {
@@ -296,7 +312,7 @@ const RegisterUser: React.FC = () => {
               size="small"
               onClick={(e) => {
                 e.stopPropagation();
-                showModal(record);
+                openEditModal(record);
               }}
               className="action-btn-edit"
             />
@@ -304,7 +320,7 @@ const RegisterUser: React.FC = () => {
           <Tooltip title={record.isActive ? "Vô hiệu hóa" : "Kích hoạt"}>
             <Switch
               checked={record.isActive}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(_checked, event) => event?.stopPropagation()}
               onChange={() => handleToggleStatus(record)}
               checkedChildren={<CheckCircleOutlined />}
               unCheckedChildren={<CloseCircleOutlined />}
