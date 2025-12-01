@@ -16,7 +16,11 @@ import {
   Table,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { UploadOutlined, ArrowLeftOutlined, MailOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  ArrowLeftOutlined,
+  MailOutlined,
+} from "@ant-design/icons";
 import type { UploadRequestOption } from "rc-upload/lib/interface";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -24,7 +28,11 @@ import {
   uploadUserProfilePictureApi,
 } from "../../../services/admin/users/api";
 import StudentServices from "../../../services/student/api.service";
-import type { StudentDetailDto, ClassInfo, EnrollmentInfo } from "../../../types/Student";
+import type {
+  StudentDetailDto,
+  ClassInfo,
+  EnrollmentInfo,
+} from "../../../types/Student";
 import type { UserDto } from "../../../services/admin/users/api";
 import dayjs from "dayjs";
 import "./detail.scss";
@@ -67,25 +75,40 @@ const StudentDetailPage: React.FC = () => {
     void fetchDetail();
   }, [fetchDetail]);
 
-  const handleUpload = async (options: UploadRequestOption) => {
-    if (!userId) return;
-    const { file, onError, onSuccess } = options;
-    try {
-      setUploading(true);
-      const response = await uploadUserProfilePictureApi(userId, file as File);
-      message.success("Cập nhật ảnh đại diện thành công");
-      setUser((prev) =>
-        prev ? { ...prev, profilePictureUrl: response.url } : prev
-      );
-      onSuccess?.(response, new XMLHttpRequest());
-    } catch (error) {
-      console.error(error);
-      message.error("Không thể cập nhật ảnh đại diện");
-      onError?.(error as Error);
-    } finally {
-      setUploading(false);
-    }
-  };
+ const handleUpload = async (options: UploadRequestOption) => {
+   if (!userId) return;
+   const { file, onError, onSuccess } = options;
+
+   try {
+     setUploading(true);
+     const res = await uploadUserProfilePictureApi(userId, file as File);
+
+     // Lấy đúng url từ response
+     const imageUrl =
+       res.data?.imageUrl ?? // nếu service trả { data: { imageUrl } }
+       res.data?.data?.imageUrl ?? // nếu axios trả { data: { success, data: { imageUrl } } }
+       res.imageUrl; // fallback
+
+     if (!imageUrl) {
+       throw new Error("Không tìm thấy imageUrl trong response");
+     }
+
+     message.success("Cập nhật ảnh đại diện thành công");
+
+     setUser((prev) =>
+       prev ? { ...prev, profilePictureUrl: imageUrl } : prev
+     );
+
+     onSuccess?.(res, new XMLHttpRequest());
+   } catch (error) {
+     console.error(error);
+     message.error("Không thể cập nhật ảnh đại diện");
+     onError?.(error as Error);
+   } finally {
+     setUploading(false);
+   }
+ };
+
 
   const currentClassColumns: ColumnsType<ClassInfo> = [
     {
@@ -237,7 +260,9 @@ const StudentDetailPage: React.FC = () => {
                   <Tag color={user.isActive ? "success" : "default"}>
                     {user.isActive ? "Đang hoạt động" : "Vô hiệu hóa"}
                   </Tag>
-                  <Tag>{user.roleName === "Student" ? "Sinh viên" : "Giảng viên"}</Tag>
+                  <Tag>
+                    {user.roleName === "Student" ? "Sinh viên" : "Giảng viên"}
+                  </Tag>
                 </div>
               </Card>
 
@@ -287,7 +312,8 @@ const StudentDetailPage: React.FC = () => {
                     </Descriptions>
                     <Divider />
                     <h3>Lớp đang học</h3>
-                    {student.currentClasses && student.currentClasses.length > 0 ? (
+                    {student.currentClasses &&
+                    student.currentClasses.length > 0 ? (
                       <Table<ClassInfo>
                         columns={currentClassColumns}
                         dataSource={student.currentClasses}
@@ -327,4 +353,3 @@ const StudentDetailPage: React.FC = () => {
 };
 
 export default StudentDetailPage;
-
