@@ -134,21 +134,21 @@ const Roadmap: React.FC = () => {
     subjects: CurriculumRoadmapSubjectDto[]
   ): RoadmapCourse[] =>
     subjects.map((subject) => ({
-      subjectId: subject.subjectId,
-      code: subject.subjectCode,
-      name: subject.subjectName,
-      credits: subject.credits,
-      prerequisite: subject.prerequisiteSubjectCode,
-      prerequisitesMet: subject.prerequisitesMet,
+        subjectId: subject.subjectId,
+        code: subject.subjectCode,
+        name: subject.subjectName,
+        credits: subject.credits,
+        prerequisite: subject.prerequisiteSubjectCode,
+        prerequisitesMet: subject.prerequisitesMet,
       attendancePercentage: subject.attendancePercentage,
       attendanceRequirementMet: subject.attendanceRequirementMet,
-      grade:
-        subject.finalScore !== null && subject.finalScore !== undefined
-          ? subject.finalScore.toFixed(2)
-          : undefined,
-      status: subject.status as CourseStatus,
-      currentClassCode: subject.currentClassCode,
-      currentSemesterName: subject.currentSemesterName,
+        grade:
+          subject.finalScore !== null && subject.finalScore !== undefined
+            ? subject.finalScore.toFixed(2)
+            : undefined,
+        status: subject.status as CourseStatus,
+        currentClassCode: subject.currentClassCode,
+        currentSemesterName: subject.currentSemesterName,
     }));
 
   const semesters: RoadmapSemester[] = useMemo(() => {
@@ -512,7 +512,7 @@ const Roadmap: React.FC = () => {
             header={
               <div className="semester-panel-header">
                 <div>
-                    <Text strong>Kỳ {semester.semesterNumber}</Text>
+                  <Text strong>Kỳ {semester.semesterNumber}</Text>
                   <div className="semester-label">
                       {semester.subjectCount} môn học
                   </div>

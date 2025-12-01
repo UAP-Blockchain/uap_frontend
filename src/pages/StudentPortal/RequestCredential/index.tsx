@@ -418,89 +418,89 @@ const RequestCredential: React.FC = () => {
                 if (!detail) return null;
 
                 const completedInSemester = detail.subjects.filter(
-                  (s) => s.status === "Completed"
-                );
-                if (completedInSemester.length === 0) return null;
+                (s) => s.status === "Completed"
+              );
+              if (completedInSemester.length === 0) return null;
 
-                return (
-                  <Panel
+              return (
+                <Panel
                     header={`Học kỳ ${sem.semesterNumber} (${completedInSemester.length} môn)`}
                     key={sem.semesterNumber}
-                  >
-                    <List
-                      dataSource={completedInSemester}
-                      renderItem={(subject) => (
-                        <List.Item
-                          actions={[
-                            hasRequestForSubject(subject.subjectId) ? (
-                              <Tag
-                                color="success"
-                                style={{
-                                  borderRadius: "8px",
-                                  padding: "4px 12px",
-                                  fontWeight: 600,
-                                  fontSize: "13px",
-                                }}
-                              >
-                                <CheckOutlined style={{ marginRight: 4 }} />
-                                Đã yêu cầu
-                              </Tag>
-                            ) : (
-                              <Button
-                                type="primary"
-                                size="small"
-                                icon={<SendOutlined />}
-                                onClick={() => handleRequestSubject(subject)}
-                                style={{
-                                  background:
-                                    "linear-gradient(135deg, #1a94fc, #0ea5e9)",
-                                  border: "none",
-                                  borderRadius: "8px",
-                                  fontWeight: 600,
+                >
+                  <List
+                    dataSource={completedInSemester}
+                    renderItem={(subject) => (
+                      <List.Item
+                        actions={[
+                          hasRequestForSubject(subject.subjectId) ? (
+                            <Tag
+                              color="success"
+                              style={{
+                                borderRadius: "8px",
+                                padding: "4px 12px",
+                                fontWeight: 600,
+                                fontSize: "13px",
+                              }}
+                            >
+                              <CheckOutlined style={{ marginRight: 4 }} />
+                              Đã yêu cầu
+                            </Tag>
+                          ) : (
+                            <Button
+                              type="primary"
+                              size="small"
+                              icon={<SendOutlined />}
+                              onClick={() => handleRequestSubject(subject)}
+                              style={{
+                                background:
+                                  "linear-gradient(135deg, #1a94fc, #0ea5e9)",
+                                border: "none",
+                                borderRadius: "8px",
+                                fontWeight: 600,
                                   boxShadow:
                                     "0 2px 8px rgba(26, 148, 252, 0.3)",
+                              }}
+                            >
+                              Yêu cầu chứng chỉ
+                            </Button>
+                          ),
+                        ]}
+                      >
+                        <List.Item.Meta
+                          title={`${subject.subjectCode} - ${subject.subjectName}`}
+                          description={
+                            <Space>
+                              <Tag
+                                style={{
+                                  borderRadius: "8px",
+                                  fontWeight: 600,
+                                  background: "#e6f7ff",
+                                  color: "#1a94fc",
+                                  border: "1px solid #91d5ff",
                                 }}
                               >
-                                Yêu cầu chứng chỉ
-                              </Button>
-                            ),
-                          ]}
-                        >
-                          <List.Item.Meta
-                            title={`${subject.subjectCode} - ${subject.subjectName}`}
-                            description={
-                              <Space>
+                                {subject.credits} tín chỉ
+                              </Tag>
+                              {subject.finalScore !== null && (
                                 <Tag
+                                  color="gold"
                                   style={{
                                     borderRadius: "8px",
                                     fontWeight: 600,
-                                    background: "#e6f7ff",
-                                    color: "#1a94fc",
-                                    border: "1px solid #91d5ff",
                                   }}
                                 >
-                                  {subject.credits} tín chỉ
+                                  Điểm: {subject.finalScore.toFixed(2)}
                                 </Tag>
-                                {subject.finalScore !== null && (
-                                  <Tag
-                                    color="gold"
-                                    style={{
-                                      borderRadius: "8px",
-                                      fontWeight: 600,
-                                    }}
-                                  >
-                                    Điểm: {subject.finalScore.toFixed(2)}
-                                  </Tag>
-                                )}
-                              </Space>
-                            }
-                          />
-                        </List.Item>
-                      )}
-                    />
-                  </Panel>
-                );
-              })}
+                              )}
+                            </Space>
+                          }
+                        />
+                      </List.Item>
+                    )}
+                  />
+                </Panel>
+              );
+            })}
           </Collapse>
         </Card>
 

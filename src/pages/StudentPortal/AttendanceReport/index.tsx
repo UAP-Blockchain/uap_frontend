@@ -21,87 +21,124 @@ import dayjs from "dayjs";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import AttendanceServices from "../../../services/attendance/api.service";
-import GradeServices from "../../../services/grade/api.service";
-import { StudentGradeServices } from "../../../services/student/api.service";
+import RoadmapServices from "../../../services/roadmap/api.service";
 import type { AttendanceDto } from "../../../types/Attendance";
-import type { SubjectGradeDto } from "../../../types/Grade";
-import type { SemesterDto } from "../../../types/Semester";
+import type {
+  CurriculumRoadmapSummaryDto,
+  CurriculumSemesterDto,
+  CurriculumRoadmapSubjectDto,
+} from "../../../types/Roadmap";
 import type { RootState } from "../../../redux/store";
 import "./AttendanceReport.scss";
 
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 
-type SubjectMap = Record<string, SubjectGradeDto[]>;
-type LoadingMap = Record<string, boolean>;
-
 const AttendanceReport: React.FC = () => {
-  const [semesters, setSemesters] = useState<SemesterDto[]>([]);
-  const [subjectsBySemester, setSubjectsBySemester] = useState<SubjectMap>({});
-  const [isLoadingSemesters, setIsLoadingSemesters] = useState(false);
-  const [isLoadingSubjects, setIsLoadingSubjects] = useState<LoadingMap>({});
-  const [activeSemesterKey, setActiveSemesterKey] = useState<string | string[]>([]);
+  const [summary, setSummary] = useState<CurriculumRoadmapSummaryDto | null>(null);
+  const [semesterDetails, setSemesterDetails] = useState<
+    Record<number, CurriculumSemesterDto>
+  >({});
+  const [loadingSemesters, setLoadingSemesters] = useState<
+    Record<number, boolean>
+  >({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeSemesterKey, setActiveSemesterKey] = useState<string | undefined>(undefined);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const [selectedSubject, setSelectedSubject] = useState<SubjectGradeDto | null>(null);
+  const [selectedSubject, setSelectedSubject] = useState<CurriculumRoadmapSubjectDto | null>(null);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceDto[]>([]);
   const [isLoadingAttendance, setIsLoadingAttendance] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 
-  const loadSemesters = useCallback(async () => {
-    setIsLoadingSemesters(true);
-    setError(null);
+  const handleLoadSemester = useCallback(async (semesterNumber: number) => {
+    setLoadingSemesters((prev) => {
+      if (prev[semesterNumber]) return prev; // Already loading
+      return { ...prev, [semesterNumber]: true };
+    });
+    
     try {
-      const response = await GradeServices.getSemesters({
-        pageSize: 100,
-        sortBy: "StartDate",
-        isDescending: true,
+      const data: CurriculumSemesterDto =
+        await RoadmapServices.getMyCurriculumSemester(semesterNumber);
+      setSemesterDetails((prev) => {
+        if (prev[semesterNumber]) return prev; // Already loaded
+        return {
+          ...prev,
+          [semesterNumber]: data,
+        };
       });
-      setSemesters(response.data);
-      if (response.data.length > 0) {
-        const firstSemesterId = response.data[0].id;
-        setActiveSemesterKey([firstSemesterId]);
-        await loadSubjectsForSemester(firstSemesterId);
-      }
     } catch (err) {
-      const messageText =
-        (err as { response?: { data?: { message?: string } }; message?: string })
-          ?.response?.data?.message ||
-        (err as { message?: string }).message ||
-        "Không thể tải danh sách học kỳ";
-      setError(messageText);
-      message.error(messageText);
+      const msg =
+        (err as { message?: string })?.message ||
+        "Không thể tải dữ liệu kỳ học.";
+      message.error(msg);
     } finally {
-      setIsLoadingSemesters(false);
+      setLoadingSemesters((prev) => ({
+        ...prev,
+        [semesterNumber]: false,
+      }));
     }
   }, []);
 
-  const loadSubjectsForSemester = useCallback(async (semesterId: string) => {
-    if (subjectsBySemester[semesterId]) {
+  // Load summary on mount
+  useEffect(() => {
+    const fetchSummary = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await RoadmapServices.getMyCurriculumRoadmapSummary();
+        setSummary(data);
+        // Auto-load first semester
+        if (data.semesterSummaries.length > 0) {
+          const firstSemester = data.semesterSummaries[0].semesterNumber;
+          setActiveSemesterKey(String(firstSemester));
+          await handleLoadSemester(firstSemester);
+        }
+      } catch (err) {
+        const messageText =
+          (
+            err as {
+              response?: { data?: { message?: string } };
+              message?: string;
+            }
+          )?.response?.data?.message ||
+          (err as { message?: string }).message ||
+          "Không thể tải dữ liệu lộ trình";
+        setError(messageText);
+        message.error(messageText);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void fetchSummary();
+  }, [handleLoadSemester]);
+
+  const handleSemesterChange = (key: string | string[]) => {
+    // In accordion mode, key is always a string (single value) or undefined when closing
+    if (key === undefined || key === null) {
+      setActiveSemesterKey(undefined);
       return;
     }
-
-    setIsLoadingSubjects((prev) => ({ ...prev, [semesterId]: true }));
-    try {
-      const response = await StudentGradeServices.getMyGrades({
-        SemesterId: semesterId,
-      });
-      setSubjectsBySemester((prev) => ({
-        ...prev,
-        [semesterId]: response.subjects || [],
-      }));
-    } catch (err) {
-      const messageText =
-        (err as { response?: { data?: { message?: string } }; message?: string })
-          ?.response?.data?.message ||
-        (err as { message?: string }).message ||
-        "Không thể tải danh sách môn học";
-      message.error(messageText);
-    } finally {
-      setIsLoadingSubjects((prev) => ({ ...prev, [semesterId]: false }));
+    
+    // In accordion mode, key is a string
+    const keyString = typeof key === "string" ? key : Array.isArray(key) && key.length > 0 ? String(key[0]) : undefined;
+    
+    if (keyString !== undefined) {
+      const semesterNumber = parseInt(keyString, 10);
+      if (!isNaN(semesterNumber)) {
+        setActiveSemesterKey(keyString);
+        void handleLoadSemester(semesterNumber);
+      }
     }
-  }, [subjectsBySemester]);
+  };
+
+  const handleSubjectClick = (subject: CurriculumRoadmapSubjectDto) => {
+    setSelectedSubjectId(subject.subjectId);
+    setSelectedSubject(subject);
+    void loadAttendanceForSubject(subject.subjectId);
+  };
 
   const loadAttendanceForSubject = useCallback(async (subjectId: string) => {
     setIsLoadingAttendance(true);
@@ -125,24 +162,11 @@ const AttendanceReport: React.FC = () => {
     }
   }, []);
 
-  useEffect(() => {
-    loadSemesters();
-  }, [loadSemesters]);
-
-  const handleSemesterChange = (keys: string | string[]) => {
-    setActiveSemesterKey(keys);
-    const semesterIds = Array.isArray(keys) ? keys : keys ? [keys] : [];
-    semesterIds.forEach((semesterId) => {
-      if (semesterId) {
-        void loadSubjectsForSemester(semesterId);
-      }
-    });
-  };
-
-  const handleSubjectClick = (subject: SubjectGradeDto) => {
-    setSelectedSubjectId(subject.subjectId);
-    setSelectedSubject(subject);
-    void loadAttendanceForSubject(subject.subjectId);
+  // Filter subjects to only show InProgress and Completed
+  const getFilteredSubjects = (subjects: CurriculumRoadmapSubjectDto[]) => {
+    return subjects.filter(
+      (subject) => subject.status === "InProgress" || subject.status === "Completed"
+    );
   };
 
   const columns: ColumnsType<AttendanceDto> = [
@@ -208,7 +232,7 @@ const AttendanceReport: React.FC = () => {
     },
   ];
 
-  const summary = useMemo(() => {
+  const attendanceSummary = useMemo(() => {
     const total = attendanceRecords.length;
     const present = attendanceRecords.filter((record) => record.isPresent).length;
     const excused = attendanceRecords.filter(
@@ -272,50 +296,59 @@ const AttendanceReport: React.FC = () => {
 
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={6}>
-          <Card className="sidebar-card" loading={isLoadingSemesters}>
+          <Card className="sidebar-card" loading={isLoading}>
             <div className="semester-list">
-              <Collapse
-                activeKey={activeSemesterKey}
-                onChange={handleSemesterChange}
-                ghost
-              >
-                {semesters.map((semester) => {
-                  const semesterSubjects = subjectsBySemester[semester.id] || [];
-                  const isLoading = isLoadingSubjects[semester.id];
+              {summary && summary.semesterSummaries.length > 0 ? (
+                <Collapse
+                  accordion
+                  activeKey={activeSemesterKey}
+                  onChange={handleSemesterChange}
+                  ghost
+                >
+                  {summary.semesterSummaries.map((semSummary) => {
+                    const semesterData = semesterDetails[semSummary.semesterNumber];
+                    const isLoading = loadingSemesters[semSummary.semesterNumber] ?? false;
+                    const filteredSubjects = semesterData
+                      ? getFilteredSubjects(semesterData.subjects)
+                      : [];
 
-                  return (
-                    <Panel header={semester.name} key={semester.id}>
-                      {isLoading ? (
-                        <Spin />
-                      ) : semesterSubjects.length === 0 ? (
-                        <Empty
-                          image={Empty.PRESENTED_IMAGE_SIMPLE}
-                          description="Chưa có môn học"
-                        />
-                      ) : (
-                        semesterSubjects.map((subject) => (
-                          <div
-                            key={subject.subjectId}
-                            className={`course-item ${
-                              selectedSubjectId === subject.subjectId
-                                ? "active"
-                                : ""
-                            }`}
-                            onClick={() => handleSubjectClick(subject)}
-                          >
-                            <Text strong className="course-code">
-                              {subject.subjectCode}
-                            </Text>
-                            <Text className="course-name">
-                              {subject.subjectName}
-                            </Text>
-                          </div>
-                        ))
-                      )}
-                    </Panel>
-                  );
-                })}
-              </Collapse>
+                    return (
+                      <Panel header={semSummary.semesterName} key={String(semSummary.semesterNumber)}>
+                        {isLoading ? (
+                          <Spin />
+                        ) : filteredSubjects.length === 0 ? (
+                          <Empty
+                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                            description="Chưa có môn học"
+                          />
+                        ) : (
+                          filteredSubjects.map((subject) => (
+                            <div
+                              key={subject.subjectId}
+                              className={`course-item ${
+                                selectedSubjectId === subject.subjectId ? "active" : ""
+                              }`}
+                              onClick={() => handleSubjectClick(subject)}
+                            >
+                              <Text strong className="course-code">
+                                {subject.subjectCode}
+                              </Text>
+                              <Text className="course-name">
+                                {subject.subjectName}
+                              </Text>
+                            </div>
+                          ))
+                        )}
+                      </Panel>
+                    );
+                  })}
+                </Collapse>
+              ) : (
+                <Empty
+                  image={Empty.PRESENTED_IMAGE_SIMPLE}
+                  description="Chưa có dữ liệu học kỳ"
+                />
+              )}
             </div>
           </Card>
         </Col>
@@ -338,10 +371,10 @@ const AttendanceReport: React.FC = () => {
                       </Title>
                     </div>
                     <div className="attendance-summary-cards">
-                      <Tag color="green">Có mặt: {summary.present}</Tag>
-                      <Tag color="blue">Miễn: {summary.excused}</Tag>
-                      <Tag color="red">Vắng: {summary.absent}</Tag>
-                      <Tag color="purple">Tổng: {summary.total}</Tag>
+                      <Tag color="green">Có mặt: {attendanceSummary.present}</Tag>
+                      <Tag color="blue">Miễn: {attendanceSummary.excused}</Tag>
+                      <Tag color="red">Vắng: {attendanceSummary.absent}</Tag>
+                      <Tag color="purple">Tổng: {attendanceSummary.total}</Tag>
                     </div>
                   </div>
 
@@ -362,7 +395,7 @@ const AttendanceReport: React.FC = () => {
 
                   <div className="attendance-summary">
                     <Text strong style={{ color: "#ff4d4f", fontSize: 15 }}>
-                      Tỉ lệ tham gia: {summary.percentage}% · Tổng số buổi: {summary.total}
+                      Tỉ lệ tham gia: {attendanceSummary.percentage}% · Tổng số buổi: {attendanceSummary.total}
                     </Text>
                   </div>
                 </Spin>
