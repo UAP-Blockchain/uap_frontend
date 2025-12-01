@@ -63,6 +63,9 @@ const RequestCredential: React.FC = () => {
   );
   const [selectedSubject, setSelectedSubject] =
     useState<CurriculumRoadmapSubjectDto | null>(null);
+  const [activeSemesterKey, setActiveSemesterKey] = useState<
+    string | string[]
+  >([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -373,7 +376,12 @@ const RequestCredential: React.FC = () => {
             </>
           }
         >
-          <Collapse className="credential-collapse">
+          <Collapse
+            className="credential-collapse"
+            accordion
+            activeKey={activeSemesterKey}
+            onChange={(key) => setActiveSemesterKey(key)}
+          >
             {roadmap?.semesters.map((semester) => {
               const completedInSemester = semester.subjects.filter(
                 (s) => s.status === "Completed"

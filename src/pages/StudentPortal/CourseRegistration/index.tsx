@@ -143,7 +143,6 @@ const CourseRegistration: React.FC = () => {
               onSelect={handleSelect}
               style={{ width: "100%" }}
               size="large"
-              placeholder="Nhập mã môn học hoặc tên môn học (ví dụ: SE101 hoặc Introduction to Software Engineering)"
               notFoundContent={
                 isSearching ? (
                   <Spin size="small" />
@@ -155,6 +154,7 @@ const CourseRegistration: React.FC = () => {
             >
               <Input
                 prefix={<SearchOutlined style={{ color: "#1a94fc" }} />}
+                placeholder="Nhập mã môn học hoặc tên môn học (ví dụ: SE101 hoặc Introduction to Software Engineering)"
                 allowClear
                 onChange={(e) => {
                   setSearchValue(e.target.value);

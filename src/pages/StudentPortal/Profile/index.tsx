@@ -219,7 +219,11 @@ const Profile: React.FC = () => {
                 <Text copyable>{studentData.email}</Text>
               </Descriptions.Item>
               <Descriptions.Item label="GPA">
-                <Tag color="gold">{studentData.gpa.toFixed(2)}</Tag>
+                <Tag color="gold">
+                  {typeof studentData.gpa === "number"
+                    ? studentData.gpa.toFixed(2)
+                    : "Chưa có"}
+                </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Ngày nhập học">
                 {dayjs(studentData.enrollmentDate).format("DD/MM/YYYY")}
