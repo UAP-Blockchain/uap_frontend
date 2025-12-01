@@ -71,7 +71,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         });
       } else {
         // Add sub-routes
-        const subPaths = paths.slice(1);
+        let subPaths = paths.slice(1);
+
+        // Special case: /student-portal/activity/:id
+        // Breadcrumb chỉ hiển thị "Chi tiết hoạt động", không thêm ID slot
+        if (subPaths.length >= 2 && subPaths[0] === "activity") {
+          subPaths = subPaths.slice(0, 1);
+        }
         subPaths.forEach((path, index) => {
           const href = "/" + paths.slice(0, index + 2).join("/");
           const displayName =

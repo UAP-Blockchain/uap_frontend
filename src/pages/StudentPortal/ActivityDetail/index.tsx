@@ -19,14 +19,13 @@ import {
 } from "antd";
 import dayjs from "dayjs";
 import React from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import type { ScheduleItemDto } from "../../../types/Schedule";
 import "./ActivityDetail.scss";
 
 const { Title, Text } = Typography;
 
 const ActivityDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -71,13 +70,13 @@ const ActivityDetail: React.FC = () => {
       case "attended":
         return (
           <Tag color="success" icon={<CheckCircleOutlined />}>
-            Đã tham gia
+            Đã điểm danh
           </Tag>
         );
       case "absent":
         return (
           <Tag color="error" icon={<CloseCircleOutlined />}>
-            Vắng mặt
+            Chưa điểm danh
           </Tag>
         );
       case "not_yet":
@@ -89,25 +88,6 @@ const ActivityDetail: React.FC = () => {
       default:
         return <Tag color="default">Chưa có dữ liệu</Tag>;
     }
-  };
-
-  const handleInstructorClick = () => {
-    if (!slot.teacherId) return;
-    navigate(`/student-portal/instructor/${slot.teacherId}`, {
-      state: { fromActivity: true },
-    });
-  };
-
-  const handleClassClick = () => {
-    if (!slot.classId && !slot.subjectCode) return;
-    navigate(
-      `/student-portal/class-list/${slot.classId || slot.subjectCode || ""}`,
-      {
-        state: {
-          fromActivity: true,
-        },
-      }
-    );
   };
 
   return (
@@ -124,7 +104,6 @@ const ActivityDetail: React.FC = () => {
         <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
           Chi tiết hoạt động
         </Title>
-        <Text type="secondary">Mã hoạt động: {id}</Text>
       </div>
 
       <Row gutter={[24, 24]}>
@@ -167,31 +146,19 @@ const ActivityDetail: React.FC = () => {
               </Descriptions.Item>
 
               <Descriptions.Item label="Lớp học" span={2}>
-                <Button
-                  type="link"
-                  style={{ padding: 0 }}
-                  onClick={handleClassClick}
-                >
-                  {slot.classCode || slot.classId}
-                </Button>
+                <Text strong style={{ color: "#1a94fc" }}>
+                  {slot.classCode || slot.classId || "Chưa cập nhật"}
+                </Text>
               </Descriptions.Item>
 
               <Descriptions.Item label="Giảng viên" span={2}>
                 {slot.teacherName ? (
-                  <Button
-                    type="link"
-                    style={{ padding: 0 }}
-                    onClick={handleInstructorClick}
-                  >
+                  <Text strong style={{ color: "#1a94fc" }}>
                     {slot.teacherName}
-                  </Button>
+                  </Text>
                 ) : (
                   <Text>Chưa cập nhật</Text>
                 )}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Trạng thái" span={2}>
-                <Tag color="processing">{slot.status || "Scheduled"}</Tag>
               </Descriptions.Item>
 
               <Descriptions.Item label="Điểm danh" span={2}>

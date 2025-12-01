@@ -128,12 +128,13 @@ const TeacherSchedule: React.FC = () => {
 
   const mapAttendance = useCallback(
     (slot: ScheduleItemDto): ClassInfo["attendance"] => {
-      if (slot.status?.toLowerCase() === "completed") return "attended";
-      if (slot.status?.toLowerCase() === "cancelled") return "absent";
+      // Backend semantics:
+      // - hasAttendance === true  => lớp đã được điểm danh (ĐÃ DẠY)
+      // - hasAttendance === false => lớp chưa điểm danh (CHƯA DẠY)
+      if (slot.hasAttendance === true) {
+        return "attended";
+      }
 
-      if (slot.isPresent === true) return "attended";
-      if (slot.isPresent === false) return "absent";
-      if (slot.hasAttendance) return "not_yet";
       return "not_yet";
     },
     []

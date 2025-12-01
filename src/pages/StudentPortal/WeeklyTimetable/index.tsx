@@ -27,10 +27,12 @@ import {
 import dayjs from "dayjs";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import StudentServices from "../../../services/student/api.service";
+import { getAllTimeSlots } from "../../../services/admin/timeSlots/api";
 import type {
   WeeklyScheduleDto,
   ScheduleItemDto,
 } from "../../../types/Schedule";
+import type { TimeSlotDto } from "../../../types/TimeSlot";
 import "./WeeklyTimetable.scss";
 
 dayjs.extend(weekOfYear);
@@ -49,8 +51,8 @@ type DayKey =
 
 interface TimetableSlot {
   slotIndex: number;
-  time: string;
   label: string;
+  time?: string;
   monday?: ClassInfo | ClassInfo[];
   tuesday?: ClassInfo | ClassInfo[];
   wednesday?: ClassInfo | ClassInfo[];
@@ -88,18 +90,12 @@ const dayMappings: Record<
   Sunday: { key: "sunday", label: "Chủ nhật", shortLabel: "CN" },
 };
 
-const DEFAULT_TIME_SLOTS: TimetableSlot[] = [
-  { slotIndex: 1, time: "07:30 - 09:20", label: "Ca 1" },
-  { slotIndex: 2, time: "09:30 - 11:20", label: "Ca 2" },
-  { slotIndex: 3, time: "12:30 - 14:20", label: "Ca 3" },
-  { slotIndex: 4, time: "14:30 - 16:20", label: "Ca 4" },
-];
-
 const WeeklyTimetable: React.FC = () => {
   const navigate = useNavigate();
   const [selectedWeek, setSelectedWeek] = useState(dayjs());
   const [weeklySchedule, setWeeklySchedule] =
     useState<WeeklyScheduleDto | null>(null);
+  const [timeSlots, setTimeSlots] = useState<TimeSlotDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -170,7 +166,8 @@ const WeeklyTimetable: React.FC = () => {
       return {
         courseCode: slot.subjectCode || slot.classCode,
         courseName: slot.subjectName || slot.classCode,
-        instructor: slot.teacherName,
+        // Ưu tiên hiển thị tên giảng viên rõ ràng
+        instructor: slot.teacherName || slot.teacherCode || undefined,
         location: slot.notes || slot.classCode,
         attendance: mapAttendance(slot),
         date: validDate,
@@ -212,18 +209,37 @@ const WeeklyTimetable: React.FC = () => {
     fetchWeeklySchedule(selectedWeek);
   }, [fetchWeeklySchedule, selectedWeek]);
 
+  // Load full list of time slots so table luôn hiển thị đủ các ca học
+  useEffect(() => {
+    const loadTimeSlots = async () => {
+      try {
+        const slots = await getAllTimeSlots();
+        // Sắp xếp theo startTime để hiển thị đúng thứ tự
+        const sorted = [...slots].sort((a, b) =>
+          a.startTime.localeCompare(b.startTime)
+        );
+        setTimeSlots(sorted);
+      } catch {
+        // Nếu lỗi vẫn fallback dùng data từ schedule
+        setTimeSlots([]);
+      }
+    };
+
+    void loadTimeSlots();
+  }, []);
+
   const getAttendanceTag = (attendance?: string) => {
     switch (attendance) {
       case "attended":
         return (
           <Tag color="success" icon={<CheckCircleOutlined />}>
-            Đã tham gia
+            Đã điểm danh
           </Tag>
         );
       case "absent":
         return (
           <Tag color="error" icon={<CloseCircleOutlined />}>
-            Vắng mặt
+            Chưa điểm danh
           </Tag>
         );
       case "not_yet":
@@ -288,20 +304,15 @@ const WeeklyTimetable: React.FC = () => {
                   </Tooltip>
                 </div>
                 <div className="course-info">
-                  <Text style={{ fontSize: 12 }}>
-                    {info.courseName}
-                    {info.instructor && ` • ${info.instructor}`}
-                  </Text>
+                  <Text style={{ fontSize: 12 }}>{info.courseName}</Text>
                 </div>
                 <div className="attendance-status">
                   {getAttendanceTag(info.attendance)}
                 </div>
                 <div className="time-info">
-                  <Text type="secondary" style={{ fontSize: 11 }}>
-                    {info.date && dayjs(info.date).isValid()
-                      ? dayjs(info.date).format("DD/MM/YYYY")
-                      : "—"}
-                  </Text>
+                  <span className="time-pill">
+                    {formatTimeRange(info.startTime, info.endTime)}
+                  </span>
                 </div>
               </div>
             );
@@ -309,73 +320,78 @@ const WeeklyTimetable: React.FC = () => {
         </div>
       );
     },
-    [navigate]
+    [navigate, formatTimeRange]
   );
 
   const timetableData = useMemo(() => {
-    if (!weeklySchedule) return DEFAULT_TIME_SLOTS;
+    if (!weeklySchedule) return [];
+
+    // Nếu có danh sách TimeSlots từ backend thì dùng làm khung chính
+    const baseSlots: TimetableSlot[] =
+      timeSlots.length > 0
+        ? timeSlots.map((ts, index) => ({
+            slotIndex: index + 1,
+            label: ts.name || `Slot ${index + 1}`,
+            time: formatTimeRange(ts.startTime, ts.endTime),
+          }))
+        : [];
 
     const slotMap = new Map<string, TimetableSlot>();
+
+    // Khởi tạo map từ baseSlots để luôn có đủ các ca
+    baseSlots.forEach((s) => {
+      slotMap.set(s.label, { ...s });
+    });
 
     weeklySchedule.days.forEach((day) => {
       const dayMeta = dayMappings[day.dayOfWeek];
       if (!dayMeta) return;
 
-      // Use day.date as fallback for slots without date
       const dayDate =
         day.date && dayjs(day.date).isValid()
           ? day.date
           : dayjs().toISOString();
 
       day.slots.forEach((slot) => {
-        // Ensure slot has valid date - use day.date if slot.date is invalid
         const slotDate =
           slot.date && dayjs(slot.date).isValid() ? slot.date : dayDate;
 
-        // Create unique key based on timeSlotId and startTime
-        // This ensures same time slot across different days maps to same row
-        const timeSlotKey = slot.timeSlotId || slot.slotId;
-        const startTime = slot.startTime || "00:00:00";
-        const key = `${timeSlotKey}-${startTime}`;
+        // Tìm dòng theo TimeSlotName nếu có, nếu không fallback label tự sinh
+        const labelKey = slot.timeSlotName || `Slot-${slot.timeSlotId}`;
 
-        if (!slotMap.has(key)) {
-          slotMap.set(key, {
+        if (!slotMap.has(labelKey)) {
+          slotMap.set(labelKey, {
             slotIndex: slotMap.size + 1,
+            label: labelKey,
             time: formatTimeRange(slot.startTime, slot.endTime),
-            label: slot.timeSlotName || `Slot ${slotMap.size + 1}`,
           });
         }
 
-        const row = slotMap.get(key);
-        if (row) {
-          // Create slot with valid date
-          const slotWithDate = { ...slot, date: slotDate };
-          const classInfo = convertSlotToClassInfo(slotWithDate);
+        const row = slotMap.get(labelKey);
+        if (!row) return;
 
-          // If there's already a class in this cell, convert to array to store multiple
-          const existing = row[dayMeta.key];
-          if (existing) {
-            if (Array.isArray(existing)) {
-              existing.push(classInfo);
-            } else {
-              row[dayMeta.key] = [existing, classInfo];
-            }
+        const slotWithDate = { ...slot, date: slotDate };
+        const classInfo = convertSlotToClassInfo(slotWithDate);
+        const existing = row[dayMeta.key];
+
+        if (existing) {
+          if (Array.isArray(existing)) {
+            existing.push(classInfo);
           } else {
-            row[dayMeta.key] = classInfo;
+            row[dayMeta.key] = [existing, classInfo];
           }
+        } else {
+          row[dayMeta.key] = classInfo;
         }
       });
     });
 
-    // Sort rows by time (extract hour from time string for proper sorting)
-    const rows = Array.from(slotMap.values()).sort((a, b) => {
-      const timeA = a.time.split(" - ")[0] || "00:00";
-      const timeB = b.time.split(" - ")[0] || "00:00";
-      return timeA.localeCompare(timeB);
-    });
+    const rows = Array.from(slotMap.values()).sort(
+      (a, b) => a.slotIndex - b.slotIndex
+    );
 
-    return rows.length > 0 ? rows : DEFAULT_TIME_SLOTS;
-  }, [weeklySchedule, convertSlotToClassInfo, formatTimeRange]);
+    return rows;
+  }, [weeklySchedule, timeSlots, convertSlotToClassInfo, formatTimeRange]);
 
   const columns: ColumnsType<TimetableSlot> = useMemo(() => {
     const base: ColumnsType<TimetableSlot> = [
@@ -387,7 +403,6 @@ const WeeklyTimetable: React.FC = () => {
         render: (_: number, record: TimetableSlot) => (
           <div className="time-slot-header">
             <div className="slot-number">{record.label}</div>
-            <div className="slot-time">{record.time}</div>
           </div>
         ),
       },
@@ -448,12 +463,13 @@ const WeeklyTimetable: React.FC = () => {
             <Col>
               <div className="week-info">
                 <Title level={4} style={{ margin: 0 }}>
-                  {weeklySchedule?.weekLabel ||
-                    `Tuần: ${getMondayOfWeek(selectedWeek).format(
-                      "DD/MM"
-                    )} - ${getMondayOfWeek(selectedWeek)
-                      .add(6, "day")
-                      .format("DD/MM/YYYY")}`}
+                  {(() => {
+                    const start = getMondayOfWeek(selectedWeek);
+                    const end = start.add(6, "day");
+                    return `Từ ${start.format("DD/MM")} đến ${end.format(
+                      "DD/MM/YYYY"
+                    )}`;
+                  })()}
                 </Title>
                 <Text type="secondary">
                   Tổng số ca: {weeklySchedule?.totalSlots ?? 0}
