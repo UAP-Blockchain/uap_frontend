@@ -24,7 +24,6 @@ import {
 import dayjs from "dayjs";
 import CredentialServices from "../../../services/credential/api.service";
 import type { CertificatePublicDto } from "../../../types/Credential";
-import { QRCode } from "antd";
 import "./VerificationResults.scss";
 
 const { Title, Text, Paragraph } = Typography;
@@ -43,7 +42,6 @@ const VerificationResults: React.FC = () => {
 		useState<CertificatePublicDto | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [showQRModal, setShowQRModal] = useState(false);
 
 	useEffect(() => {
 		const fetchDetail = async () => {
@@ -90,13 +88,17 @@ const VerificationResults: React.FC = () => {
 			certificate.certificateType
 		);
 	}, [certificate]);
-
-	const formattedIssuedDate = certificate?.issueDate
-		? dayjs(certificate.issueDate).format("DD MMMM, YYYY")
+	console.log("certificate", certificate);
+	const formattedIssuedDate = certificate?.issuedDate
+		? dayjs(certificate.issuedDate).format("DD/MM/YYYY")
 		: "—";
 
 	const handleDownloadPdf = () => {
-		// TODO: tích hợp API tải PDF public nếu backend hỗ trợ
+		if (!certificate || !(certificate as any).fileUrl) {
+			return;
+		}
+		const url = (certificate as any).fileUrl as string;
+		window.open(url, "_blank");
 	};
 
 	if (isLoading) {
@@ -141,6 +143,7 @@ const VerificationResults: React.FC = () => {
 	}
 
 	const displayName = certificate.studentName || "—";
+	const fileUrl = (certificate as any).fileUrl as string | undefined;
 
 	return (
 		<div className="verification-results-page">
@@ -151,12 +154,17 @@ const VerificationResults: React.FC = () => {
 				>
 					Quay lại cổng xác thực
 				</Button>
-				<Button
-					icon={<DownloadOutlined />}
-					onClick={handleDownloadPdf}
-				>
-					Tải chứng chỉ PDF
-				</Button>
+				<div className="certificate-actions">
+					<Button
+						type="primary"
+						icon={<DownloadOutlined />}
+						onClick={handleDownloadPdf}
+						disabled={!(certificate as any).fileUrl}
+					>
+						Tải chứng chỉ PDF
+					</Button>
+					
+				</div>
 			</div>
 
 			<Row gutter={[24, 24]}>
@@ -191,39 +199,61 @@ const VerificationResults: React.FC = () => {
 									<span className="strong-text">{displayName}</span>
 								</div>
 								<div className="info-row">
+									<span>Mã sinh viên</span>
+									<span>{certificate.studentCode || "—"}</span>
+								</div>
+								<div className="info-row">
 									<span>Mã chứng chỉ</span>
-									<Tag color="blue">{certificate.id}</Tag>
+									<Tag color="blue">
+										{(certificate as any).credentialNumber || certificate.id}
+									</Tag>
 								</div>
 								<div className="info-row">
 									<span>Ngày cấp</span>
 									<span>
-										<CalendarOutlined style={{ marginRight: 6 }} />
 										{formattedIssuedDate}
 									</span>
 								</div>
-								{certificate.letterGrade && (
-									<div className="info-row">
-										<span>Điểm trung bình</span>
-										<Tag color="gold">{certificate.letterGrade}</Tag>
-									</div>
-								)}
+								<div className="info-row">
+									<span>Ngày hoàn thành</span>
+									<span>
+										{(certificate as any).completionDate
+												? dayjs((certificate as any).completionDate).format("DD/MM/YYYY")
+											: "—"}
+									</span>
+								</div>
 								<div className="info-row">
 									<span>Trạng thái</span>
-									<Tag color={certificate.status === "Issued" ? "green" : "orange"}>
-										{certificate.status}
+									<Tag color={certificate.verificationStatus === "Verified" ? "green" : "orange"}>
+										{certificate.verificationStatus}
 									</Tag>
 								</div>
-								{certificate.semesterName && (
+								<div className="info-row">
+									<span>Loại</span>
+									<span>
+										{certificateLabels[certificate.certificateType] ||
+											certificate.certificateType}
+									</span>
+								</div>
+								<div className="info-row">
+									<span>Điểm chữ</span>
+									<span>{certificate.letterGrade || "—"}</span>
+								</div>
+								<div className="info-row">
+									<span>Điểm số</span>
+									<span>
+										{typeof (certificate as any).finalGrade === "number"
+											? (certificate as any).finalGrade
+											: "—"}
+									</span>
+								</div>
+								{(certificate as any).verificationHash && (
 									<div className="info-row">
-										<span>Học kỳ</span>
-										<span>{certificate.semesterName}</span>
-									</div>
-								)}
-								{certificate.credentialHash && (
-									<div className="info-row">
-										<span>Hash xác thực</span>
-										<Tooltip title={certificate.credentialHash}>
-											<Text code>{certificate.credentialHash.slice(0, 12)}...</Text>
+										<span>Verification Hash</span>
+										<Tooltip title={(certificate as any).verificationHash}>
+											<Text code>
+												{(certificate as any).verificationHash.slice(0, 12)}...
+											</Text>
 										</Tooltip>
 									</div>
 								)}
@@ -231,65 +261,23 @@ const VerificationResults: React.FC = () => {
 						</Space>
 					</Card>
 				</Col>
-
 				<Col xs={24} lg={12}>
 					<Card bordered={false} className="certificate-preview-card">
-						<div className="certificate-preview">
-							<div className="certificate-header">
-								<div className="issuer-block">
-									<Text className="issuer-name">UAP Blockchain</Text>
-									<Text className="certificate-type">
-										{certificateLabels[certificate.certificateType] ||
-												"Chứng chỉ"}
-									</Text>
-								</div>
-								<Badge
-									count="Đã xác thực on-chain"
-									style={{ backgroundColor: "#1a94fc" }}
-								/>
-							</div>
-
-							<div className="certificate-body">
-								<Text className="caption">CHỨNG NHẬN RẰNG</Text>
-								<Title level={1} className="recipient">
-									{displayName}
-								</Title>
-								<Paragraph className="description">
-									đã hoàn thành chương trình học
-								</Paragraph>
-								<Title level={2} className="program">
-									{certificateTitle}
-								</Title>
-								<Paragraph className="details">
-									Cấp ngày {formattedIssuedDate} · Mã sinh viên {certificate.studentCode}
-								</Paragraph>
-							</div>
-
-							<div className="certificate-footer">
-								<div className="signature-block">
-									<div className="signature" />
-									<Text>Phòng Đào tạo</Text>
-								</div>
-								<div className="seal">FAP</div>
-							</div>
-						</div>
+						{fileUrl ? (
+							<iframe
+								src={fileUrl}
+								title="Certificate PDF"
+								style={{ width: "100%", height: 600, border: "none" }}
+							/>
+						) : (
+							<Paragraph type="secondary">
+								Không tìm thấy file chứng chỉ để hiển thị.
+							</Paragraph>
+						)}
 					</Card>
 				</Col>
 			</Row>
 
-			<Modal
-				open={showQRModal}
-				title="QR xác thực chứng chỉ"
-				footer={null}
-				onCancel={() => setShowQRModal(false)}
-			>
-				<div style={{ textAlign: "center", padding: 20 }}>
-					<QRCode value={window.location.href} size={200} />
-					<Paragraph style={{ marginTop: 16 }}>
-						Quét mã QR này để truy cập lại trang xác thực.
-					</Paragraph>
-				</div>
-			</Modal>
 		</div>
 	);
 };

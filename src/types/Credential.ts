@@ -40,12 +40,18 @@ interface CertificatePublicDto {
   finalGrade?: number;
   letterGrade?: string;
   classification?: string;
-  issueDate: string;
+  issuedDate: string;
+  completionDate?: string;
   credentialHash: string;
   blockchainTxHash?: string;
   qrCodeData?: string;
   shareUrl?: string;
   status: string;
+  verificationStatus?: string;
+  viewCount?: number;
+  verificationHash?: string;
+  credentialNumber?: string;
+  fileUrl?: string;
 }
 
 interface StudentCredentialSummaryDto {

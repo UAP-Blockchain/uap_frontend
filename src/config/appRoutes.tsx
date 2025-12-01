@@ -71,9 +71,6 @@ const VerificationPortal = lazy(
 const VerificationResults = lazy(
   () => import("../pages/PublicPortal/VerificationResults")
 );
-const CertificateVerifyDetail = lazy(
-  () => import("../pages/PublicPortal/CertificateVerifyDetail")
-);
 const ActivityDetail = lazy(
   () => import("../pages/StudentPortal/ActivityDetail")
 );
@@ -548,7 +545,7 @@ export const publicPortalRoutes: RouteConfig = {
     },
     {
       path: "certificates/verify/:credentialId",
-      element: <CertificateVerifyDetail />,
+      element: <VerificationResults />,
     },
     {
       path: "history",

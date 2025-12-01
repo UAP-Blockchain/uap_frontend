@@ -64,6 +64,8 @@ const formatDateDisplay = (date?: string | null, fallback = "—") => {
   return parsed.isValid() ? parsed.format("DD/MM/YYYY") : fallback;
 };
 
+const MAX_QR_LENGTH = 800;
+
 const CredentialDetail: React.FC = () => {
   const { credentialId } = useParams<{ credentialId: string }>();
   const navigate = useNavigate();
@@ -145,6 +147,29 @@ const CredentialDetail: React.FC = () => {
     );
   }, [credential]);
 
+  const handleDownloadQr = () => {
+    try {
+      const canvas = document.querySelector(
+        "#admin-credential-qr canvas"
+      ) as HTMLCanvasElement | null;
+
+      if (!canvas) {
+        message.error("Không tìm thấy QR để tải");
+        return;
+      }
+
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `${(credential as any)?.credentialId || credential?.id || "credential-qr"}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (e) {
+      message.error("Không thể xuất ảnh QR");
+    }
+  };
+
   const handleDownloadPdf = async () => {
     if (!credential) return;
     setActionLoading(true);
@@ -216,32 +241,33 @@ const CredentialDetail: React.FC = () => {
     );
   }
 
+  // Ưu tiên dùng qrCodeData; nếu quá dài thì fallback sang shareableUrl (nếu có),
+  // cuối cùng mới dùng credentialHash. Nếu tất cả đều quá dài thì không render QR.
+  const primaryQrValue = qrCodeData || credential.credentialHash || "";
+  const shareableUrl = (credential as any).shareableUrl || "";
+
+  let safeQrValue = "";
+  let isQrTooLong = false;
+
+  if (primaryQrValue && primaryQrValue.length <= MAX_QR_LENGTH) {
+    safeQrValue = primaryQrValue;
+  } else if (shareableUrl && shareableUrl.length <= MAX_QR_LENGTH) {
+    safeQrValue = shareableUrl;
+  } else {
+    isQrTooLong = Boolean(primaryQrValue || shareableUrl);
+  }
+
   return (
     <div className="admin-credential-detail">
       <div className="detail-header">
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/admin/credentials")}>
           Quay lại danh sách
         </Button>
-        <Space wrap>
-          <Button
-            icon={<DownloadOutlined />}
-            type="primary"
-            loading={actionLoading}
-            onClick={handleDownloadPdf}
-          >
-            Tải PDF
-          </Button>
-          {(credential as any).shareableUrl && (
-            <Button icon={<LinkOutlined />} onClick={() => copyToClipboard((credential as any).shareableUrl, "Đã sao chép liên kết")}>Sao chép liên kết</Button>
-          )}
-          <Button icon={<CopyOutlined />} onClick={() => copyToClipboard(credential.credentialHash)}>
-            Sao chép hash
-          </Button>
-        </Space>
+       
       </div>
 
       <Row gutter={[24, 24]}>
-        <Col xs={24} lg={16}>
+        <Col xs={24} lg={18}>
           <Card className="credential-summary-card" bordered={false}>
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Space className="summary-heading" align="center" size={12}>
@@ -288,9 +314,6 @@ const CredentialDetail: React.FC = () => {
                     maximumFractionDigits: 2,
                   }) || "—"}
                 </Descriptions.Item>
-                <Descriptions.Item label="Xếp loại" span={2}>
-                  {credential.classification || "—"}
-                </Descriptions.Item>
                 <Descriptions.Item label="Số lần xem">
                   {(credential as any).viewCount ?? 0}
                 </Descriptions.Item>
@@ -298,13 +321,6 @@ const CredentialDetail: React.FC = () => {
                   <Descriptions.Item label="Verification Hash" span={2}>
                     <Space align="center">
                       <Text copyable>{(credential as any).verificationHash}</Text>
-                      <Tooltip title="Sao chép hash">
-                        <Button
-                          size="small"
-                          icon={<CopyOutlined />}
-                          onClick={() => copyToClipboard((credential as any).verificationHash)}
-                        />
-                      </Tooltip>
                     </Space>
                   </Descriptions.Item>
                 )}
@@ -333,38 +349,49 @@ const CredentialDetail: React.FC = () => {
             </Space>
           </Card>
         </Col>
-        <Col xs={24} lg={8}>
+        <Col xs={24} lg={6}>
           <Card className="credential-qr-card" bordered={false}>
             <div className="qr-preview">
               {qrLoading ? (
                 <Spin />
+              ) : isQrTooLong || !safeQrValue ? (
+                <Text type="secondary">Dữ liệu quá dài, không thể tạo QR</Text>
               ) : (
-                <QRCode value={qrCodeData || credential.credentialHash} size={200} />
+                <QRCode
+                  id="admin-credential-qr"
+                  value={safeQrValue}
+                  size={200}
+                />
               )}
             </div>
             <Text type="secondary" className="qr-helper">
               Quét mã để xác thực chứng chỉ
             </Text>
-            <Space direction="vertical" size={8} className="qr-meta">
-              <Space align="center" size={4}>
-                <QrcodeOutlined />
-                <Text copyable>{credential.credentialHash}</Text>
-              </Space>
+            <Space direction="vertical" size={12} className="qr-meta" align="center">
               {credential.blockchainTxHash && (
                 <Space align="center" size={4}>
                   <BlockOutlined />
                   <Text copyable>{credential.blockchainTxHash}</Text>
                 </Space>
               )}
-              {(credential as any).shareableUrl && (
+              <Space direction="vertical" size={8} align="center">
                 <Button
-                  type="link"
-                  icon={<LinkOutlined />}
-                  onClick={() => copyToClipboard((credential as any).shareableUrl, "Đã sao chép liên kết xác thực")}
+                  icon={<DownloadOutlined />}
+                  onClick={handleDownloadQr}
+                  disabled={!qrCodeData}
                 >
-                  Liên kết xác thực
+                  Tải ảnh QR
                 </Button>
-              )}
+                {(credential as any).shareableUrl && (
+                  <Button
+                    type="link"
+                    icon={<LinkOutlined />}
+                    onClick={() => copyToClipboard((credential as any).shareableUrl, "Đã sao chép liên kết xác thực")}
+                  >
+                    Liên kết xác thực
+                  </Button>
+                )}
+              </Space>
             </Space>
           </Card>
         </Col>

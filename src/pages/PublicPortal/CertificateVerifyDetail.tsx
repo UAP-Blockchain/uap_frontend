@@ -90,8 +90,8 @@ const CertificateVerifyDetail: React.FC = () => {
     );
   }, [credential]);
 
-  const formattedIssuedDate = credential?.issueDate
-    ? dayjs(credential.issueDate).format("DD MMMM, YYYY")
+  const formattedIssuedDate = credential?.issuedDate
+    ? dayjs(credential.issuedDate).format("DD MMMM, YYYY")
     : "—";
 
   const handleDownloadCertificate = async () => {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -26,6 +26,8 @@ import {
   LoadingOutlined,
 } from "@ant-design/icons";
 import type { UploadProps } from "antd";
+import { BrowserQRCodeReader } from "@zxing/browser";
+import CredentialServices from "../../../services/credential/api.service";
 import "./VerificationPortal.scss";
 
 const { Title, Text, Paragraph } = Typography;
@@ -38,54 +40,234 @@ const VerificationPortal: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [credentialId, setCredentialId] = useState("");
   const [uploadedFile, setUploadedFile] = useState<any>(null);
+	const [isDecodingQr, setIsDecodingQr] = useState(false);
+  const qrReaderRef = useRef<BrowserQRCodeReader | null>(null);
 
-  // Mock verification process
-  const handleVerification = async (method: string, data: any) => {
-    setIsVerifying(true);
+  useEffect(() => {
+    qrReaderRef.current = new BrowserQRCodeReader();
+    return () => {
+      qrReaderRef.current = null;
+    };
+  }, []);
 
-    // Simulate verification delay
-    setTimeout(() => {
-      setIsVerifying(false);
-      message.success("Xác thực hoàn tất thành công!");
-      // Navigate to results with mock data
-      navigate("/public-portal/results", {
-        state: {
-          verificationData: data,
-          method,
-          success: true,
-        },
-      });
-    }, 2000);
-  };
+  // Parse QR payload (URL hoặc plain credentialNumber)
+  const parseQrPayload = (input: string) => {
+    const qrText = input.trim();
+    if (!qrText) {
+      return { credentialNumber: undefined as string | undefined, verificationHash: undefined as string | undefined };
+    }
 
-  // QR Code scanning simulation
-  const handleQRScan = () => {
-    setIsScanning(true);
-    // Simulate camera access and QR scan
-    setTimeout(() => {
-      setIsScanning(false);
-      const mockQRData = {
-        id: "deg_001",
-        type: "qr",
-        scannedAt: new Date().toISOString(),
+    try {
+      const url = new URL(qrText);
+      const segments = url.pathname.split("/").filter(Boolean);
+      const lastSegment = segments[segments.length - 1];
+
+      const searchParams = url.searchParams;
+      const credentialNumberFromQuery =
+        searchParams.get("credentialNumber") || lastSegment;
+      const verificationHash = searchParams.get("verificationHash") || undefined;
+
+      return {
+        credentialNumber: credentialNumberFromQuery,
+        verificationHash,
       };
-      handleVerification("qr", mockQRData);
-    }, 3000);
+    } catch {
+      const looksLikeHash =
+        /^0x[a-fA-F0-9]{10,}$/i.test(qrText) ||
+        /^[a-fA-F0-9]{40,}$/.test(qrText);
+
+      if (looksLikeHash) {
+        return {
+          credentialNumber: undefined,
+          verificationHash: qrText,
+        };
+      }
+
+      return {
+        credentialNumber: qrText,
+        verificationHash: undefined,
+      };
+    }
   };
 
-  // Manual ID verification
-  const handleManualVerification = () => {
-    if (!credentialId.trim()) {
+  const handleQRScanResult = async (qrText: string) => {
+    const { credentialNumber, verificationHash } = parseQrPayload(qrText);
+
+    if (!credentialNumber && !verificationHash) {
+      message.error("QR không chứa dữ liệu xác thực hợp lệ");
+      setIsScanning(false);
+      return;
+    }
+
+    try {
+      setIsScanning(true);
+      setIsVerifying(true);
+      const verifyResult = await CredentialServices.verifyCredential({
+        credentialNumber,
+        verificationHash,
+      });
+
+      if (!verifyResult?.isValid) {
+        message.error(
+          verifyResult?.message ||
+            "Chứng chỉ không hợp lệ hoặc đã bị thu hồi"
+        );
+        return;
+      }
+
+      const credentialNumberFromResult =
+        (verifyResult as any)?.credential?.credentialId ||
+        credentialNumber ||
+        verificationHash;
+
+      if (!credentialNumberFromResult) {
+        message.warning("Không tìm thấy mã chứng chỉ sau khi xác thực");
+        return;
+      }
+
+      message.success("Xác thực thành công! Đang mở chứng chỉ...");
+      navigate(
+        `/public-portal/certificates/verify/${encodeURIComponent(
+            credentialNumberFromResult
+          )}`
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      message.error("Có lỗi khi xác thực chứng chỉ");
+    } finally {
+      setIsVerifying(false);
+      setIsScanning(false);
+    }
+  };
+
+  // Decode QR từ file ảnh bằng ZXing
+  const decodeQrFromFile = async (file: File): Promise<string | null> => {
+    setIsDecodingQr(true);
+    try {
+      const reader = new FileReader();
+      const dataUrl: string = await new Promise((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = dataUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve(null);
+        img.onerror = () => reject(new Error("Không thể tải ảnh QR"));
+      });
+
+      const readerInstance = qrReaderRef.current ?? new BrowserQRCodeReader();
+      if (!qrReaderRef.current) {
+        qrReaderRef.current = readerInstance;
+      }
+
+      const result = await readerInstance.decodeFromImageElement(img);
+      return result?.getText() ?? null;
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("QR decode error", error);
+      return null;
+    } finally {
+      setIsDecodingQr(false);
+    }
+  };
+
+  // Decode QR từ file ảnh (tạm thời yêu cầu user đọc text QR và dán)
+  const handleQrImageUploaded = async (file: File) => {
+    setUploadedFile(file);
+
+    const qrText = await decodeQrFromFile(file);
+    if (!qrText) {
+      message.error("Không đọc được mã QR từ ảnh. Vui lòng thử lại với ảnh rõ hơn.");
+      return false;
+    }
+
+    message.success("Đọc mã QR thành công, đang xác thực...");
+    void handleQRScanResult(qrText);
+    return false;
+  };
+
+  // Bắt Ctrl+V để dán text QR (hoặc hash / URL)
+  useEffect(() => {
+    const handlePaste = (event: ClipboardEvent) => {
+      if (!event.clipboardData) return;
+
+      const text =
+        event.clipboardData.getData("text") ||
+        event.clipboardData.getData("text/plain");
+      if (text) {
+        // Nếu đang ở tab QR thì coi như dán nội dung QR
+        if (activeTab === "qr") {
+          event.preventDefault();
+          void handleQRScanResult(text.trim());
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [activeTab]);
+
+  // Nút quét QR giờ chỉ là hướng dẫn sử dụng Ctrl+V hoặc upload
+  const handleQRScan = () => {
+    message.info(
+      "Hãy tải lên ảnh QR bên dưới hoặc nhấn Ctrl+V để dán nội dung QR/text."
+    );
+  };
+
+  // Manual ID verification (dùng verify API)
+  const handleManualVerification = async () => {
+    const trimmed = credentialId.trim();
+    if (!trimmed) {
       message.error("Vui lòng nhập ID chứng chỉ hợp lệ");
       return;
     }
 
-    const mockManualData = {
-      id: credentialId,
-      type: "manual",
-      enteredAt: new Date().toISOString(),
-    };
-    handleVerification("manual", mockManualData);
+    // Đoán đây là mã chứng chỉ (SUB-YYYY-XXXXXX, GRAD-YYYY-XXXXXX, ...)
+    const isCredentialNumber =
+      /^([A-Z]{3,4})-\d{4}-\d{6}$/.test(trimmed) ||
+      /^deg_\d+$/i.test(trimmed) ||
+      /^cert_\d+$/i.test(trimmed) ||
+      /^trans_\d+$/i.test(trimmed);
+
+    const payload = isCredentialNumber
+      ? { credentialNumber: trimmed, verificationHash: undefined }
+      : { credentialNumber: undefined, verificationHash: trimmed };
+
+    try {
+      setIsVerifying(true);
+      const verifyResult = await CredentialServices.verifyCredential(payload);
+
+      if (!verifyResult?.isValid) {
+        message.error(
+          verifyResult?.message ||
+            "Chứng chỉ không hợp lệ hoặc đã bị thu hồi"
+        );
+        return;
+      }
+
+      const credentialNumberFromResult =
+        (verifyResult as any).credential?.credentialId || trimmed;
+
+      message.success("Xác thực thành công! Đang mở chứng chỉ...");
+      navigate(
+        `/public-portal/certificates/verify/${encodeURIComponent(
+            credentialNumberFromResult
+          )}`
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      message.error("Có lỗi khi xác thực chứng chỉ");
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   // File upload verification
@@ -96,9 +278,9 @@ const VerificationPortal: React.FC = () => {
     beforeUpload: (file) => {
       const isValidType = [
         "application/pdf",
-        "image/jpeg",
-        "image/png",
-      ].includes(file.type);
+      "image/jpeg",
+      "image/png",
+    ].includes(file.type);
       if (!isValidType) {
         message.error("Bạn chỉ có thể tải lên file PDF, JPG hoặc PNG!");
         return false;
@@ -123,13 +305,7 @@ const VerificationPortal: React.FC = () => {
       return;
     }
 
-    const mockFileData = {
-      fileName: uploadedFile.name,
-      fileSize: uploadedFile.size,
-      type: "file",
-      uploadedAt: new Date().toISOString(),
-    };
-    handleVerification("file", mockFileData);
+    message.info("Chức năng phân tích file sẽ được hỗ trợ sau.");
   };
 
   const tabItems = [
@@ -180,25 +356,31 @@ const VerificationPortal: React.FC = () => {
                 >
                   Sẵn sàng quét
                 </Title>
-                <Text
-                  type="secondary"
-                  style={{ display: "block", marginBottom: 32 }}
-                >
-                  Đặt mã QR trong khung để bắt đầu xác thực
-                </Text>
-                <Button
-                  type="primary"
-                  size="large"
-                  icon={<CameraOutlined />}
-                  onClick={handleQRScan}
-                  loading={isVerifying}
-                  style={{
-                    background: "linear-gradient(135deg, #1a94fc, #0d73c9)",
-                    border: "none",
-                  }}
-                >
-                  Bắt đầu quét camera
-                </Button>
+                
+                
+          <div style={{ marginTop: 16 }}>
+            <Upload.Dragger
+              accept=".jpg,.jpeg,.png"
+              showUploadList={false}
+              beforeUpload={handleQrImageUploaded}
+            >
+              <p className="ant-upload-drag-icon">
+                <UploadOutlined style={{ color: "#1990FF" }} />
+              </p>
+              <p className="ant-upload-text">
+                Nhấp hoặc kéo ảnh QR vào đây để tải lên
+              </p>
+              <p className="ant-upload-hint">
+                Hệ thống sẽ tự động đọc nội dung QR và xác thực ngay sau khi tải lên.
+              </p>
+            </Upload.Dragger>
+            {isDecodingQr && (
+              <Space style={{ marginTop: 16 }}>
+                <LoadingOutlined />
+                <Text>Đang đọc mã QR...</Text>
+              </Space>
+            )}
+          </div>
               </div>
             )}
           </div>
@@ -228,16 +410,16 @@ const VerificationPortal: React.FC = () => {
               level={3}
               style={{ textAlign: "center", margin: "0 0 16px" }}
             >
-              Nhập ID chứng chỉ
+              Nhập Mã chứng chỉ/ Mã Hash Blockchain
             </Title>
             <Paragraph style={{ textAlign: "center", color: "#8c8c8c" }}>
-              Nhập thủ công ID chứng chỉ hoặc mã hash blockchain để xác thực tính xác thực
+              Nhập thủ công mã chứng chỉ hoặc mã hash blockchain để xác thực tính xác thực
             </Paragraph>
           </div>
 
           <Form layout="vertical" style={{ maxWidth: 600, margin: "0 auto" }}>
             <Form.Item
-              label="ID chứng chỉ / Mã hash Blockchain"
+              label="Mã chứng chỉ / Mã hash Blockchain"
               extra="Nhập mã định danh duy nhất được tìm thấy trên tài liệu chứng chỉ"
             >
               <TextArea

@@ -11,6 +11,18 @@
 		flex-wrap: wrap;
 		gap: 12px;
 		margin-bottom: 24px;
+
+		.certificate-actions {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-start;
+			gap: 4px;
+
+			&__hint {
+				font-size: 12px;
+				margin-top: 4px;
+			}
+		}
 	}
 
 	.result-card,
