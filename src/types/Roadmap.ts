@@ -11,6 +11,8 @@ export interface CurriculumRoadmapSubjectDto {
   currentSemesterName: string | null;
   prerequisiteSubjectCode: string | null;
   prerequisitesMet: boolean;
+  attendancePercentage: number | null;
+  attendanceRequirementMet: boolean;
   notes: string | null;
 }
 

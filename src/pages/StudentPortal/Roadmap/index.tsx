@@ -42,6 +42,8 @@ interface RoadmapCourse {
   status: CourseStatus;
   currentClassCode?: string | null;
   currentSemesterName?: string | null;
+  attendancePercentage?: number | null;
+  attendanceRequirementMet?: boolean;
 }
 
 interface RoadmapSemester {
@@ -120,6 +122,8 @@ const Roadmap: React.FC = () => {
         credits: subject.credits,
         prerequisite: subject.prerequisiteSubjectCode,
         prerequisitesMet: subject.prerequisitesMet,
+        attendancePercentage: subject.attendancePercentage,
+        attendanceRequirementMet: subject.attendanceRequirementMet,
         grade:
           subject.finalScore !== null && subject.finalScore !== undefined
             ? subject.finalScore.toFixed(2)
@@ -250,6 +254,36 @@ const Roadmap: React.FC = () => {
       key: "credits",
       width: 100,
       align: "center",
+    },
+    {
+      title: "Điểm danh",
+      dataIndex: "attendancePercentage",
+      key: "attendancePercentage",
+      width: 140,
+      align: "center",
+      render: (
+        attendancePercentage: number | null | undefined,
+        record: RoadmapCourse
+      ) => {
+        if (
+          attendancePercentage === null ||
+          attendancePercentage === undefined
+        ) {
+          return <Text type="secondary">—</Text>;
+        }
+
+        const formatted = `${attendancePercentage.toFixed(2)}%`;
+        const met = record.attendanceRequirementMet;
+
+        return (
+          <Tag
+            color={met ? "success" : "error"}
+            style={{ borderRadius: 6, fontWeight: 500 }}
+          >
+            {formatted}
+          </Tag>
+        );
+      },
     },
     {
       title: "Điểm",
@@ -403,12 +437,7 @@ const Roadmap: React.FC = () => {
               />
             </Card>
             <Card className="metric-card compact">
-              <Statistic
-                title="GPA hiện tại"
-                value={stats.gpa}
-                precision={2}
-                suffix="/4.00"
-              />
+              <Statistic title="GPA hiện tại" value={stats.gpa} precision={2} />
             </Card>
             <Card className="metric-card compact registration-card">
               <div style={{ position: "relative", zIndex: 10 }}>
