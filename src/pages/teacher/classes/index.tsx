@@ -15,7 +15,12 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import { BookOutlined, TeamOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  BookOutlined,
+  TeamOutlined,
+  UserOutlined,
+  CalendarOutlined,
+} from "@ant-design/icons";
 import {
   getTeacherClassesApi,
   getClassByIdApi,
@@ -48,6 +53,7 @@ const TeacherTeachingClasses: React.FC = () => {
         setSelectedClassId("");
       }
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to load teacher classes:", error);
       message.error("Không thể tải danh sách lớp giảng dạy");
     } finally {
@@ -61,6 +67,7 @@ const TeacherTeachingClasses: React.FC = () => {
       const detail = await getClassByIdApi(classId);
       setClassDetail(detail);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to load class detail:", error);
       message.error("Không thể tải thông tin lớp");
       setClassDetail(null);
@@ -105,7 +112,9 @@ const TeacherTeachingClasses: React.FC = () => {
       key: "index",
       width: 80,
       align: "center",
-      render: (_: unknown, __: ClassStudent, index: number) => index + 1,
+      render: (_: unknown, __: ClassStudent, index: number) => (
+        <span className="student-index-pill">{index + 1}</span>
+      ),
     },
     {
       title: "Sinh viên",
@@ -129,25 +138,30 @@ const TeacherTeachingClasses: React.FC = () => {
   ];
 
   const totalStudents =
-    classDetail?.students?.length ??
-    selectedClassSummary?.totalStudents ??
-    0;
+    classDetail?.students?.length ?? selectedClassSummary?.totalStudents ?? 0;
 
   const slots = selectedClassSummary?.totalSlots ?? 0;
 
   return (
     <div className="teacher-teaching-classes">
       <div className="page-header">
-        <div>
+        <div className="page-header__left">
           <p className="eyebrow">Teacher Portal</p>
           <Title level={2}>Lớp giảng dạy</Title>
           <Text type="secondary">
             Quản lý các lớp đang phụ trách và danh sách sinh viên đăng ký
           </Text>
         </div>
-        <Tag color="blue" className="header-tag">
-          {classes.length} lớp
-        </Tag>
+        <Space size={12} className="page-header__right">
+          <Tag color="blue" className="header-tag">
+            {classes.length} lớp
+          </Tag>
+          {selectedClassSummary && (
+            <Tag icon={<CalendarOutlined />} className="header-tag secondary">
+              {selectedClassSummary.semesterName}
+            </Tag>
+          )}
+        </Space>
       </div>
 
       <Card className="class-selector-card">
@@ -165,7 +179,11 @@ const TeacherTeachingClasses: React.FC = () => {
             {classes.map((cls) => {
               const label = `${cls.classCode} • ${cls.subjectName} • ${cls.semesterName}`;
               return (
-                <Option key={cls.classId} value={cls.classId} data-label={label}>
+                <Option
+                  key={cls.classId}
+                  value={cls.classId}
+                  data-label={label}
+                >
                   <div className="option-meta">
                     <span className="option-code">{cls.classCode}</span>
                     <span className="option-name">{cls.subjectName}</span>
@@ -216,13 +234,21 @@ const TeacherTeachingClasses: React.FC = () => {
                   {classDetail?.semesterStartDate && (
                     <div>
                       <p>Bắt đầu</p>
-                      <strong>{new Date(classDetail.semesterStartDate).toLocaleDateString()}</strong>
+                      <strong>
+                        {new Date(
+                          classDetail.semesterStartDate
+                        ).toLocaleDateString()}
+                      </strong>
                     </div>
                   )}
                   {classDetail?.semesterEndDate && (
                     <div>
                       <p>Kết thúc</p>
-                      <strong>{new Date(classDetail.semesterEndDate).toLocaleDateString()}</strong>
+                      <strong>
+                        {new Date(
+                          classDetail.semesterEndDate
+                        ).toLocaleDateString()}
+                      </strong>
                     </div>
                   )}
                   {classDetail?.room && (
@@ -302,6 +328,8 @@ const TeacherTeachingClasses: React.FC = () => {
               pagination={false}
               scroll={{ x: 600 }}
               className="students-table"
+              bordered
+              size="middle"
               locale={{
                 emptyText: loadingDetail ? "Đang tải..." : "Chưa có sinh viên",
               }}
@@ -314,4 +342,3 @@ const TeacherTeachingClasses: React.FC = () => {
 };
 
 export default TeacherTeachingClasses;
-

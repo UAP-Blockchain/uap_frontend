@@ -95,9 +95,11 @@ export interface UpdateGradesRequest {
   }>;
 }
 
+// Generic response type for grade operations (kept simple because
+// backend GradeResponse has a slightly different shape)
 export interface SubmitGradesResponse {
-  success: boolean;
-  message: string;
+  success?: boolean;
+  message?: string;
   gradeIds?: string[];
 }
 
@@ -261,12 +263,17 @@ export const getClassGradesApi = async (
     response.data.students.forEach((student) => {
       if (student.grades) {
         student.grades.forEach((grade) => {
-          if (grade.gradeId && grade.score !== undefined && grade.score !== null) {
+          if (grade.gradeId) {
+            const normalizedScore =
+              grade.score !== undefined && grade.score !== null
+                ? Number(grade.score)
+                : 0;
+
             grades.push({
               studentId: student.studentId,
               gradeComponentId: grade.gradeComponentId,
               gradeId: grade.gradeId,
-              score: Number(grade.score),
+              score: normalizedScore,
             });
           }
         });
@@ -290,12 +297,22 @@ export const submitStudentGradesApi = async (
 
 /**
  * Update grades for a student
- * PUT /api/Grades
+ * NOTE: Backend exposes PUT /api/grades/{id} for a single grade,
+ * so here we fan-out and call it once per gradeId.
  */
 export const updateStudentGradesApi = async (
   request: UpdateGradesRequest
-): Promise<SubmitGradesResponse> => {
-  const response = await api.put<SubmitGradesResponse>("/Grades", request);
-  return response.data;
+): Promise<void> => {
+  if (!request.grades || request.grades.length === 0) {
+    return;
+  }
+
+  await Promise.all(
+    request.grades.map((grade) =>
+      api.put(`/Grades/${grade.gradeId}`, {
+        score: grade.score,
+      })
+    )
+  );
 };
 
