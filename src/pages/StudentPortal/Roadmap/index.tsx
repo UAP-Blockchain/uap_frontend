@@ -204,7 +204,7 @@ const Roadmap: React.FC = () => {
           (err as { message?: string })?.message ||
           "Không thể tải danh sách môn cần học lại.";
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        message.warn(messageText);
+        message.info(messageText);
       } finally {
         setLoadingRetakes(false);
       }
@@ -351,11 +351,14 @@ const Roadmap: React.FC = () => {
 
           setRetakeOptions(retakes.filter((item) => item.isRetake));
 
-        const failedMap: Record<string, string> = {};
+          const failedMap: Record<string, string> = {};
 
           roadmap.semesterGroups.forEach((group) => {
             group.subjects.forEach((subject) => {
-              if (subject.status === "Failed" && !failedMap[subject.subjectId]) {
+              if (
+                subject.status === "Failed" &&
+                !failedMap[subject.subjectId]
+              ) {
                 failedMap[subject.subjectId] = subject.id;
               }
             });
@@ -791,7 +794,9 @@ const Roadmap: React.FC = () => {
                 dataIndex: "availableClasses",
                 key: "availableClasses",
                 width: 260,
-                render: (classes: RecommendedSubjectDto["availableClasses"]) => {
+                render: (
+                  classes: RecommendedSubjectDto["availableClasses"]
+                ) => {
                   if (!classes || classes.length === 0) {
                     return <Text type="secondary">Chưa có lớp mở</Text>;
                   }
