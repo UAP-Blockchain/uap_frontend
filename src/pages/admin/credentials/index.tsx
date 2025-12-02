@@ -56,6 +56,8 @@ import {
   approveCredentialApi,
   rejectCredentialApi,
 } from "../../../services/admin/credentials/api";
+import type { SemesterDto } from "../../../types/Semester";
+import type { SubjectDto } from "../../../types/Subject";
 import dayjs from "dayjs";
 import "./index.scss";
 

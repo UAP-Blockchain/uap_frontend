@@ -39,7 +39,7 @@ const VerificationPortal: React.FC = () => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [credentialId, setCredentialId] = useState("");
   const [uploadedFile, setUploadedFile] = useState<any>(null);
-  const [isDecodingQr, setIsDecodingQr] = useState(false);
+	const [isDecodingQr, setIsDecodingQr] = useState(false);
 
   // Parse QR payload (URL hoặc plain credentialNumber)
   const parseQrPayload = (input: string) => {
