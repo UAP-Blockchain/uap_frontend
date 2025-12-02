@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Alert,
@@ -72,6 +72,7 @@ const CredentialDetail: React.FC = () => {
   const [qrCodeData, setQrCodeData] = useState<string>("");
   const [qrLoading, setQrLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const qrRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!credentialId) {
@@ -224,32 +225,38 @@ const CredentialDetail: React.FC = () => {
     rawQr && rawQr.length <= 300 ? rawQr : ""
   ) || shareableUrl.trim();
 
+  const handleDownloadQr = () => {
+    if (!qrValue || !qrRef.current) {
+      message.warning("Không có mã QR để tải xuống");
+      return;
+    }
+
+    const canvas = qrRef.current.querySelector("canvas");
+    if (!canvas) {
+      message.error("Không tìm thấy hình ảnh QR để tải xuống");
+      return;
+    }
+
+    const dataUrl = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = `${(credential as any).credentialId || credential.id || "qr-code"}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="admin-credential-detail">
       <div className="detail-header">
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/admin/credentials")}>
           Quay lại danh sách
         </Button>
-        <Space wrap>
-          <Button
-            icon={<DownloadOutlined />}
-            type="primary"
-            loading={actionLoading}
-            onClick={handleDownloadPdf}
-          >
-            Tải PDF
-          </Button>
-          {(credential as any).shareableUrl && (
-            <Button icon={<LinkOutlined />} onClick={() => copyToClipboard((credential as any).shareableUrl, "Đã sao chép liên kết")}>Sao chép liên kết</Button>
-          )}
-          <Button icon={<CopyOutlined />} onClick={() => copyToClipboard(credential.credentialHash)}>
-            Sao chép hash
-          </Button>
-        </Space>
+        
       </div>
 
       <Row gutter={[24, 24]}>
-        <Col xs={24} lg={16}>
+        <Col xs={24} lg={18}>
           <Card className="credential-summary-card" bordered={false}>
             <Space direction="vertical" size={16} style={{ width: "100%" }}>
               <Space className="summary-heading" align="center" size={12}>
@@ -272,9 +279,8 @@ const CredentialDetail: React.FC = () => {
                 <Descriptions.Item label="Mã chứng chỉ">
                   {(credential as any).credentialId || credential.id}
                 </Descriptions.Item>
-                <Descriptions.Item label="Ngày cấp">
+                <Descriptions.Item label="Ngày cấp" span={1}>
                   <Space>
-                    <CalendarOutlined />
                     {formatDateDisplay(credential.issueDate, "Chưa cấp")}
                   </Space>
                 </Descriptions.Item>
@@ -295,9 +301,6 @@ const CredentialDetail: React.FC = () => {
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 2,
                   }) || "—"}
-                </Descriptions.Item>
-                <Descriptions.Item label="Xếp loại" span={2}>
-                  {credential.classification || "—"}
                 </Descriptions.Item>
                 <Descriptions.Item label="Số lần xem">
                   {(credential as any).viewCount ?? 0}
@@ -341,9 +344,9 @@ const CredentialDetail: React.FC = () => {
             </Space>
           </Card>
         </Col>
-        <Col xs={24} lg={8}>
+        <Col xs={24} lg={6}>
           <Card className="credential-qr-card" bordered={false}>
-            <div className="qr-preview">
+            <div className="qr-preview" ref={qrRef}>
               {qrLoading ? (
                 <Spin />
               ) : qrValue ? (
@@ -359,27 +362,31 @@ const CredentialDetail: React.FC = () => {
             <Text type="secondary" className="qr-helper">
               Quét mã để xác thực chứng chỉ
             </Text>
-            <Space direction="vertical" size={8} className="qr-meta">
-              <Space align="center" size={4}>
-                <QrcodeOutlined />
-                <Text copyable>{credential.credentialHash}</Text>
-              </Space>
-              {credential.blockchainTxHash && (
-                <Space align="center" size={4}>
-                  <BlockOutlined />
-                  <Text copyable>{credential.blockchainTxHash}</Text>
-                </Space>
-              )}
-              {(credential as any).shareableUrl && (
+            <div className="qr-actions">
+              <Space size={12}>
                 <Button
-                  type="link"
-                  icon={<LinkOutlined />}
-                  onClick={() => copyToClipboard((credential as any).shareableUrl, "Đã sao chép liên kết xác thực")}
+                  type="primary"
+                  onClick={handleDownloadQr}
+                  disabled={qrLoading || !qrValue}
                 >
-                  Liên kết xác thực
+                  Tải mã QR
                 </Button>
-              )}
-            </Space>
+                {(credential as any).shareableUrl && (
+                  <Button
+                    type="default"
+                    icon={<LinkOutlined />}
+                    onClick={() =>
+                      copyToClipboard(
+                        (credential as any).shareableUrl,
+                        "Đã sao chép liên kết xác thực",
+                      )
+                    }
+                  >
+                    Liên kết xác thực
+                  </Button>
+                )}
+              </Space>
+            </div>
           </Card>
         </Col>
       </Row>
