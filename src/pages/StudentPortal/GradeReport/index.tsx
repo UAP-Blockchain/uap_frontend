@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Alert,
   Card,
@@ -60,9 +61,12 @@ const GradeReport: React.FC = () => {
   const [gradeData, setGradeData] = useState<GradeRecord[]>([]);
   const [isLoadingGrades, setIsLoadingGrades] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pendingSubjectId, setPendingSubjectId] = useState<string | null>(null);
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const handleLoadSemester = useCallback(async (semesterNumber: number) => {
     setLoadingSemesters((prev) => {
@@ -92,6 +96,22 @@ const GradeReport: React.FC = () => {
       }));
     }
   }, []);
+
+  const ensureSemesterVisible = useCallback(
+    (semesterName?: string | null) => {
+      if (!semesterName || !summary) return;
+      const targetSemester = summary.semesterSummaries.find(
+        (semester) =>
+          semester.semesterName?.toLowerCase() === semesterName.toLowerCase()
+      );
+      if (targetSemester) {
+        const key = String(targetSemester.semesterNumber);
+        setActiveSemesterKey(key);
+        void handleLoadSemester(targetSemester.semesterNumber);
+      }
+    },
+    [summary, handleLoadSemester]
+  );
 
   // Load summary on mount (dùng API roadmap giống trang điểm danh)
   useEffect(() => {
@@ -151,7 +171,8 @@ const GradeReport: React.FC = () => {
     }
   };
 
-  const loadGradesForSubject = useCallback(async (subjectId: string) => {
+  const loadGradesForSubject = useCallback(
+    async (subjectId: string) => {
     setIsLoadingGrades(true);
     setError(null);
     try {
@@ -167,6 +188,7 @@ const GradeReport: React.FC = () => {
       if (subject) {
         setSelectedSubject(subject);
         setGradeData(transformGradeData(subject));
+          ensureSemesterVisible(subject.semesterName);
       } else {
         setSelectedSubject(null);
         setGradeData([]);
@@ -188,7 +210,27 @@ const GradeReport: React.FC = () => {
     } finally {
       setIsLoadingGrades(false);
     }
-  }, []);
+    },
+    [ensureSemesterVisible]
+  );
+
+  useEffect(() => {
+    const incomingSubjectId =
+      (location.state as { subjectId?: string } | undefined)?.subjectId ??
+      null;
+    if (incomingSubjectId) {
+      setPendingSubjectId(incomingSubjectId);
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.pathname, location.state, navigate]);
+
+  useEffect(() => {
+    if (pendingSubjectId) {
+      setSelectedSubjectId(pendingSubjectId);
+      void loadGradesForSubject(pendingSubjectId);
+      setPendingSubjectId(null);
+    }
+  }, [pendingSubjectId, loadGradesForSubject]);
 
   // Transform API grade data to table format
   const transformGradeData = (subjectGrade: SubjectGradeDto): GradeRecord[] => {

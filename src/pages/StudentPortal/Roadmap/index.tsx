@@ -33,7 +33,7 @@ import "./Roadmap.scss";
 const { Title, Text } = Typography;
 const { Panel } = Collapse;
 
-type CourseStatus = "Completed" | "InProgress" | "Open" | "Locked";
+type CourseStatus = "Completed" | "InProgress" | "Open" | "Locked" | "Failed";
 
 interface RoadmapCourse {
   subjectId: string;
@@ -78,6 +78,11 @@ const statusMap: Record<
     label: "Chưa mở khóa",
     color: "#94a3b8",
     background: "#f8fafc",
+  },
+  Failed: {
+    label: "Rớt môn",
+    color: "#dc2626",
+    background: "#fee2e2",
   },
 };
 
@@ -134,21 +139,21 @@ const Roadmap: React.FC = () => {
     subjects: CurriculumRoadmapSubjectDto[]
   ): RoadmapCourse[] =>
     subjects.map((subject) => ({
-        subjectId: subject.subjectId,
-        code: subject.subjectCode,
-        name: subject.subjectName,
-        credits: subject.credits,
-        prerequisite: subject.prerequisiteSubjectCode,
-        prerequisitesMet: subject.prerequisitesMet,
+      subjectId: subject.subjectId,
+      code: subject.subjectCode,
+      name: subject.subjectName,
+      credits: subject.credits,
+      prerequisite: subject.prerequisiteSubjectCode,
+      prerequisitesMet: subject.prerequisitesMet,
       attendancePercentage: subject.attendancePercentage,
       attendanceRequirementMet: subject.attendanceRequirementMet,
-        grade:
-          subject.finalScore !== null && subject.finalScore !== undefined
-            ? subject.finalScore.toFixed(2)
-            : undefined,
-        status: subject.status as CourseStatus,
-        currentClassCode: subject.currentClassCode,
-        currentSemesterName: subject.currentSemesterName,
+      grade:
+        subject.finalScore !== null && subject.finalScore !== undefined
+          ? subject.finalScore.toFixed(2)
+          : undefined,
+      status: subject.status as CourseStatus,
+      currentClassCode: subject.currentClassCode,
+      currentSemesterName: subject.currentSemesterName,
     }));
 
   const semesters: RoadmapSemester[] = useMemo(() => {
@@ -514,7 +519,7 @@ const Roadmap: React.FC = () => {
                 <div>
                   <Text strong>Kỳ {semester.semesterNumber}</Text>
                   <div className="semester-label">
-                      {semester.subjectCount} môn học
+                    {semester.subjectCount} môn học
                   </div>
                 </div>
                 <Space size={8}>
@@ -557,9 +562,7 @@ const Roadmap: React.FC = () => {
               dataSource={
                 semesterDetails[semester.semesterNumber]?.courses || []
               }
-              rowKey={(record) =>
-                `${semester.semesterNumber}-${record.code}`
-              }
+              rowKey={(record) => `${semester.semesterNumber}-${record.code}`}
               pagination={false}
               size="small"
               loading={!!loadingSemesters[semester.semesterNumber]}

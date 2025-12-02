@@ -503,9 +503,9 @@ const EnrollList: React.FC = () => {
                                 Số ca học
                               </Text>
                               <div>
-                                <Text style={{ fontSize: "13px" }}>
+                                    <Text style={{ fontSize: "13px" }}>
                                   {cls.slots.length} Slot
-                                </Text>
+                                  </Text>
                               </div>
                             </div>
                           </div>
