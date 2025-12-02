@@ -266,7 +266,7 @@ const CredentialDetail: React.FC = () => {
                   <Title level={3} style={{ margin: 0 }}>
                     {certificateTitle}
                   </Title>
-                </div>
+                </div> 
                 <Tag color="blue">{typeLabels[credential.certificateType] || credential.certificateType}</Tag>
               </Space>
               <Descriptions bordered size="small" column={2} layout="horizontal">
