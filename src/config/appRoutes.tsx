@@ -48,6 +48,9 @@ const CredentialRequestDetailAdmin = lazy(
   () => import("../pages/admin/credentialRequests/RequestDetail")
 );
 const CurriculumManagement = lazy(() => import("../pages/admin/curriculums"));
+const CurriculumDetail = lazy(
+  () => import("../pages/admin/curriculums/CurriculumDetail")
+);
 const ReportsManagement = lazy(() => import("../pages/admin/reports"));
 const SecurityManagement = lazy(() => import("../pages/admin/security"));
 const RegisterUser = lazy(() => import("../pages/admin/registerUser"));
@@ -199,6 +202,12 @@ export const adminRoutes: RouteConfig = {
       allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
       menuIndex: 3.5,
       menuSection: "main",
+    },
+    {
+      path: "/admin/curriculums/:id",
+      element: <CurriculumDetail />,
+      showInMenu: false,
+      allowedRoles: [ROLE_CODES.ADMIN, ROLE_CODES.MANAGER],
     },
     {
       path: "/admin/classes/:classCode",

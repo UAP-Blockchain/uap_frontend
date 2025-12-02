@@ -1,0 +1,92 @@
+@use "../../../styles/theme-variables" as *;
+
+.curriculum-detail-page {
+  padding: 24px;
+  background: #f5f7fa;
+  min-height: 100vh;
+
+  .curriculum-detail-loading,
+  .curriculum-detail-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+  }
+
+  .curriculum-detail-card {
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    background: #fff;
+
+    .detail-header {
+      margin-bottom: 24px;
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        flex-wrap: wrap;
+
+        @media (max-width: 768px) {
+          flex-direction: column;
+        }
+      }
+    }
+
+    .info-card {
+      border-radius: 12px;
+      border: 1px solid #eef2ff;
+      background: #fafbff;
+    }
+
+    .subjects-card {
+      border-radius: 12px;
+      border: 1px solid #eef2ff;
+      background: #fff;
+
+      .semester-tables {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+
+        .semester-section {
+          .semester-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #eef2ff;
+          }
+
+          .semester-table {
+            .ant-table-thead > tr > th {
+              background: #f8f9ff;
+              font-weight: 600;
+              color: #0f172a;
+              border-bottom: 2px solid #eef2ff;
+            }
+
+            .ant-table-tbody > tr:hover > td {
+              background: #f8f9ff;
+            }
+
+            .ant-table-tbody > tr > td {
+              border-bottom: 1px solid #f1f5f9;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .modal-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 0;
+  }
+}
+

@@ -1,12 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Alert,
   Button,
   Card,
   Col,
-  Descriptions,
-  Divider,
-  Drawer,
   Empty,
   Form,
   Input,
@@ -37,9 +35,7 @@ import { toast } from "react-toastify";
 import type {
   AddSubjectToCurriculumRequest,
   CreateCurriculumRequest,
-  CurriculumDetailDto,
   CurriculumListItem,
-  CurriculumSubjectDto,
   UpdateCurriculumRequest,
 } from "../../../types/Curriculum";
 import type { SubjectDto } from "../../../types/Subject";
@@ -48,8 +44,6 @@ import {
   createCurriculumApi,
   deleteCurriculumApi,
   fetchCurriculumsApi,
-  getCurriculumByIdApi,
-  removeSubjectFromCurriculumApi,
   updateCurriculumApi,
 } from "../../../services/admin/curriculums/api";
 import { fetchSubjectsApi } from "../../../services/admin/subjects/api";
@@ -61,6 +55,7 @@ const { Option } = Select;
 type SortOption = "recent" | "subject" | "credits";
 
 const CurriculumManagementPage: React.FC = () => {
+  const navigate = useNavigate();
   const [curriculums, setCurriculums] = useState<CurriculumListItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("recent");
@@ -69,25 +64,21 @@ const CurriculumManagementPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCurriculum, setEditingCurriculum] =
     useState<CurriculumListItem | null>(null);
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [selectedCurriculum, setSelectedCurriculum] =
-    useState<CurriculumDetailDto | null>(null);
-  const [subjectModalOpen, setSubjectModalOpen] = useState(false);
-  const [subjectOptions, setSubjectOptions] = useState<SubjectDto[]>([]);
-  const [subjectLoading, setSubjectLoading] = useState(false);
-  const [subjectSubmitting, setSubjectSubmitting] = useState(false);
   const [creationWizardOpen, setCreationWizardOpen] = useState(false);
   const [creationStep, setCreationStep] = useState(0);
-  const [newCurriculum, setNewCurriculum] = useState<CurriculumListItem | null>(null);
+  const [newCurriculum, setNewCurriculum] = useState<CurriculumListItem | null>(
+    null
+  );
   const [creationLoading, setCreationLoading] = useState(false);
   const [batchSubjectSubmitting, setBatchSubjectSubmitting] = useState(false);
+  const [subjectOptions, setSubjectOptions] = useState<SubjectDto[]>([]);
+  const [subjectLoading, setSubjectLoading] = useState(false);
 
   const [form] = Form.useForm<CreateCurriculumRequest>();
-  const [subjectForm] = Form.useForm<AddSubjectToCurriculumRequest>();
   const [creationForm] = Form.useForm<CreateCurriculumRequest>();
-  const [subjectBatchForm] =
-    Form.useForm<{ subjects: AddSubjectToCurriculumRequest[] }>();
+  const [subjectBatchForm] = Form.useForm<{
+    subjects: AddSubjectToCurriculumRequest[];
+  }>();
 
   const loadCurriculums = useCallback(async () => {
     setLoading(true);
@@ -106,19 +97,6 @@ const CurriculumManagementPage: React.FC = () => {
     loadCurriculums();
   }, [loadCurriculums]);
 
-  const loadCurriculumDetail = useCallback(async (id: number) => {
-    setDetailLoading(true);
-    try {
-      const detail = await getCurriculumByIdApi(id);
-      setSelectedCurriculum(detail);
-    } catch (error) {
-      console.error("Failed to load curriculum detail", error);
-      toast.error("Không thể tải chi tiết khung chương trình");
-    } finally {
-      setDetailLoading(false);
-    }
-  }, []);
-
   const loadSubjectOptions = useCallback(async () => {
     setSubjectLoading(true);
     try {
@@ -134,12 +112,6 @@ const CurriculumManagementPage: React.FC = () => {
       setSubjectLoading(false);
     }
   }, []);
-
-  useEffect(() => {
-    if (subjectModalOpen && subjectOptions.length === 0) {
-      loadSubjectOptions();
-    }
-  }, [subjectModalOpen, subjectOptions.length, loadSubjectOptions]);
 
   useEffect(() => {
     if (
@@ -195,26 +167,6 @@ const CurriculumManagementPage: React.FC = () => {
       }
     });
   }, [curriculums, searchTerm, sortOption]);
-
-  const groupedSubjects = useMemo(() => {
-    if (!selectedCurriculum) return [];
-    const map = selectedCurriculum.subjects.reduce<
-      Record<number, CurriculumSubjectDto[]>
-    >((acc, subject) => {
-      const semester = subject.semesterNumber || 0;
-      if (!acc[semester]) {
-        acc[semester] = [];
-      }
-      acc[semester].push(subject);
-      return acc;
-    }, {});
-    return Object.entries(map)
-      .sort(([a], [b]) => Number(a) - Number(b))
-      .map(([semester, subjects]) => ({
-        semester: Number(semester),
-        subjects,
-      }));
-  }, [selectedCurriculum]);
 
   const openCreateModal = () => {
     setEditingCurriculum(null);
@@ -313,7 +265,6 @@ const CurriculumManagementPage: React.FC = () => {
       }
 
       toast.success("Đã thêm môn học vào khung chương trình");
-      await loadCurriculumDetail(newCurriculum.id);
       await loadCurriculums();
       closeCreationWizard();
     } catch (error) {
@@ -345,58 +296,8 @@ const CurriculumManagementPage: React.FC = () => {
     });
   };
 
-  const handleViewDetail = async (record: CurriculumListItem) => {
-    setDetailDrawerOpen(true);
-    await loadCurriculumDetail(record.id);
-  };
-
-  const openSubjectModal = () => {
-    subjectForm.resetFields();
-    setSubjectModalOpen(true);
-  };
-
-  const handleAddSubject = async () => {
-    if (!selectedCurriculum) return;
-    try {
-      const values = await subjectForm.validateFields();
-      setSubjectSubmitting(true);
-      await addSubjectToCurriculumApi(selectedCurriculum.id, values);
-      toast.success("Đã thêm môn vào khung chương trình");
-      setSubjectModalOpen(false);
-      subjectForm.resetFields();
-      await loadCurriculumDetail(selectedCurriculum.id);
-      await loadCurriculums();
-    } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      }
-    } finally {
-      setSubjectSubmitting(false);
-    }
-  };
-
-  const handleRemoveSubject = async (subjectId: string) => {
-    if (!selectedCurriculum) return;
-    Modal.confirm({
-      title: "Xóa môn khỏi khung?",
-      icon: <ExclamationCircleOutlined />,
-      okText: "Xóa",
-      cancelText: "Hủy",
-      okButtonProps: { danger: true },
-      async onOk() {
-        try {
-          await removeSubjectFromCurriculumApi(
-            selectedCurriculum.id,
-            subjectId
-          );
-          toast.success("Đã xóa môn khỏi khung chương trình");
-          await loadCurriculumDetail(selectedCurriculum.id);
-          loadCurriculums();
-        } catch {
-          toast.error("Không thể xóa môn học");
-        }
-      },
-    });
+  const handleViewDetail = (record: CurriculumListItem) => {
+    navigate(`/admin/curriculums/${record.id}`);
   };
 
   const columns: ColumnsType<CurriculumListItem> = [
@@ -479,7 +380,9 @@ const CurriculumManagementPage: React.FC = () => {
             <div>
               <p className="eyebrow">Chương trình đào tạo</p>
               <h2>Quản lý Khung chương trình</h2>
-              <span>Kiểm soát danh sách khung, tín chỉ và cấu trúc môn học</span>
+              <span>
+                Kiểm soát danh sách khung, tín chỉ và cấu trúc môn học
+              </span>
             </div>
           </div>
           <Space>
@@ -566,102 +469,10 @@ const CurriculumManagementPage: React.FC = () => {
           dataSource={filteredCurriculums}
           pagination={{ pageSize: 8, showSizeChanger: false }}
           locale={{
-            emptyText: (
-              <Empty description="Chưa có khung chương trình" />
-            ),
+            emptyText: <Empty description="Chưa có khung chương trình" />,
           }}
         />
       </Card>
-
-      <Drawer
-        title={selectedCurriculum?.name || "Chi tiết khung chương trình"}
-        placement="right"
-        width={520}
-        open={detailDrawerOpen}
-        onClose={() => {
-          setDetailDrawerOpen(false);
-          setSelectedCurriculum(null);
-        }}
-        extra={
-          selectedCurriculum && (
-            <Button type="primary" icon={<PlusOutlined />} onClick={openSubjectModal}>
-              Thêm môn học vào khung chương trình 
-            </Button>
-          )
-        }
-      >
-        {detailLoading ? (
-          <div className="drawer-loading">
-            <Spin />
-          </div>
-        ) : selectedCurriculum ? (
-          <div className="drawer-content">
-            <Descriptions column={1} bordered size="small">
-              <Descriptions.Item label="Mã chương trình">
-                {selectedCurriculum.code}
-              </Descriptions.Item>
-              <Descriptions.Item label="Tổng tín chỉ">
-                {selectedCurriculum.totalCredits}
-              </Descriptions.Item>
-              <Descriptions.Item label="Số môn học">
-                {selectedCurriculum.subjectCount}
-              </Descriptions.Item>
-              <Descriptions.Item label="Số sinh viên">
-                {selectedCurriculum.studentCount || 0}
-              </Descriptions.Item>
-              <Descriptions.Item label="Mô tả">
-                {selectedCurriculum.description || "Chưa có mô tả"}
-              </Descriptions.Item>
-            </Descriptions>
-
-            <Divider />
-            <h4>Cấu trúc môn học</h4>
-            {groupedSubjects.length === 0 ? (
-              <Empty description="Chưa có môn học nào trong khung" />
-            ) : (
-              groupedSubjects.map((group) => (
-                <div className="semester-block" key={group.semester}>
-                  <div className="semester-header">
-                    <span>Học kỳ {group.semester}</span>
-                    <Tag color="blue">{group.subjects.length} môn</Tag>
-                  </div>
-                  <div className="semester-body">
-                    {group.subjects.map((subject) => (
-                      <div className="subject-item" key={subject.id}>
-                        <div>
-                          <div className="subject-name">
-                            {subject.subjectCode} - {subject.subjectName}
-                          </div>
-                          <div className="subject-meta">
-                            <Tag color="geekblue">{subject.credits} tín chỉ</Tag>
-                            {subject.prerequisiteSubjectCode && (
-                              <Tag color="purple">
-                                Tiên quyết: {subject.prerequisiteSubjectCode}
-                              </Tag>
-                            )}
-                          </div>
-                        </div>
-                        <Tooltip title="Xóa môn khỏi khung">
-                          <Button
-                            type="text"
-                            icon={<DeleteOutlined />}
-                            danger
-                            onClick={() =>
-                              handleRemoveSubject(subject.subjectId)
-                            }
-                          />
-                        </Tooltip>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        ) : (
-          <Empty description="Chọn một khung chương trình để xem chi tiết" />
-        )}
-      </Drawer>
 
       <Modal
         open={creationWizardOpen}
@@ -800,7 +611,10 @@ const CurriculumManagementPage: React.FC = () => {
                                   },
                                 ]}
                               >
-                                <InputNumber min={1} style={{ width: "100%" }} />
+                                <InputNumber
+                                  min={1}
+                                  style={{ width: "100%" }}
+                                />
                               </Form.Item>
                             </Col>
                             <Col xs={24} md={6}>
@@ -853,7 +667,9 @@ const CurriculumManagementPage: React.FC = () => {
       <Modal
         open={isModalVisible}
         title={
-          editingCurriculum ? "Chỉnh sửa khung chương trình" : "Khung chương trình mới"
+          editingCurriculum
+            ? "Chỉnh sửa khung chương trình"
+            : "Khung chương trình mới"
         }
         onCancel={() => setIsModalVisible(false)}
         onOk={handleSubmitCurriculum}
@@ -886,65 +702,6 @@ const CurriculumManagementPage: React.FC = () => {
             <InputNumber min={1} style={{ width: "100%" }} />
           </Form.Item>
         </Form>
-      </Modal>
-
-      <Modal
-        open={subjectModalOpen}
-        title="Thêm môn vào khung chương trình"
-        onCancel={() => setSubjectModalOpen(false)}
-        onOk={handleAddSubject}
-        okText="Thêm môn"
-        confirmLoading={subjectSubmitting}
-      >
-        {subjectLoading ? (
-          <div className="modal-loading">
-            <Spin />
-          </div>
-        ) : subjectOptions.length === 0 ? (
-          <Alert
-            type="warning"
-            showIcon
-            message="Không tìm thấy dữ liệu môn học"
-            description="Hãy tạo môn học trước khi thêm vào khung chương trình."
-          />
-        ) : (
-          <Form form={subjectForm} layout="vertical">
-            <Form.Item
-              label="Môn học"
-              name="subjectId"
-              rules={[{ required: true, message: "Vui lòng chọn môn" }]}
-            >
-              <Select
-                showSearch
-                placeholder="Chọn môn học"
-                optionFilterProp="label"
-                options={subjectOptions.map((subject) => ({
-                  label: `${subject.subjectCode} - ${subject.subjectName}`,
-                  value: subject.id,
-                }))}
-              />
-            </Form.Item>
-            <Form.Item
-              label="Học kỳ"
-              name="semesterNumber"
-              rules={[{ required: true, message: "Vui lòng nhập học kỳ" }]}
-            >
-              <InputNumber min={1} style={{ width: "100%" }} />
-            </Form.Item>
-            {selectedCurriculum && selectedCurriculum.subjects.length > 0 && (
-              <Form.Item label="Môn tiên quyết" name="prerequisiteSubjectId">
-                <Select
-                  allowClear
-                  placeholder="Chọn môn tiên quyết (nếu có)"
-                  options={selectedCurriculum.subjects.map((subject) => ({
-                    label: `${subject.subjectCode} - ${subject.subjectName}`,
-                    value: subject.subjectId,
-                  }))}
-                />
-              </Form.Item>
-            )}
-          </Form>
-        )}
       </Modal>
     </div>
   );
