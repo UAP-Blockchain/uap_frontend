@@ -2,13 +2,378 @@
   .list-header {
     margin-bottom: 24px;
   }
+
   .student-table-card {
-    .table-header { margin-bottom: 12px; }
-    .student-list-table {
-      .ant-table-thead > tr > th { background: linear-gradient(135deg, #1890ff, #36cfc9); color: #fff; font-weight: 600; text-align: center; }
-      .ant-table-tbody > tr > td:first-child { text-align: center; font-weight: 600; color: #722ed1; background: #fafafa; }
+    .table-header {
+      margin-bottom: 12px;
+    }
+  }
+
+  // Header styling giống Roadmap
+  .attendance-header {
+    background: linear-gradient(135deg, #1a94fc 0%, #0d73c9 50%, #1a94fc 100%);
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(26, 148, 252, 0.25),
+      0 4px 16px rgba(26, 148, 252, 0.15);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 24px;
+
+    .attendance-header-content {
+      position: relative;
+      z-index: 1;
+      padding: 24px 32px;
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      gap: 24px;
+      flex-wrap: wrap;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 20px;
+      }
+    }
+
+    .attendance-title-section {
+      flex: 1;
+      min-width: 300px;
+
+      .attendance-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .ant-typography-title-2 {
+        color: #ffffff;
+        font-weight: 700;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        letter-spacing: -0.5px;
+        margin-bottom: 8px;
+      }
+
+      .attendance-subtitle-main {
+        color: rgba(255, 255, 255, 0.95);
+        font-size: 18px;
+        font-weight: 600;
+        line-height: 1.4;
+        margin: 0;
+        display: block;
+      }
+
+      .attendance-subtitle-secondary {
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 14px;
+        line-height: 1.4;
+        margin: 0;
+        display: block;
+      }
+    }
+
+    .attendance-metrics {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      align-items: stretch;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+      }
+
+      @media (min-width: 769px) and (max-width: 1200px) {
+        flex-wrap: wrap;
+
+        .metric-card {
+          flex: 1 1 calc(50% - 6px);
+          min-width: 200px;
+        }
+      }
+
+      .metric-card.compact {
+        flex: 1;
+        min-width: 0;
+        height: 100%;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1),
+          0 2px 8px rgba(26, 148, 252, 0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+
+        .ant-card-body {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+
+        &::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 4px;
+          background: linear-gradient(90deg, #1a94fc, #0ea5e9, #1a94fc);
+          background-size: 200% 100%;
+          animation: gradient-shift 3s ease infinite;
+        }
+
+        &:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15),
+            0 4px 12px rgba(26, 148, 252, 0.25);
+          border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .ant-statistic-title {
+          font-size: 13px;
+          color: #1a94fc;
+          font-weight: 600;
+          letter-spacing: 0.3px;
+        }
+
+        .ant-statistic-content {
+          .ant-statistic-content-value {
+            color: #1a94fc;
+            font-weight: 700;
+          }
+
+          .ant-statistic-content-suffix {
+            color: #1a94fc;
+            font-weight: 600;
+          }
+        }
+
+        // Present card - chỉ dùng màu chữ xanh lá
+        &.present-card {
+          .ant-statistic-title {
+            color: #52c41a;
+          }
+
+          .ant-statistic-content-value {
+            color: #52c41a;
+          }
+        }
+
+        // Absent card - chỉ dùng màu chữ đỏ
+        &.absent-card {
+          .ant-statistic-title {
+            color: #ff4d4f;
+          }
+
+          .ant-statistic-content-value {
+            color: #ff4d4f;
+          }
+        }
+      }
+    }
+  }
+
+  @keyframes gradient-shift {
+    0%,
+    100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  // Table actions bar styling
+  .table-actions-bar {
+    margin-bottom: 16px;
+    padding: 16px;
+    background: #fafafa;
+    border-radius: 12px;
+    border: 1px solid #e8e8e8;
+
+    .search-wrapper {
+      .attendance-search {
+        .ant-input-group-wrapper {
+          .ant-input-wrapper {
+            .ant-input {
+              border: 1px solid #d9d9d9;
+              border-radius: 8px 0 0 8px;
+              padding: 10px 16px;
+              font-size: 14px;
+              transition: all 0.3s ease;
+              background: #ffffff;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+
+              &:focus,
+              &:hover {
+                border-color: #1a94fc;
+                box-shadow: 0 0 0 2px rgba(26, 148, 252, 0.1);
+              }
+            }
+
+            .ant-input-group-addon {
+              .ant-btn {
+                background: #178bfa !important;
+                border: none !important;
+                border-radius: 0 8px 8px 0;
+                color: white !important;
+                font-weight: 500;
+                transition: all 0.3s ease;
+                height: 100%;
+
+                &:hover {
+                  background: #40a9ff !important;
+                  transform: translateY(-1px);
+                  box-shadow: 0 4px 8px rgba(23, 139, 250, 0.3);
+                }
+
+                &:active {
+                  background: #178bfa !important;
+                  transform: translateY(0);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .mark-all-present-btn {
+      background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+      border: none;
+      color: white !important;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(82, 196, 26, 0.25);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+        border-color: transparent;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+        border-color: transparent;
+        color: white !important;
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .mark-all-absent-btn {
+      background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+      border: none;
+      color: white !important;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(255, 77, 79, 0.25);
+
+      &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+        border-color: transparent;
+        color: white !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+        border-color: transparent;
+        color: white !important;
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    // Nút Lưu điểm danh
+    .ant-btn-primary {
+      background: #178bfa;
+      border-color: #178bfa;
+
+      &:hover:not(:disabled) {
+        background: #40a9ff;
+        border-color: #40a9ff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(23, 139, 250, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        background: #178bfa;
+        border-color: #178bfa;
+        transform: translateY(0);
+      }
+    }
+  }
+
+  // Table styling - đồng bộ với slots
+  .custom-table {
+    .ant-table-thead > tr > th {
+      background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 16px;
+      border: none;
+    }
+
+    .ant-table-tbody > tr {
+      transition: all 0.3s ease;
+
+      &:hover > td {
+        background-color: #e6f7ff;
+      }
+
+      > td {
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+    }
+
+    .ant-table-tbody > tr:last-child > td {
+      border-bottom: none;
+    }
+  }
+
+  // Button styles giống slots
+  .ant-btn {
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &.ant-btn-primary {
+      box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+
+      &:hover {
+        box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+        transform: translateY(-1px);
+      }
     }
   }
 }
-
-

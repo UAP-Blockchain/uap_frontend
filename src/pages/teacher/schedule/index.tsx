@@ -185,9 +185,11 @@ const TeacherSchedule: React.FC = () => {
 
   const mapAttendance = useCallback(
     (slot: ScheduleItemDto): ClassInfo["attendance"] => {
-      if (slot.isPresent === true) return "attended";
-      if (slot.isPresent === false) return "absent";
-      if (slot.hasAttendance) return "not_yet";
+      // Logic giống student: dựa trên hasAttendance
+      // hasAttendance: true → đã điểm danh (có thể có isPresent = true/false/null)
+      // hasAttendance: false → chưa điểm danh
+      if (slot.hasAttendance === true) return "attended";
+      if (slot.hasAttendance === false) return "absent";
       return undefined;
     },
     []
@@ -276,7 +278,6 @@ const TeacherSchedule: React.FC = () => {
             Chưa điểm danh
           </Tag>
         );
-      case "not_yet":
       default:
         return null;
     }
@@ -595,12 +596,12 @@ const TeacherSchedule: React.FC = () => {
           </Col>
           <Col>
             <Space>
-              <Badge
-                color="#52c41a"
-                text="Đã tham gia - Sinh viên đã tham gia lớp học này"
-              />
-              <Badge color="#ff4d4f" text="Vắng mặt - Sinh viên đã vắng mặt" />
-              <Badge color="#faad14" text="Chưa có - Lớp học chưa bắt đầu" />
+              <Tag color="success" icon={<CheckCircleOutlined />}>
+                Đã điểm danh
+              </Tag>
+              <Tag color="error" icon={<CloseCircleOutlined />}>
+                Chưa điểm danh
+              </Tag>
             </Space>
           </Col>
         </Row>

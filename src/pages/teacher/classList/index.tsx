@@ -16,7 +16,6 @@ import {
   Spin,
   notification,
   Radio,
-  Tooltip,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -342,14 +341,16 @@ const TeacherClassStudentList: React.FC = () => {
       title: "STT",
       key: "index",
       width: 80,
-      align: "center",
-      render: (_: unknown, __: unknown, index: number) => index + 1,
+      align: "center" as const,
+      render: (_: unknown, __: unknown, index: number) => (
+        <span style={{ fontWeight: 500, fontSize: "15px" }}>{index + 1}</span>
+      ),
     },
     {
       title: "Ảnh",
       key: "avatar",
       width: 100,
-      align: "center",
+      align: "center" as const,
       render: (_: unknown, record: StudentAttendanceDetailDto) => (
         <Avatar
           size={64}
@@ -367,12 +368,17 @@ const TeacherClassStudentList: React.FC = () => {
       dataIndex: "studentCode",
       key: "studentCode",
       width: 120,
-      render: (code: string) => <Text strong>{code}</Text>,
+      render: (code: string) => (
+        <span style={{ fontWeight: 500, fontSize: "15px" }}>{code}</span>
+      ),
     },
     {
       title: "Họ và tên",
       dataIndex: "studentName",
       key: "studentName",
+      render: (name: string) => (
+        <span style={{ fontSize: "14px" }}>{name}</span>
+      ),
     },
     {
       title: "Điểm danh",
@@ -472,21 +478,15 @@ const TeacherClassStudentList: React.FC = () => {
             Quay lại lịch giảng dạy
           </Button>
 
-          <Row
-            align="middle"
-            justify="space-between"
-            style={{ marginBottom: 24 }}
-          >
-            <Col>
-              <Space direction="vertical" size="small">
-                <Title level={2} style={{ margin: 0, color: "#1890ff" }}>
-                  Điểm danh -{" "}
-                  {slotAttendance?.classCode || state.courseCode || "Lớp học"}
+          <div className="attendance-header">
+            <div className="attendance-header-content">
+              <div className="attendance-title-section">
+                <Text className="attendance-label">ĐIỂM DANH</Text>
+                <Title level={2} style={{ margin: 0 }}>
                   {slotAttendance?.hasAttendance && (
                     <Tag
                       color="success"
                       style={{
-                        marginLeft: 12,
                         fontSize: 14,
                         padding: "2px 12px",
                       }}
@@ -495,73 +495,116 @@ const TeacherClassStudentList: React.FC = () => {
                     </Tag>
                   )}
                 </Title>
-                <Text type="secondary" style={{ fontSize: 16 }}>
-                  {slotAttendance?.subjectName ||
-                    state.courseName ||
-                    state.className ||
-                    "Class"}
-                  {slotAttendance?.date && (
-                    <> • {dayjs(slotAttendance.date).format("DD/MM/YYYY")}</>
-                  )}
-                  {slotAttendance?.timeSlotName && (
-                    <> • {slotAttendance.timeSlotName}</>
-                  )}
-                </Text>
-              </Space>
-            </Col>
-            <Col>
-              <Space>
+                <Space direction="vertical" size={4}>
+                  <Text className="attendance-subtitle-main">
+                    {slotAttendance?.subjectName ||
+                      state.courseName ||
+                      state.className ||
+                      "Class"}
+                  </Text>
+                  <Text className="attendance-subtitle-secondary">
+                    {slotAttendance?.date && (
+                      <>{dayjs(slotAttendance.date).format("DD/MM/YYYY")}</>
+                    )}
+                    {slotAttendance?.date && slotAttendance?.timeSlotName && (
+                      <> • </>
+                    )}
+                    {slotAttendance?.timeSlotName && (
+                      <>{slotAttendance.timeSlotName}</>
+                    )}
+                  </Text>
+                </Space>
+              </div>
+              <div className="attendance-metrics">
+                <Card className="metric-card compact">
+                  <Statistic
+                    title="Tổng số sinh viên"
+                    value={slotAttendance?.totalStudents || 0}
+                    prefix={<TeamOutlined style={{ color: "#1a94fc" }} />}
+                  />
+                </Card>
+                <Card className="metric-card compact">
+                  <Statistic
+                    title="Tỷ lệ điểm danh"
+                    value={slotAttendance?.attendanceRate || 0}
+                    suffix="%"
+                    prefix={<BookOutlined style={{ color: "#1a94fc" }} />}
+                  />
+                </Card>
+                <Card className="metric-card compact present-card">
+                  <Statistic
+                    title="Có mặt"
+                    value={slotAttendance?.presentCount || 0}
+                    prefix={
+                      <CheckCircleOutlined style={{ color: "#52c41a" }} />
+                    }
+                  />
+                </Card>
+                <Card className="metric-card compact absent-card">
+                  <Statistic
+                    title="Vắng"
+                    value={slotAttendance?.absentCount || 0}
+                    prefix={
+                      <CloseCircleOutlined style={{ color: "#ff4d4f" }} />
+                    }
+                  />
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="table-actions-bar">
+          <Row gutter={[12, 12]} align="middle">
+            <Col xs={24} sm={12} md={10}>
+              <div className="search-wrapper">
                 <Search
                   placeholder="Tìm kiếm sinh viên..."
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  style={{ width: 250 }}
+                  onSearch={(value) => setSearchText(value)}
+                  className="attendance-search"
                   allowClear
+                  enterButton
+                  size="large"
                 />
-                <Tooltip
-                  title={
-                    slotAttendance?.hasAttendance
-                      ? "Đã điểm danh. Vui lòng chỉnh sửa từng sinh viên và cập nhật."
-                      : "Đánh dấu tất cả sinh viên có mặt"
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={14}>
+              <Space wrap size="middle">
+                <Button
+                  onClick={handleMarkAllPresent}
+                  loading={savingAttendance}
+                  disabled={
+                    !state.slotId ||
+                    !slotAttendance ||
+                    slotAttendance.hasAttendance
                   }
+                  className="mark-all-present-btn"
+                  size="large"
                 >
-                  <Button
-                    onClick={handleMarkAllPresent}
-                    loading={savingAttendance}
-                    disabled={
-                      !state.slotId ||
-                      !slotAttendance ||
-                      slotAttendance.hasAttendance
-                    }
-                  >
-                    Tất cả có mặt
-                  </Button>
-                </Tooltip>
-                <Tooltip
-                  title={
-                    slotAttendance?.hasAttendance
-                      ? "Đã điểm danh. Vui lòng chỉnh sửa từng sinh viên và cập nhật."
-                      : "Đánh dấu tất cả sinh viên vắng"
+                  Tất cả có mặt
+                </Button>
+                <Button
+                  onClick={handleMarkAllAbsent}
+                  loading={savingAttendance}
+                  disabled={
+                    !state.slotId ||
+                    !slotAttendance ||
+                    slotAttendance.hasAttendance
                   }
+                  className="mark-all-absent-btn"
+                  size="large"
                 >
-                  <Button
-                    onClick={handleMarkAllAbsent}
-                    loading={savingAttendance}
-                    disabled={
-                      !state.slotId ||
-                      !slotAttendance ||
-                      slotAttendance.hasAttendance
-                    }
-                  >
-                    Tất cả vắng
-                  </Button>
-                </Tooltip>
+                  Tất cả vắng
+                </Button>
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}
                   loading={savingAttendance}
                   onClick={handleSaveAttendance}
                   disabled={!state.slotId || !slotAttendance}
+                  size="large"
                 >
                   {slotAttendance?.hasAttendance
                     ? "Cập nhật điểm danh"
@@ -571,51 +614,6 @@ const TeacherClassStudentList: React.FC = () => {
             </Col>
           </Row>
         </div>
-
-        <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-          <Col xs={12} sm={8}>
-            <Card>
-              <Statistic
-                title="Tổng số sinh viên"
-                value={slotAttendance?.totalStudents || 0}
-                prefix={<TeamOutlined style={{ color: "#1890ff" }} />}
-              />
-            </Card>
-          </Col>
-          <Col xs={12} sm={8}>
-            <Card>
-              <Statistic
-                title="Tỷ lệ điểm danh"
-                value={slotAttendance?.attendanceRate || 0}
-                suffix="%"
-                prefix={<BookOutlined style={{ color: "#52c41a" }} />}
-              />
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card>
-              <Space direction="vertical" size="small">
-                <div>
-                  <Tag color="success">
-                    Có mặt: {slotAttendance?.presentCount || 0}
-                  </Tag>
-                  <Tag color="error">
-                    Vắng: {slotAttendance?.absentCount || 0}
-                  </Tag>
-                </div>
-                {slotAttendance?.hasAttendance &&
-                  slotAttendance?.recordedAt && (
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Đã điểm danh:{" "}
-                      {dayjs(slotAttendance.recordedAt).format(
-                        "DD/MM/YYYY HH:mm"
-                      )}
-                    </Text>
-                  )}
-              </Space>
-            </Card>
-          </Col>
-        </Row>
 
         <Card className="student-table-card">
           <Spin spinning={loading}>
@@ -629,11 +627,11 @@ const TeacherClassStudentList: React.FC = () => {
                 showSizeChanger: true,
                 showQuickJumper: true,
                 showTotal: (t, r) => `${r[0]}-${r[1]} của ${t} sinh viên`,
+                position: ["bottomRight"],
+                pageSizeOptions: ["10", "20", "50", "100"],
               }}
               scroll={{ x: 1000 }}
-              size="middle"
-              className="student-list-table"
-              bordered
+              className="custom-table"
             />
           </Spin>
         </Card>
