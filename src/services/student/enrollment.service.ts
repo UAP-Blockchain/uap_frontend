@@ -8,6 +8,8 @@ export interface EnrollmentResponse {
   success: boolean;
   message: string;
   enrollmentId?: string;
+  errors?: string[];
+  warnings?: string[];
 }
 
 export const createEnrollment = async (

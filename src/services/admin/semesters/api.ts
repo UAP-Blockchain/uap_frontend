@@ -71,3 +71,6 @@ export const deleteSemesterApi = async (id: string): Promise<void> => {
   await api.delete(`${SEMESTER_ENDPOINT}/${id}`);
 };
 
+// Re-export SemesterDto type for admin modules that need it
+export type { SemesterDto } from "../../../types/Semester";
+

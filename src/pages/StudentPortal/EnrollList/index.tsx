@@ -168,38 +168,80 @@ const EnrollList: React.FC = () => {
     void loadData();
   }, [location.state]);
 
+  /**
+   * Lấy nhãn thứ tiếng Việt từ ngày
+   */
+  const getVietnameseDayLabel = (date: string) => {
+    const dayIndex = dayjs(date).day(); // 0-6 (Sun-Sat)
+    const labels = [
+      "Chủ nhật",
+      "Thứ 2",
+      "Thứ 3",
+      "Thứ 4",
+      "Thứ 5",
+      "Thứ 6",
+      "Thứ 7",
+    ];
+    return {
+      label: labels[dayIndex] ?? "",
+      order: dayIndex === 0 ? 7 : dayIndex, // Cho Chủ nhật xuống cuối
+    };
+  };
+
+  /**
+   * Từ danh sách slot, rút ra pattern lặp theo tuần: "Thứ 3 - Slot 3", "Thứ 5 - Slot 3", ...
+   */
+  const getWeeklyPatterns = (
+    slots: SlotDto[]
+  ): { key: string; text: string; order: number }[] => {
+    const map: Record<string, { text: string; order: number }> = {};
+
+    slots.forEach((slot) => {
+      if (!slot.date || !slot.timeSlotName) return;
+
+      const { label: dayLabel, order } = getVietnameseDayLabel(slot.date);
+      const slotName = slot.timeSlotName;
+      const key = `${order}-${slotName}`;
+
+      if (!map[key]) {
+        map[key] = {
+          text: `${dayLabel} - ${slotName}`,
+          order,
+        };
+      }
+    });
+
+    return Object.entries(map)
+      .map(([key, value]) => ({ key, text: value.text, order: value.order }))
+      .sort((a, b) => a.order - b.order || a.text.localeCompare(b.text));
+  };
+
+  /**
+   * Chuỗi tóm tắt lịch học: "Thứ 3 - Slot 3, Thứ 5 - Slot 3"
+   */
   const formatSlotsToSchedule = (slots: SlotDto[]): string => {
     if (!slots || slots.length === 0) return "Chưa có lịch học";
 
-    // Group by day and time
-    const grouped = slots.reduce((acc, slot) => {
-      const date = dayjs(slot.date);
-      const dayName = date.format("dddd");
-      const timeRange =
-        slot.startTime && slot.endTime
-          ? `${slot.startTime.substring(0, 5)} - ${slot.endTime.substring(
-              0,
-              5
-            )}`
-          : slot.timeSlotName || "";
+    const patterns = getWeeklyPatterns(slots);
+    if (!patterns.length) return "Chưa có lịch học";
 
-      const key = `${dayName}-${timeRange}`;
-      if (!acc[key]) {
-        acc[key] = { day: dayName, time: timeRange, count: 0 };
-      }
-      acc[key].count++;
-      return acc;
-    }, {} as Record<string, { day: string; time: string; count: number }>);
-
-    return Object.values(grouped)
-      .map((item) => `${item.day}: ${item.time}`)
-      .join(", ");
+    return patterns.map((p) => p.text).join(", ");
   };
 
   const handleRegister = async (classId: string) => {
     setRegistering(classId);
     try {
       const response = await createEnrollment({ classId });
+
+      // Nếu backend trả về cảnh báo không blocking, có thể hiển thị thêm
+      if (response.warnings && response.warnings.length > 0) {
+        notification.info({
+          message: "Lưu ý khi đăng ký lớp",
+          description: response.warnings.join("; "),
+          placement: "topRight",
+          duration: 6,
+        });
+      }
 
       // Show success notification
       notification.success({
@@ -212,8 +254,11 @@ const EnrollList: React.FC = () => {
         icon: <CheckCircleOutlined style={{ color: "#10b981" }} />,
       });
 
-      // Also show message for consistency
-      message.success("Đăng ký thành công!");
+      // Also show message for consistency (ưu tiên message từ backend)
+      message.success(
+        response.message ||
+          "Yêu cầu đăng ký của bạn đã được gửi và đang chờ được duyệt bởi quản trị viên."
+      );
 
       // Update the class to show enrolled status
       const updatedClasses = classes.map((cls) => {
@@ -243,9 +288,17 @@ const EnrollList: React.FC = () => {
         setClasses(refreshedClasses);
       }, 1000);
     } catch (err: unknown) {
+      const apiError = (
+        err as {
+          response?: { data?: { message?: string; errors?: string[] } };
+          message?: string;
+        }
+      )?.response?.data;
+
       const errorMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data
-          ?.message ||
+        (apiError?.errors && apiError.errors.length > 0
+          ? apiError.errors.join("; ")
+          : apiError?.message) ||
         (err as { message?: string })?.message ||
         "Không thể đăng ký lớp học. Vui lòng thử lại sau.";
 
@@ -447,29 +500,12 @@ const EnrollList: React.FC = () => {
                                 type="secondary"
                                 style={{ fontSize: "13px" }}
                               >
-                                Chi tiết lịch học
+                                Số ca học
                               </Text>
                               <div>
-                                {cls.slots.slice(0, 3).map((slot, idx) => (
-                                  <div key={idx} style={{ marginTop: 4 }}>
-                                    <Text style={{ fontSize: "13px" }}>
-                                      {dayjs(slot.date).format("DD/MM/YYYY")} -{" "}
-                                      {slot.timeSlotName ||
-                                        `${slot.startTime?.substring(
-                                          0,
-                                          5
-                                        )} - ${slot.endTime?.substring(0, 5)}`}
-                                    </Text>
-                                  </div>
-                                ))}
-                                {cls.slots.length > 3 && (
-                                  <Text
-                                    type="secondary"
-                                    style={{ fontSize: "12px" }}
-                                  >
-                                    và {cls.slots.length - 3} buổi học khác
-                                  </Text>
-                                )}
+                                <Text style={{ fontSize: "13px" }}>
+                                  {cls.slots.length} Slot
+                                </Text>
                               </div>
                             </div>
                           </div>

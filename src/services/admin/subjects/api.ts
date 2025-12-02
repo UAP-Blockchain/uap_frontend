@@ -15,7 +15,7 @@ export interface CreateSubjectRequest {
   prerequisites?: string;
 }
 
-export interface UpdateSubjectRequest extends CreateSubjectRequest {}
+export type UpdateSubjectRequest = CreateSubjectRequest;
 
 const normalizeItems = <T>(payload: {
   data?: T[];
@@ -87,5 +87,5 @@ export const deleteSubjectApi = async (id: string): Promise<void> => {
   await api.delete(`/Subjects/${id}`);
 };
 
-
-
+// Re-export SubjectDto type for admin modules that need it
+export type { SubjectDto } from "../../../types/Subject";

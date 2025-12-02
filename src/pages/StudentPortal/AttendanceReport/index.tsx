@@ -121,7 +121,7 @@ const AttendanceReport: React.FC = () => {
       setActiveSemesterKey(undefined);
       return;
     }
-    
+
     // In accordion mode, key is a string
     const keyString = typeof key === "string" ? key : Array.isArray(key) && key.length > 0 ? String(key[0]) : undefined;
     
@@ -299,12 +299,12 @@ const AttendanceReport: React.FC = () => {
           <Card className="sidebar-card" loading={isLoading}>
             <div className="semester-list">
               {summary && summary.semesterSummaries.length > 0 ? (
-                <Collapse
+              <Collapse
                   accordion
-                  activeKey={activeSemesterKey}
-                  onChange={handleSemesterChange}
-                  ghost
-                >
+                activeKey={activeSemesterKey}
+                onChange={handleSemesterChange}
+                ghost
+              >
                   {summary.semesterSummaries.map((semSummary) => {
                     const semesterData = semesterDetails[semSummary.semesterNumber];
                     const isLoading = loadingSemesters[semSummary.semesterNumber] ?? false;
@@ -312,37 +312,37 @@ const AttendanceReport: React.FC = () => {
                       ? getFilteredSubjects(semesterData.subjects)
                       : [];
 
-                    return (
+                  return (
                       <Panel header={semSummary.semesterName} key={String(semSummary.semesterNumber)}>
-                        {isLoading ? (
-                          <Spin />
+                      {isLoading ? (
+                        <Spin />
                         ) : filteredSubjects.length === 0 ? (
-                          <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description="Chưa có môn học"
-                          />
-                        ) : (
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="Chưa có môn học"
+                        />
+                      ) : (
                           filteredSubjects.map((subject) => (
-                            <div
-                              key={subject.subjectId}
-                              className={`course-item ${
+                          <div
+                            key={subject.subjectId}
+                            className={`course-item ${
                                 selectedSubjectId === subject.subjectId ? "active" : ""
-                              }`}
-                              onClick={() => handleSubjectClick(subject)}
-                            >
-                              <Text strong className="course-code">
-                                {subject.subjectCode}
-                              </Text>
-                              <Text className="course-name">
-                                {subject.subjectName}
-                              </Text>
-                            </div>
-                          ))
-                        )}
-                      </Panel>
-                    );
-                  })}
-                </Collapse>
+                            }`}
+                            onClick={() => handleSubjectClick(subject)}
+                          >
+                            <Text strong className="course-code">
+                              {subject.subjectCode}
+                            </Text>
+                            <Text className="course-name">
+                              {subject.subjectName}
+                            </Text>
+                          </div>
+                        ))
+                      )}
+                    </Panel>
+                  );
+                })}
+              </Collapse>
               ) : (
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
