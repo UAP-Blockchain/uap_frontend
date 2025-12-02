@@ -56,8 +56,8 @@ import {
   approveCredentialApi,
   rejectCredentialApi,
 } from "../../../services/admin/credentials/api";
-import type { SemesterDto } from "../../../types/Semester";
-import type { SubjectDto } from "../../../types/Subject";
+import type { SemesterDto } from "../../../services/admin/semesters/api";
+import type { SubjectDto } from "../../../services/admin/subjects/api";
 import dayjs from "dayjs";
 import "./index.scss";
 
@@ -594,7 +594,7 @@ const CredentialsManagement: React.FC = () => {
             <Col xs={12} sm={8} md={6}>
               <div className="filter-field status-select">
                 <label>Trạng thái</label>
-                <Select
+                <Select<string>
                   placeholder="Trạng thái"
                   style={{ width: "100%" }}
                   value={statusFilter}
@@ -612,7 +612,7 @@ const CredentialsManagement: React.FC = () => {
             <Col xs={12} sm={8} md={6}>
               <div className="filter-field type-select">
                 <label>Loại chứng chỉ</label>
-                <Select
+                <Select<string>
                   placeholder="Loại"
                   style={{ width: "100%" }}
                   value={typeFilter}
@@ -712,7 +712,7 @@ const CredentialsManagement: React.FC = () => {
                   { required: true, message: "Vui lòng chọn loại chứng chỉ!" },
                 ]}
               >
-                <Select placeholder="Chọn loại chứng chỉ">
+                <Select<string> placeholder="Chọn loại chứng chỉ">
                   <Option value="Completion">Hoàn thành</Option>
                   <Option value="Subject">Môn học</Option>
                   <Option value="Semester">Học kỳ</Option>
