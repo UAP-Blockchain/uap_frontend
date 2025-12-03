@@ -200,12 +200,14 @@ const SiderComponent: React.FC<SiderProps> = ({ collapsed }) => {
           )}
 
           {/* Tools Section - Filtered by user permissions */}
-          {!collapsed && filteredToolsNavItems.length > 0 && (
+          {filteredToolsNavItems.length > 0 && (
             <>
-              <div className="menu-divider" />
-              <div className="sidebar-section-title">
-                {SECTION_TITLES.TOOLS}
-              </div>
+              {!collapsed && <div className="menu-divider" />}
+              {!collapsed && (
+                <div className="sidebar-section-title">
+                  {SECTION_TITLES.TOOLS}
+                </div>
+              )}
               <Menu
                 theme="light"
                 mode="inline"
