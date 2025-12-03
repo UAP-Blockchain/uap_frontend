@@ -1,10 +1,11 @@
 import { Breadcrumb, Layout } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { Link, useLocation } from "react-router-dom";
 import HeaderComponent from "./header";
 import "./index.scss";
 import SiderComponent from "./siderAdmin";
+import { getUserByIdApi } from "../services/admin/users/api";
 
 const { Content } = Layout;
 
@@ -23,6 +24,55 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   const [collapsed, setCollapsed] = useState(true);
   const location = useLocation();
   const pathname = location.pathname;
+  const [userNameMap, setUserNameMap] = useState<Record<string, string>>({});
+  const fetchingRef = useRef<Set<string>>(new Set());
+
+  // Helper function to check if a string looks like a UUID
+  const isUUID = (str: string): boolean => {
+    // UUID pattern: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 chars)
+    // or xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx (32 chars, no dashes)
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const uuidPatternNoDash = /^[0-9a-f]{32}$/i;
+    return uuidPattern.test(str) || uuidPatternNoDash.test(str);
+  };
+
+  // Fetch user name when userId is detected in path
+  useEffect(() => {
+    const paths = pathname?.split("/").filter(Boolean) || [];
+
+    // Check if path is /admin/users/:userId
+    if (paths.length >= 3 && paths[0] === "admin" && paths[1] === "users") {
+      const userId = paths[2];
+
+      // Check if it's a UUID and not already fetched or currently fetching
+      if (
+        isUUID(userId) &&
+        !userNameMap[userId] &&
+        !fetchingRef.current.has(userId)
+      ) {
+        fetchingRef.current.add(userId);
+
+        getUserByIdApi(userId)
+          .then((user) => {
+            setUserNameMap((prev) => ({
+              ...prev,
+              [userId]: user.fullName || user.email || userId,
+            }));
+            fetchingRef.current.delete(userId);
+          })
+          .catch((error) => {
+            console.error("Failed to fetch user for breadcrumb:", error);
+            // Fallback to userId if fetch fails
+            setUserNameMap((prev) => ({
+              ...prev,
+              [userId]: userId,
+            }));
+            fetchingRef.current.delete(userId);
+          });
+      }
+    }
+  }, [pathname, userNameMap]);
 
   // Generate default breadcrumb items based on the current path if not provided
   const generateDefaultBreadcrumbs = () => {
@@ -40,6 +90,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 
     // Route name mapping (Vietnamese)
     const routeNameMap: Record<string, string> = {
+      admin: "Quản trị",
       "student-portal": "Cổng sinh viên",
       dashboard: "Bảng điều khiển",
       roadmap: "Lộ trình học tập",
@@ -56,6 +107,16 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       instructor: "Chi tiết giảng viên",
       "credential-detail": "Chi tiết chứng chỉ",
       "my-credentials": "Chứng chỉ của tôi",
+      users: "Người dùng",
+      "bulk-register": "Đăng ký hàng loạt",
+      register: "Đăng ký",
+      curriculums: "Khung chương trình",
+      subjects: "Môn học",
+      semesters: "Học kì",
+      slots: "Ca học",
+      classes: "Lớp học",
+      teachers: "Giảng viên",
+      students: "Sinh viên",
     };
 
     // For student-portal routes, create breadcrumb with "Cổng sinh viên" as first item
@@ -101,9 +162,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     // Default breadcrumb generation for other routes
     return paths.map((path, index) => {
       const href = "/" + paths.slice(0, index + 1).join("/");
-      const pathTitle =
-        path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
-      const displayName = pathTitle.replace(/(quan-li|quản-lý)/i, "Quản lý");
+
+      // Check if this is a userId (UUID) and we have the user name
+      let displayName: string;
+      if (isUUID(path) && userNameMap[path]) {
+        displayName = userNameMap[path];
+      } else if (routeNameMap[path]) {
+        displayName = routeNameMap[path];
+      } else {
+        // Default formatting
+        displayName =
+          path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+      }
+
       const isLast = index === paths.length - 1;
 
       return {
