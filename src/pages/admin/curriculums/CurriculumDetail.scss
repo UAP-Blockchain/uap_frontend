@@ -62,19 +62,32 @@
           }
 
           .semester-table {
-            .ant-table-thead > tr > th {
-              background: #f8f9ff;
-              font-weight: 600;
-              color: #0f172a;
-              border-bottom: 2px solid #eef2ff;
-            }
+            &.custom-table {
+              .ant-table-thead > tr > th {
+                background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+                color: white;
+                font-weight: 600;
+                font-size: 14px;
+                padding: 16px;
+                border: none;
+              }
 
-            .ant-table-tbody > tr:hover > td {
-              background: #f8f9ff;
-            }
+              .ant-table-tbody > tr {
+                transition: all 0.3s ease;
 
-            .ant-table-tbody > tr > td {
-              border-bottom: 1px solid #f1f5f9;
+                &:hover > td {
+                  background-color: #e6f7ff;
+                }
+
+                > td {
+                  padding: 16px;
+                  border-bottom: 1px solid #f0f0f0;
+                }
+              }
+
+              .ant-table-tbody > tr:last-child > td {
+                border-bottom: none;
+              }
             }
           }
         }

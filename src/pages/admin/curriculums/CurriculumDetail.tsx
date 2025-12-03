@@ -319,7 +319,7 @@ const CurriculumDetailPage: React.FC = () => {
                     rowKey="id"
                     pagination={false}
                     size="middle"
-                    className="semester-table"
+                    className="semester-table custom-table"
                   />
                 </div>
               ))}
