@@ -431,7 +431,7 @@ const SubjectsManagement: React.FC = () => {
             dataSource={subjects}
             loading={loading}
             rowKey="id"
-            className="subjects-table"
+            className="subjects-table custom-table"
             pagination={{
               current: pagination.pageNumber,
               pageSize: pagination.pageSize,

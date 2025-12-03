@@ -174,6 +174,36 @@
       background: #f0f5ff;
     }
 
+    // Custom table styling (like slots)
+    .custom-table {
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 16px;
+        border: none;
+        text-transform: none;
+      }
+
+      .ant-table-tbody > tr {
+        transition: all 0.3s ease;
+
+        &:hover > td {
+          background-color: #e6f7ff;
+        }
+
+        > td {
+          padding: 16px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+      }
+
+      .ant-table-tbody > tr:last-child > td {
+        border-bottom: none;
+      }
+    }
+
     .subject-info {
       &.clickable {
         cursor: pointer;
@@ -451,7 +481,9 @@
   }
 
   @media (max-width: 768px) {
-    padding: 16px;
+    & {
+      padding: 16px;
+    }
 
     .overview-header {
       flex-direction: column;

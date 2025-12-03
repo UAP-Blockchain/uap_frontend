@@ -609,7 +609,7 @@ const SemestersManagement: React.FC = () => {
             dataSource={filteredSemesters}
             loading={loading}
             rowKey="id"
-            className="semesters-table"
+            className="semesters-table custom-table"
             pagination={{
               current: pagination.pageNumber,
               pageSize: pagination.pageSize,
