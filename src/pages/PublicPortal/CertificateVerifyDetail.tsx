@@ -153,7 +153,7 @@ const CertificateVerifyDetail: React.FC = () => {
       <div className="results-header">
         <Button
           icon={<ArrowLeftOutlined />}
-          onClick={() => navigate("/public-portal/verify")}
+          onClick={() => navigate("/verify")}
         >
           Quay lại cổng xác thực
         </Button>
