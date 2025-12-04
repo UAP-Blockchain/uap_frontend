@@ -118,8 +118,17 @@
           }
 
           &.total {
-            background: #fff7e6;
-            color: #ad6800;
+            background: #1689eb;
+            color: #ffffff;
+            box-shadow: 0 6px 16px rgba(22, 137, 235, 0.35);
+
+            .value {
+              color: #ffffff;
+            }
+
+            .label {
+              color: rgba(255, 255, 255, 0.9);
+            }
           }
 
           &.students {
@@ -143,17 +152,33 @@
     .subject-descriptions {
       .ant-descriptions-item-label {
         font-weight: 600;
-        color: #4b5563;
-        background: #f8fafc;
+        color: #2563eb !important;
+        background: #f4f7ff !important;
+        border-right: 1px solid #dbeafe !important;
       }
 
       .ant-descriptions-item-content {
         color: #111827;
+        background: #ffffff;
       }
 
       .subject-description {
         margin: 0;
         color: #475467;
+      }
+
+      .ant-tag {
+        border-radius: 999px;
+        border: none;
+        font-size: 11px;
+        padding: 2px 10px;
+        background: #e0edff;
+        color: #1d4ed8;
+
+        &.ant-tag-default {
+          background: #f3f4f6;
+          color: #6b7280;
+        }
       }
     }
 
@@ -252,8 +277,8 @@
     box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
 
     .classes-header {
-      margin-bottom: 16px;
-      padding-bottom: 12px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
       border-bottom: 1px solid #eef1f7;
 
       .classes-title {
@@ -261,6 +286,35 @@
         font-size: 18px;
         font-weight: 600;
         color: #0f172a;
+      }
+    }
+
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 14px 16px;
+        border: none;
+        text-transform: none;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .ant-table-tbody > tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: #e6f7ff;
+        }
+      }
+
+      .ant-table-tbody > tr:last-child > td {
+        border-bottom: none;
       }
     }
   }
@@ -290,6 +344,93 @@
       border: 1px solid #fcd34d;
       color: #b45309;
     }
+
+    .grade-component-name {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+
+      &.child {
+        color: #4b5563;
+      }
+
+      .child-prefix {
+        color: #9ca3af;
+        font-size: 13px;
+      }
+    }
+
+    .grade-weight-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+
+      .main-weight {
+        font-weight: 600;
+        color: #111827;
+      }
+
+      .child-weight-hint {
+        font-size: 11px;
+        color: #6b7280;
+      }
+    }
+
+    .main-weight {
+      font-weight: 600;
+      color: #111827;
+    }
+  }
+
+  // Match table styling with admin subjects list
+  .grade-components-card {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+        color: #ffffff;
+        font-weight: 600;
+        font-size: 14px;
+        padding: 14px 16px;
+        border: none;
+        text-transform: none;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+
+      .ant-table-tbody > tr {
+        transition: all 0.2s ease;
+
+        &:hover > td {
+          background-color: #e6f7ff;
+        }
+      }
+
+      .ant-table-tbody > tr:last-child > td {
+        border-bottom: none;
+      }
+
+      // Child rows (các thành phần được chia nhỏ)
+      .ant-table-row-level-1 > td {
+        background-color: #f9fbff;
+      }
+
+      .ant-table-row-level-1:hover > td {
+        background-color: #e0f2ff;
+      }
+    }
+
+    .grade-weight-value {
+      font-weight: 600;
+      color: #111827;
+
+      &.child {
+        color: #1d4ed8;
+      }
+    }
   }
 
   .delete-warning-text {
@@ -300,23 +441,6 @@
 
   .classes-card,
   .grade-components-card {
-    .ant-table-thead > tr > th {
-      background: #f8fafc;
-      color: #4b5563;
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 11px;
-      border-bottom: 1px solid #e4e9f2;
-    }
-
-    .ant-table-tbody > tr > td {
-      border-bottom: 1px solid #f1f5f9;
-    }
-
-    .ant-table-tbody > tr:hover > td {
-      background: #f0f5ff;
-    }
-
     .credit-tag,
     .semester-tag {
       border-radius: 999px;

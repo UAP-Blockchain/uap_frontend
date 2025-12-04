@@ -497,23 +497,23 @@ const TeacherClassStudentList: React.FC = () => {
                 </Title>
                 <Space direction="vertical" size={4}>
                   <Text className="attendance-subtitle-main">
-                    {slotAttendance?.subjectName ||
-                      state.courseName ||
-                      state.className ||
-                      "Class"}
+                  {slotAttendance?.subjectName ||
+                    state.courseName ||
+                    state.className ||
+                    "Class"}
                   </Text>
                   <Text className="attendance-subtitle-secondary">
-                    {slotAttendance?.date && (
+                  {slotAttendance?.date && (
                       <>{dayjs(slotAttendance.date).format("DD/MM/YYYY")}</>
                     )}
                     {slotAttendance?.date && slotAttendance?.timeSlotName && (
                       <> • </>
-                    )}
-                    {slotAttendance?.timeSlotName && (
+                  )}
+                  {slotAttendance?.timeSlotName && (
                       <>{slotAttendance.timeSlotName}</>
-                    )}
-                  </Text>
-                </Space>
+                  )}
+                </Text>
+              </Space>
               </div>
               <div className="attendance-metrics">
                 <Card className="metric-card compact">
@@ -572,32 +572,32 @@ const TeacherClassStudentList: React.FC = () => {
             </Col>
             <Col xs={24} sm={12} md={14}>
               <Space wrap size="middle">
-                <Button
-                  onClick={handleMarkAllPresent}
-                  loading={savingAttendance}
-                  disabled={
-                    !state.slotId ||
-                    !slotAttendance ||
-                    slotAttendance.hasAttendance
-                  }
+                  <Button
+                    onClick={handleMarkAllPresent}
+                    loading={savingAttendance}
+                    disabled={
+                      !state.slotId ||
+                      !slotAttendance ||
+                      slotAttendance.hasAttendance
+                    }
                   className="mark-all-present-btn"
                   size="large"
-                >
-                  Tất cả có mặt
-                </Button>
-                <Button
-                  onClick={handleMarkAllAbsent}
-                  loading={savingAttendance}
-                  disabled={
-                    !state.slotId ||
-                    !slotAttendance ||
-                    slotAttendance.hasAttendance
-                  }
+                  >
+                    Tất cả có mặt
+                  </Button>
+                  <Button
+                    onClick={handleMarkAllAbsent}
+                    loading={savingAttendance}
+                    disabled={
+                      !state.slotId ||
+                      !slotAttendance ||
+                      slotAttendance.hasAttendance
+                    }
                   className="mark-all-absent-btn"
                   size="large"
-                >
-                  Tất cả vắng
-                </Button>
+                  >
+                    Tất cả vắng
+                  </Button>
                 <Button
                   type="primary"
                   icon={<SaveOutlined />}

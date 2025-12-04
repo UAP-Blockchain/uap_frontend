@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   Button,
   Card,
@@ -17,12 +23,9 @@ import {
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
 import {
-  AppstoreOutlined,
   ArrowLeftOutlined,
   BookOutlined,
-  CalendarOutlined,
   EditOutlined,
-  TeamOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -36,23 +39,81 @@ import {
 } from "../../../services/admin/subjects/api";
 import { fetchClassesApi } from "../../../services/admin/classes/api";
 import {
-  fetchGradeComponentsApi,
-  createGradeComponentApi,
-  updateGradeComponentApi,
-  deleteGradeComponentApi,
+  fetchGradeComponentTreeApi,
+  createSubjectGradeComponentsApi,
 } from "../../../services/admin/gradeComponents/api";
 import type {
   GradeComponentDto,
-  CreateGradeComponentRequest,
+  CreateSubjectGradeComponentsRequest,
 } from "../../../types/GradeComponent";
 import "./SubjectDetail.scss";
 
 const { Title, Text, Paragraph } = Typography;
 const { Option } = Select;
 
+interface GradeComponentFormNode {
+  name: string;
+  weightPercent: number;
+  /**
+   * Số lượng thành phần con tự động sinh (Mini Test 1, 2, 3, ...)
+   */
+  childCount?: number;
+}
+
+interface GradeConfigFormValues {
+  components: GradeComponentFormNode[];
+}
+
+const mapDtoToFormNode = (node: GradeComponentDto): GradeComponentFormNode => ({
+  name: node.name,
+  weightPercent: node.weightPercent,
+  childCount: node.subComponents?.length ?? 0,
+});
+
+const mapFormNodeToCreateItem = (
+  node: GradeComponentFormNode
+): CreateSubjectGradeComponentsRequest["components"][number] => {
+  const name = node.name.trim();
+  const weightPercent = Number(node.weightPercent) || 0;
+  const childCount =
+    node.childCount && node.childCount > 0 ? node.childCount : 0;
+
+  if (!childCount) {
+    return {
+      name,
+      weightPercent,
+      subComponents: [],
+    };
+  }
+
+  // Chia đều trọng số cho các thành phần con, đảm bảo tổng đúng bằng trọng số cha
+  const base = Math.floor(weightPercent / childCount);
+  const remainder = weightPercent - base * childCount;
+
+  const subComponents = Array.from({ length: childCount }, (_, index) => {
+    const extra = index < remainder ? 1 : 0;
+    return {
+      name: `${name} ${index + 1}`,
+      weightPercent: base + extra,
+      subComponents: [] as never[],
+    };
+  });
+
+  return {
+    name,
+    weightPercent,
+    subComponents,
+  };
+};
+
+const hasGradesInNode = (node: GradeComponentDto): boolean =>
+  (node.gradeCount ?? 0) > 0 ||
+  (node.subComponents?.some((child) => hasGradesInNode(child)) ?? false);
+
 const SubjectDetail: React.FC = () => {
   const navigate = useNavigate();
-  const { subjectCode } = useParams<{ subjectCode: string }>();
+  // subjectCode param not needed here because we load subject by id from query string
+  useParams<{ subjectCode: string }>();
   const [searchParams] = useSearchParams();
   const subjectId = searchParams.get("id");
 
@@ -62,18 +123,21 @@ const SubjectDetail: React.FC = () => {
   const [classesLoading, setClassesLoading] = useState<boolean>(false);
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [prerequisiteOptions, setPrerequisiteOptions] = useState<SubjectDto[]>([]);
-  const [loadingPrerequisites, setLoadingPrerequisites] = useState<boolean>(false);
+  const [prerequisiteOptions, setPrerequisiteOptions] = useState<SubjectDto[]>(
+    []
+  );
+  const [loadingPrerequisites, setLoadingPrerequisites] =
+    useState<boolean>(false);
   const [form] = Form.useForm<SubjectFormValues>();
-  const [gradeComponents, setGradeComponents] = useState<GradeComponentDto[]>([]);
+  const [gradeComponents, setGradeComponents] = useState<GradeComponentDto[]>(
+    []
+  );
   const [gradeLoading, setGradeLoading] = useState<boolean>(false);
-  const [isGradeModalOpen, setIsGradeModalOpen] = useState<boolean>(false);
-  const [gradeForm] = Form.useForm<Omit<CreateGradeComponentRequest, "subjectId">>();
-  const [creatingGrade, setCreatingGrade] = useState<boolean>(false);
-  const [editingGradeComponent, setEditingGradeComponent] = useState<GradeComponentDto | null>(null);
-  const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
-  const [gradeToDelete, setGradeToDelete] = useState<GradeComponentDto | null>(null);
-  const [deletingGrade, setDeletingGrade] = useState<boolean>(false);
+  const [isGradeConfigModalOpen, setIsGradeConfigModalOpen] =
+    useState<boolean>(false);
+  const [gradeConfigForm] = Form.useForm<GradeConfigFormValues>();
+  const [savingGradeConfig, setSavingGradeConfig] = useState<boolean>(false);
+  const hasLoadedGradeTreeRef = useRef(false);
 
   const prerequisiteList = useMemo(() => {
     if (!subject?.prerequisites) {
@@ -130,7 +194,8 @@ const SubjectDetail: React.FC = () => {
           (cls) =>
             cls.subjectCode &&
             subjectData.subjectCode &&
-            cls.subjectCode.toLowerCase() === subjectData.subjectCode.toLowerCase()
+            cls.subjectCode.toLowerCase() ===
+              subjectData.subjectCode.toLowerCase()
         );
 
         setRelatedClasses(filteredClasses);
@@ -147,20 +212,19 @@ const SubjectDetail: React.FC = () => {
     [navigate]
   );
 
-  const loadGradeComponents = useCallback(
-    async (id: string) => {
-      setGradeLoading(true);
-      try {
-        const data = await fetchGradeComponentsApi(id);
-        setGradeComponents(data);
-      } catch {
-        toast.error("Không thể tải các thành phần điểm");
-      } finally {
-        setGradeLoading(false);
-      }
-    },
-    []
-  );
+  const loadGradeComponents = useCallback(async (id: string) => {
+    setGradeLoading(true);
+    try {
+      const data = await fetchGradeComponentTreeApi(id);
+      setGradeComponents(data || []);
+    } catch {
+      // Nếu backend lỗi (500, 404, ...) interceptor sẽ hiển thị thông báo chung.
+      // Ở đây chỉ đảm bảo UI vẫn hoạt động.
+      setGradeComponents([]);
+    } finally {
+      setGradeLoading(false);
+    }
+  }, []);
 
   const loadPrerequisiteOptions = useCallback(async () => {
     if (loadingPrerequisites) {
@@ -188,8 +252,15 @@ const SubjectDetail: React.FC = () => {
       return;
     }
 
-    loadSubjectDetail(subjectId);
-    loadGradeComponents(subjectId);
+    // Tránh gọi tree API 2 lần trong môi trường dev (React StrictMode)
+    if (!hasLoadedGradeTreeRef.current) {
+      hasLoadedGradeTreeRef.current = true;
+      loadSubjectDetail(subjectId);
+      loadGradeComponents(subjectId);
+    } else {
+      // Lần render thứ hai chỉ cần reload lại thông tin môn (nhẹ hơn), không cần gọi tree nữa
+      loadSubjectDetail(subjectId, { showLoading: false });
+    }
   }, [subjectId, loadSubjectDetail, loadGradeComponents, navigate]);
 
   const handleStartEdit = () => {
@@ -277,102 +348,90 @@ const SubjectDetail: React.FC = () => {
     }
   };
 
-  const handleGradeFormSubmit = async (
-    values: Omit<CreateGradeComponentRequest, "subjectId">
-  ) => {
+  const handleOpenGradeConfig = () => {
     if (!subject) {
       toast.error("Không tìm thấy môn học hiện tại");
       return;
     }
 
-    const payload: CreateGradeComponentRequest = {
-      subjectId: subject.id,
-      ...values,
-    };
-
-    setCreatingGrade(true);
-    try {
-      if (editingGradeComponent) {
-        const result = await updateGradeComponentApi(editingGradeComponent.id, payload);
-        if (!result.success) {
-          toast.error("Không thể lưu thay đổi thành phần điểm");
-          return;
-        }
-        toast.success("Đã cập nhật thành phần điểm");
-      } else {
-        const result = await createGradeComponentApi(payload);
-        if (!result.success) {
-          toast.error("Không thể tạo thành phần điểm mới");
-          return;
-        }
-        toast.success("Đã tạo thành phần điểm mới");
-      }
-
-      setIsGradeModalOpen(false);
-      setEditingGradeComponent(null);
-      gradeForm.resetFields();
-      if (subject.id) {
-        loadGradeComponents(subject.id);
-      }
-    } catch {
-      toast.error("Đã xảy ra lỗi khi thao tác với thành phần điểm");
-    } finally {
-      setCreatingGrade(false);
+    if (gradeComponents.length) {
+      gradeConfigForm.setFieldsValue({
+        components: gradeComponents.map(mapDtoToFormNode),
+      });
+    } else {
+      // Gợi ý mặc định khi chưa có cấu hình
+      gradeConfigForm.setFieldsValue({
+        components: [
+          { name: "Giữa kỳ", weightPercent: 40 },
+          { name: "Cuối kỳ", weightPercent: 60 },
+        ],
+      });
     }
+
+    setIsGradeConfigModalOpen(true);
   };
 
-  const openDeleteGradeModal = (component: GradeComponentDto) => {
-    setGradeToDelete(component);
-    setDeleteModalOpen(true);
+  const handleCloseGradeConfig = () => {
+    setIsGradeConfigModalOpen(false);
   };
 
-  const closeDeleteGradeModal = () => {
-    setDeleteModalOpen(false);
-    setGradeToDelete(null);
+  const validateGradeTree = (
+    components: GradeComponentFormNode[]
+  ): string | null => {
+    const normalize = (value: number | undefined) =>
+      Number.isFinite(value) ? Number(value) : 0;
+
+    const totalRoot = components.reduce(
+      (sum, item) => sum + normalize(item.weightPercent),
+      0
+    );
+
+    if (totalRoot !== 100) {
+      return `Tổng trọng số toàn bộ thang điểm phải bằng 100% (hiện tại: ${totalRoot}%).`;
+    }
+
+    return null;
   };
 
-  const handleDeleteGradeComponent = async () => {
-    if (!subject || !gradeToDelete) {
-      toast.error("Không tìm thấy thông tin để xóa");
+  const handleSubmitGradeConfig = async (values: GradeConfigFormValues) => {
+    if (!subject) {
+      toast.error("Không tìm thấy môn học hiện tại");
       return;
     }
 
-    setDeletingGrade(true);
-    try {
-      const result = await deleteGradeComponentApi(gradeToDelete.id);
-      if (!result.success) {
-        toast.error("Không thể xóa thành phần điểm");
-        return;
-      }
-      toast.success("Đã xóa thành phần điểm");
-      await loadGradeComponents(subject.id);
-      closeDeleteGradeModal();
-    } catch {
-      toast.error("Không thể xóa thành phần điểm");
-    } finally {
-      setDeletingGrade(false);
+    const components = values.components || [];
+
+    if (!components.length) {
+      toast.error("Vui lòng thêm ít nhất một thành phần điểm");
+      return;
     }
-  };
 
-  const openCreateGradeModal = () => {
-    setEditingGradeComponent(null);
-    gradeForm.resetFields();
-    setIsGradeModalOpen(true);
-  };
+    const validationError = validateGradeTree(components);
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
 
-  const openEditGradeModal = (component: GradeComponentDto) => {
-    gradeForm.setFieldsValue({
-      name: component.name,
-      weightPercent: component.weightPercent,
-    });
-    setEditingGradeComponent(component);
-    setIsGradeModalOpen(true);
-  };
+    const payload: CreateSubjectGradeComponentsRequest = {
+      subjectId: subject.id,
+      components: components.map(mapFormNodeToCreateItem),
+    };
 
-  const closeGradeModal = () => {
-    setIsGradeModalOpen(false);
-    setEditingGradeComponent(null);
-    gradeForm.resetFields();
+    setSavingGradeConfig(true);
+    try {
+      await createSubjectGradeComponentsApi(payload);
+      toast.success("Thiết lập thang điểm thành công");
+      setIsGradeConfigModalOpen(false);
+      await loadGradeComponents(subject.id);
+    } catch (error) {
+      const anyError = error as { response?: { data?: { message?: string } } };
+      const message =
+        anyError.response?.data?.message ||
+        "Không thể thiết lập thang điểm. Vui lòng thử lại.";
+      toast.error(message);
+    } finally {
+      setSavingGradeConfig(false);
+    }
   };
 
   const classColumns: ColumnsType<ClassSummary> = useMemo(
@@ -446,7 +505,10 @@ const SubjectDetail: React.FC = () => {
         width: 110,
         align: "center",
         render: (_: number, record: ClassSummary) => {
-          if (typeof record.maxEnrollment === "number" && typeof record.currentEnrollment === "number") {
+          if (
+            typeof record.maxEnrollment === "number" &&
+            typeof record.currentEnrollment === "number"
+          ) {
             return Math.max(record.maxEnrollment - record.currentEnrollment, 0);
           }
           return 0;
@@ -456,39 +518,63 @@ const SubjectDetail: React.FC = () => {
     [navigate]
   );
 
-  const gradeComponentColumns: ColumnsType<GradeComponentDto> = [
-    {
-      title: "Tên",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "Trọng số",
-      dataIndex: "weightPercent",
-      key: "weightPercent",
-      align: "center",
-      render: (value: number) => `${value}%`,
-    },
-    {
-      title: "Hành động",
-      key: "actions",
-      width: 170,
-      align: "center",
-      render: (_, record) => (
-        <Space size="small">
-          <Button type="link" onClick={() => openEditGradeModal(record)}>
-            Sửa
-          </Button>
-          <Button type="link" danger onClick={() => openDeleteGradeModal(record)}>
-            Xóa
-          </Button>
-        </Space>
-      ),
-    },
-  ];
+  const gradeComponentColumns: ColumnsType<
+    GradeComponentDto & { children?: GradeComponentDto[] }
+  > = useMemo(
+    () => [
+      {
+        title: "Thành phần",
+        dataIndex: "name",
+        key: "name",
+        render: (name: string, record) => (
+          <span
+            className={
+              record.parentId
+                ? "grade-component-name child"
+                : "grade-component-name"
+            }
+          >
+            {record.parentId && <span className="child-prefix">↳</span>}
+            {name}
+          </span>
+        ),
+      },
+      {
+        title: "Trọng số (%)",
+        dataIndex: "weightPercent",
+        key: "weightPercent",
+        align: "center" as const,
+        render: (value: number, record) => (
+          <span
+            className={
+              record.parentId
+                ? "grade-weight-value child"
+                : "grade-weight-value"
+            }
+          >
+            {value}%
+          </span>
+        ),
+      },
+    ],
+    []
+  );
 
-  const totalGradeWeight = useMemo(
-    () => gradeComponents.reduce((sum, component) => sum + component.weightPercent, 0),
+  const gradeTableData: (GradeComponentDto & {
+    children?: GradeComponentDto[];
+  })[] = useMemo(() => {
+    const mapNode = (
+      node: GradeComponentDto
+    ): GradeComponentDto & { children?: GradeComponentDto[] } => ({
+      ...node,
+      children: node.subComponents?.map(mapNode),
+    });
+
+    return gradeComponents.map(mapNode);
+  }, [gradeComponents]);
+
+  const hasAnyGrades = useMemo(
+    () => gradeComponents.some((component) => hasGradesInNode(component)),
     [gradeComponents]
   );
 
@@ -519,9 +605,8 @@ const SubjectDetail: React.FC = () => {
           </Button>
           <div>
             <Title level={3} className="page-title">
-              {subject.subjectName}
+              Chi tiết môn học
             </Title>
-            <Text type="secondary">{subject.subjectCode || subjectCode}</Text>
           </div>
         </div>
         <div className="header-actions">
@@ -586,14 +671,18 @@ const SubjectDetail: React.FC = () => {
               <Form.Item
                 name="subjectCode"
                 label="Mã môn học"
-                rules={[{ required: true, message: "Vui lòng nhập mã môn học!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập mã môn học!" },
+                ]}
               >
                 <Input placeholder="VD: AI401, BC202..." size="large" />
               </Form.Item>
               <Form.Item
                 name="subjectName"
                 label="Tên môn học"
-                rules={[{ required: true, message: "Vui lòng nhập tên môn học!" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập tên môn học!" },
+                ]}
               >
                 <Input placeholder="Nhập tên môn học" size="large" />
               </Form.Item>
@@ -605,7 +694,11 @@ const SubjectDetail: React.FC = () => {
                 label="Số tín chỉ"
                 rules={[
                   { required: true, message: "Vui lòng nhập số tín chỉ!" },
-                  { type: "number", min: 1, message: "Số tín chỉ phải lớn hơn 0!" },
+                  {
+                    type: "number",
+                    min: 1,
+                    message: "Số tín chỉ phải lớn hơn 0!",
+                  },
                 ]}
               >
                 <InputNumber
@@ -643,7 +736,11 @@ const SubjectDetail: React.FC = () => {
                     }
                   }}
                   notFoundContent={
-                    loadingPrerequisites ? <Spin size="small" /> : "Không có dữ liệu"
+                    loadingPrerequisites ? (
+                      <Spin size="small" />
+                    ) : (
+                      "Không có dữ liệu"
+                    )
                   }
                   className="subject-form-select"
                 >
@@ -732,7 +829,11 @@ const SubjectDetail: React.FC = () => {
           loading={classesLoading}
           pagination={false}
           locale={{
-            emptyText: classesLoading ? <Spin size="small" /> : <Empty description="Chưa có lớp cho môn học này" />,
+            emptyText: classesLoading ? (
+              <Spin size="small" />
+            ) : (
+              <Empty description="Chưa có lớp cho môn học này" />
+            ),
           }}
           size="small"
         />
@@ -741,88 +842,222 @@ const SubjectDetail: React.FC = () => {
       <Card className="grade-components-card">
         <div className="grade-components-header">
           <Title level={4} className="classes-title">
-            Thành phần điểm
+            Cấu hình thang điểm
           </Title>
-          <Button type="primary" onClick={openCreateGradeModal}>
-            Thêm thành phần điểm
+          <Button
+            type="primary"
+            onClick={handleOpenGradeConfig}
+            disabled={gradeLoading}
+          >
+            {gradeComponents.length
+              ? "Chỉnh sửa thang điểm"
+              : "Thiết lập thang điểm"}
           </Button>
         </div>
-        <Table
-          columns={gradeComponentColumns}
-          dataSource={gradeComponents}
-          rowKey="id"
-          loading={gradeLoading}
-          pagination={false}
-          locale={{
-            emptyText: gradeLoading ? <Spin size="small" /> : "Chưa có thành phần điểm",
-          }}
-          size="small"
-        />
-        {totalGradeWeight !== 100 && (
-          <div className="grade-weight-warning">
-            <Text type="warning">
-              Trọng số hiện tại là {totalGradeWeight}%. Tổng trọng số phải bằng 100%.
+
+        {hasAnyGrades && (
+          <div className="grade-info-banner">
+            <Text type="secondary">
+              Môn học đã có điểm được nhập. Thang điểm hiện tại chỉ có thể xem,
+              không thể chỉnh sửa.
             </Text>
           </div>
         )}
+
+        <Table
+          columns={gradeComponentColumns}
+          dataSource={gradeTableData}
+          rowKey="id"
+          loading={gradeLoading}
+          pagination={false}
+          size="small"
+          expandable={{ defaultExpandAllRows: true }}
+          locale={{
+            emptyText: gradeLoading ? (
+              <Spin size="small" />
+            ) : (
+              "Chưa cấu hình thang điểm cho môn học này"
+            ),
+          }}
+        />
       </Card>
 
-        <Modal
-          title={editingGradeComponent ? "Chỉnh sửa thành phần điểm" : "Thêm thành phần điểm"}
-          open={isGradeModalOpen}
-          onCancel={closeGradeModal}
-          onOk={() => gradeForm.submit()}
-          okText={editingGradeComponent ? "Lưu" : "Tạo"}
-          cancelText="Hủy"
-          confirmLoading={creatingGrade}
-          destroyOnClose
+      <Modal
+        title="Thiết lập thang điểm cho môn học"
+        open={isGradeConfigModalOpen}
+        onCancel={handleCloseGradeConfig}
+        onOk={() => gradeConfigForm.submit()}
+        okText="Lưu thang điểm"
+        cancelText="Hủy"
+        confirmLoading={savingGradeConfig}
+        width={800}
+        destroyOnClose
+      >
+        <Form
+          form={gradeConfigForm}
+          layout="vertical"
+          onFinish={handleSubmitGradeConfig}
         >
-          <Form
-            form={gradeForm}
-            layout="vertical"
-            onFinish={handleGradeFormSubmit}
-          >
-            <Form.Item
-              name="name"
-              label="Tên thành phần"
-              rules={[{ required: true, message: "Vui lòng nhập tên" }]}
-            >
-              <Input placeholder="Ví dụ: Bài tập giữa kì" />
-            </Form.Item>
-            <Form.Item
-              name="weightPercent"
-              label="Trọng số (%)"
-              rules={[
-                { required: true, message: "Vui lòng nhập trọng số" },
-                { type: "number", min: 1, message: "Phải lớn hơn 0" },
-              ]}
-            >
-              <InputNumber style={{ width: "100%" }} min={1} max={100} />
-            </Form.Item>
-          </Form>
-        </Modal>
+          <Text type="secondary">
+            Thiết lập cấu trúc thang điểm cho môn học. Tổng trọng số các thành
+            phần cấp 1 phải bằng 100%, và tổng trọng số các thành phần con phải
+            bằng trọng số của thành phần cha.
+          </Text>
 
-        <Modal
-          title="Xóa thành phần điểm"
-          open={deleteModalOpen}
-          onCancel={closeDeleteGradeModal}
-          onOk={handleDeleteGradeComponent}
-          okText="Xóa"
-          okType="danger"
-          cancelText="Hủy"
-          confirmLoading={deletingGrade}
-        >
-          <p>
-            Bạn có chắc chắn muốn xóa thành phần điểm
-            {" "}
-            <strong>{gradeToDelete?.name ?? "này"}</strong>
-            {" "}với trọng số{gradeToDelete ? ` ${gradeToDelete.weightPercent}%` : ""} không?
-          </p>
-          <p className="delete-warning-text">
-            Hành động này không thể hoàn tác.
-          </p>
-        </Modal>
+          <Form.List name="components">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map((field, index) => (
+                  <Card
+                    key={field.key}
+                    size="small"
+                    className="grade-config-item"
+                    title={`Thành phần ${index + 1}`}
+                    extra={
+                      fields.length > 1 ? (
+                        <Button
+                          danger
+                          type="link"
+                          onClick={() => remove(field.name)}
+                        >
+                          Xóa
+                        </Button>
+                      ) : null
+                    }
+                    style={{ marginBottom: 12 }}
+                  >
+                    <div className="subject-form-grid">
+                      <Form.Item
+                        name={[field.name, "name"]}
+                        label="Tên thành phần"
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng nhập tên thành phần",
+                          },
+                        ]}
+                      >
+                        <Input placeholder="Ví dụ: Giữa kỳ, Cuối kỳ, Bài tập, Dự án..." />
+                      </Form.Item>
+                      <Form.Item
+                        name={[field.name, "weightPercent"]}
+                        label="Trọng số (%)"
+                        rules={[
+                          { required: true, message: "Vui lòng nhập trọng số" },
+                          {
+                            type: "number",
+                            min: 0,
+                            max: 100,
+                            message: "0 - 100",
+                          },
+                        ]}
+                      >
+                        <InputNumber
+                          style={{ width: "100%" }}
+                          min={0}
+                          max={100}
+                        />
+                      </Form.Item>
+                    </div>
 
+                    <div className="subject-form-grid">
+                      <Form.Item
+                        name={[field.name, "childCount"]}
+                        label="Số lượng thành phần con"
+                        rules={[
+                          {
+                            type: "number",
+                            min: 0,
+                            max: 20,
+                            message: "0 - 20",
+                          },
+                        ]}
+                      >
+                        <InputNumber
+                          style={{ width: "100%" }}
+                          min={0}
+                          max={20}
+                          placeholder="Ví dụ: 2 (Mini Test 1, Mini Test 2)"
+                        />
+                      </Form.Item>
+                    </div>
+
+                    <Form.Item noStyle shouldUpdate>
+                      {({ getFieldValue }) => {
+                        const componentValue = getFieldValue([
+                          "components",
+                          field.name,
+                        ]) as GradeComponentFormNode | undefined;
+
+                        const name = (componentValue?.name || "").trim();
+                        const weight =
+                          Number(componentValue?.weightPercent) || 0;
+                        const count =
+                          componentValue?.childCount &&
+                          componentValue.childCount > 0
+                            ? componentValue.childCount
+                            : 0;
+
+                        if (!name || !weight || !count) {
+                          return null;
+                        }
+
+                        const base = Math.floor(weight / count);
+                        const remainder = weight - base * count;
+
+                        const items = Array.from(
+                          { length: count },
+                          (_, idx) => {
+                            const extra = idx < remainder ? 1 : 0;
+                            return {
+                              label: `${name} ${idx + 1}`,
+                              weight: base + extra,
+                            };
+                          }
+                        );
+
+                        return (
+                          <div className="grade-subcomponents-preview">
+                            <Text type="secondary">
+                              Các thành phần con sẽ được tạo tự động:
+                            </Text>
+                            <ul>
+                              {items.map((item) => (
+                                <li key={item.label}>
+                                  {item.label}: {item.weight}%
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        );
+                      }}
+                    </Form.Item>
+                  </Card>
+                ))}
+
+                {/* Chỉ cho phép thêm mới khi chưa có cấu hình thang điểm nào */}
+                {gradeComponents.length === 0 && (
+                  <Form.Item>
+                    <Button
+                      type="dashed"
+                      onClick={() =>
+                        add({
+                          name: "",
+                          weightPercent: 0,
+                          subComponents: [],
+                        })
+                      }
+                      block
+                    >
+                      Thêm thành phần điểm
+                    </Button>
+                  </Form.Item>
+                )}
+              </>
+            )}
+          </Form.List>
+        </Form>
+      </Modal>
     </div>
   );
 };
