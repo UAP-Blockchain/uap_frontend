@@ -2,6 +2,9 @@
 
 // Verification Portal Styles
 .verification-portal {
+  // Đảm bảo trang có thể scroll nếu nội dung dài
+  min-height: 100vh;
+
   .page-header {
     text-align: center;
     margin-bottom: 32px;

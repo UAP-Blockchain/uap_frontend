@@ -5,7 +5,7 @@ import {
   useNavigate,
   Outlet,
 } from "react-router-dom";
-import { Spin } from "antd";
+import { Spin, Button } from "antd";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
@@ -16,6 +16,7 @@ import {
 } from "./config/appRoutes";
 import { setNavigate } from "./utils/navigation";
 import PublicPortalLayout from "./layout/PublicPortalLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 // Lazy load auth pages
 const Login = lazy(() => import("./pages/Login"));
@@ -52,18 +53,47 @@ const wrapWithSuspense = (element: React.ReactNode) => (
   <Suspense fallback={<PageLoader />}>{element}</Suspense>
 );
 
-// Helper function to process route config and add Suspense
-const processRoute = (route: RouteConfig): RouteConfig => {
-  const processedRoute: RouteConfig = {
-    ...route,
+// Error element for routes
+const ErrorElement = () => (
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh",
+      flexDirection: "column",
+      gap: 16,
+    }}
+  >
+    <h2>404 - Trang không tìm thấy</h2>
+    <p>Trang bạn đang tìm kiếm không tồn tại hoặc đã bị di chuyển.</p>
+    <Button
+      type="primary"
+      onClick={() => window.location.href = "/admin/subjects"}
+    >
+      Quay lại trang quản lý môn học
+    </Button>
+  </div>
+);
+
+// Helper function to convert RouteConfig to React Router format
+const convertRouteConfig = (route: RouteConfig): any => {
+  const converted: any = {
+    path: route.path,
     element: route.element ? wrapWithSuspense(route.element) : undefined,
+    errorElement: route.errorElement || <ErrorElement />,
   };
 
   if (route.children) {
-    processedRoute.children = route.children.map(processRoute);
+    converted.children = route.children.map(convertRouteConfig);
   }
 
-  return processedRoute;
+  return converted;
+};
+
+// Helper function to process route config and add Suspense (kept for backward compatibility)
+const processRoute = (route: RouteConfig): any => {
+  return convertRouteConfig(route);
 };
 
 // Root component to initialize navigation utility

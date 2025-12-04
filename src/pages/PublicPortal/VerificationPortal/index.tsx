@@ -26,6 +26,8 @@ import {
   LoadingOutlined,
 } from "@ant-design/icons";
 import type { UploadProps } from "antd";
+import { notification } from "antd";
+import { BrowserQRCodeReader } from "@zxing/browser";
 import CredentialServices from "../../../services/credential/api.service";
 import "./VerificationPortal.scss";
 
@@ -40,6 +42,15 @@ const VerificationPortal: React.FC = () => {
   const [credentialId, setCredentialId] = useState("");
   const [uploadedFile, setUploadedFile] = useState<any>(null);
 	const [isDecodingQr, setIsDecodingQr] = useState(false);
+  const qrReaderRef = useRef<BrowserQRCodeReader | null>(null);
+  const [notificationApi, notificationContextHolder] = notification.useNotification();
+
+  useEffect(() => {
+    qrReaderRef.current = new BrowserQRCodeReader();
+    return () => {
+      qrReaderRef.current = null;
+    };
+  }, []);
 
   // Parse QR payload (URL hoặc plain credentialNumber)
   const parseQrPayload = (input: string) => {
@@ -85,7 +96,10 @@ const VerificationPortal: React.FC = () => {
     const { credentialNumber, verificationHash } = parseQrPayload(qrText);
 
     if (!credentialNumber && !verificationHash) {
-      message.error("QR không chứa dữ liệu xác thực hợp lệ");
+      notificationApi.error({
+        message: "QR không hợp lệ",
+        description: "QR không chứa dữ liệu xác thực hợp lệ.",
+      });
       setIsScanning(false);
       return;
     }
@@ -98,25 +112,40 @@ const VerificationPortal: React.FC = () => {
         verificationHash,
       });
 
-      if (!verifyResult?.isValid) {
-        message.error(
-          verifyResult?.message ||
-            "Chứng chỉ không hợp lệ hoặc đã bị thu hồi"
-        );
+      const { isValid, message: backendMessage, credential } =
+        (verifyResult || {}) as {
+          isValid?: boolean;
+          message?: string;
+          credential?: { credentialId?: string; id?: string };
+        };
+
+      if (isValid === false) {
+        notificationApi.error({
+          message: "Không thể xác thực chứng chỉ",
+          description:
+            backendMessage || "Chứng chỉ không hợp lệ hoặc đã bị thu hồi.",
+        });
         return;
       }
 
       const credentialNumberFromResult =
-        (verifyResult as any)?.credential?.credentialId ||
+        credential?.credentialId ||
+        credential?.id ||
         credentialNumber ||
         verificationHash;
 
       if (!credentialNumberFromResult) {
-        message.warning("Không tìm thấy mã chứng chỉ sau khi xác thực");
+        notificationApi.warning({
+          message: "Không tìm thấy mã chứng chỉ",
+          description: "Không tìm thấy mã chứng chỉ sau khi xác thực.",
+        });
         return;
       }
 
-      message.success("Xác thực thành công! Đang mở chứng chỉ...");
+      notificationApi.success({
+        message: "Xác thực thành công",
+        description: "Đang mở chứng chỉ...",
+      });
       navigate(
         `/certificates/verify/${encodeURIComponent(
             credentialNumberFromResult
@@ -125,7 +154,10 @@ const VerificationPortal: React.FC = () => {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);
-      message.error("Có lỗi khi xác thực chứng chỉ");
+      notificationApi.error({
+        message: "Lỗi xác thực",
+        description: "Có lỗi khi xác thực chứng chỉ. Vui lòng thử lại sau.",
+      });
     } finally {
       setIsVerifying(false);
       setIsScanning(false);
@@ -143,12 +175,21 @@ const VerificationPortal: React.FC = () => {
         reader.readAsDataURL(file);
       });
 
-      // Tạm thời không sử dụng thư viện đọc QR trực tiếp để tránh phụ thuộc build.
-      // Hướng dẫn user dán nội dung QR hoặc ID chứng chỉ.
-      message.info(
-        "Tính năng đọc QR từ ảnh tạm thời không khả dụng. Vui lòng dán nội dung QR hoặc ID chứng chỉ vào ô nhập."
-      );
-      return null;
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = dataUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = () => resolve(null);
+        img.onerror = () => reject(new Error("Không thể tải ảnh QR"));
+      });
+
+      const readerInstance = qrReaderRef.current ?? new BrowserQRCodeReader();
+      if (!qrReaderRef.current) {
+        qrReaderRef.current = readerInstance;
+      }
+
+      const result = await readerInstance.decodeFromImageElement(img);
+      return result?.getText() ?? null;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("QR decode error", error);
@@ -198,16 +239,21 @@ const VerificationPortal: React.FC = () => {
 
   // Nút quét QR giờ chỉ là hướng dẫn sử dụng Ctrl+V hoặc upload
   const handleQRScan = () => {
-    message.info(
-      "Hãy tải lên ảnh QR bên dưới hoặc nhấn Ctrl+V để dán nội dung QR/text."
-    );
+    notificationApi.info({
+      message: "Hướng dẫn quét QR",
+      description:
+        "Hãy tải lên ảnh QR bên dưới hoặc nhấn Ctrl+V để dán nội dung QR/text.",
+    });
   };
 
   // Manual ID verification (dùng verify API)
   const handleManualVerification = async () => {
     const trimmed = credentialId.trim();
     if (!trimmed) {
-      message.error("Vui lòng nhập ID chứng chỉ hợp lệ");
+      notificationApi.error({
+        message: "Thiếu mã chứng chỉ",
+        description: "Vui lòng nhập ID chứng chỉ hoặc hash hợp lệ.",
+      });
       return;
     }
 
@@ -226,18 +272,29 @@ const VerificationPortal: React.FC = () => {
       setIsVerifying(true);
       const verifyResult = await CredentialServices.verifyCredential(payload);
 
-      if (!verifyResult?.isValid) {
-        message.error(
-          verifyResult?.message ||
-            "Chứng chỉ không hợp lệ hoặc đã bị thu hồi"
-        );
+      const { isValid, message: backendMessage, credential } =
+        (verifyResult || {}) as {
+          isValid?: boolean;
+          message?: string;
+          credential?: { credentialId?: string; id?: string };
+        };
+
+      if (isValid === false) {
+        notificationApi.error({
+          message: "Không thể xác thực chứng chỉ",
+          description:
+            backendMessage || "Chứng chỉ không hợp lệ hoặc đã bị thu hồi.",
+        });
         return;
       }
 
       const credentialNumberFromResult =
-        (verifyResult as any).credential?.credentialId || trimmed;
+        credential?.credentialId || credential?.id || trimmed;
 
-      message.success("Xác thực thành công! Đang mở chứng chỉ...");
+      notificationApi.success({
+        message: "Xác thực thành công",
+        description: "Đang mở chứng chỉ...",
+      });
       navigate(
         `/certificates/verify/${encodeURIComponent(
             credentialNumberFromResult
@@ -246,7 +303,10 @@ const VerificationPortal: React.FC = () => {
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error(err);
-      message.error("Có lỗi khi xác thực chứng chỉ");
+      notificationApi.error({
+        message: "Lỗi xác thực",
+        description: "Có lỗi khi xác thực chứng chỉ. Vui lòng thử lại sau.",
+      });
     } finally {
       setIsVerifying(false);
     }
@@ -283,11 +343,17 @@ const VerificationPortal: React.FC = () => {
 
   const handleFileVerification = () => {
     if (!uploadedFile) {
-      message.error("Vui lòng tải lên file trước");
+      notificationApi.error({
+        message: "Thiếu file chứng chỉ",
+        description: "Vui lòng tải lên file chứng chỉ trước khi xác thực.",
+      });
       return;
     }
 
-    message.info("Chức năng phân tích file sẽ được hỗ trợ sau.");
+    notificationApi.info({
+      message: "Đang phát triển",
+      description: "Chức năng phân tích file sẽ được hỗ trợ trong phiên bản sau.",
+    });
   };
 
   const tabItems = [
@@ -367,13 +433,13 @@ const VerificationPortal: React.FC = () => {
             )}
           </div>
 
-          <Alert
+          {/* <Alert
             message="Thông báo bảo mật"
             description="Quyền truy cập camera chỉ được sử dụng để quét mã QR và không lưu trữ hình ảnh."
             type="info"
             showIcon
             style={{ marginTop: 24 }}
-          />
+          /> */}
         </div>
       ),
     },
@@ -527,8 +593,25 @@ const VerificationPortal: React.FC = () => {
 
   return (
     <div className="verification-portal">
+      {notificationContextHolder}
       {/* Page Header */}
-      <div className="page-header">
+      <div className="page-header" style={{ position: "relative", textAlign: "center" }}>
+        <Button
+          type="default"
+          size="large"
+          onClick={() => navigate("/")}
+          style={{
+            position: "absolute",
+            left: 16,
+            top: "50%",
+            transform: "translateY(-50%)",
+            borderRadius: 999,
+            paddingInline: 24,
+            fontWeight: 500,
+          }}
+        >
+          Trang chủ
+        </Button>
         <Title level={2} style={{ margin: 0, color: "#ffffff" }}>
           Cổng xác thực chứng chỉ
         </Title>

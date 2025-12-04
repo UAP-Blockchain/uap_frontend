@@ -8,6 +8,7 @@ import {
   Col,
   Divider,
   Empty,
+  QRCode,
   Row,
   Space,
   Spin,
@@ -24,12 +25,12 @@ import {
   LinkOutlined,
   QrcodeOutlined,
   SafetyCertificateOutlined,
+  BlockOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { useSelector } from "react-redux";
 import CredentialServices from "../../../services/credential/api.service";
+import { downloadCredentialPdfApi } from "../../../services/admin/credentials/api";
 import type { StudentCredentialDto } from "../../../types/Credential";
 import type { RootState } from "../../../redux/store";
 import "./CredentialDetail.scss";
@@ -50,7 +51,8 @@ const CredentialDetail: React.FC = () => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const certificateRef = useRef<HTMLDivElement>(null);
+  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
 
   useEffect(() => {
@@ -72,6 +74,7 @@ const CredentialDetail: React.FC = () => {
           setError("Không tìm thấy chứng chỉ này trong tài khoản của bạn");
         } else {
           setCredential(found);
+          setQrCodeData((found as any).shareableUrl || null);
         }
       } catch (err) {
         const messageText =
@@ -103,7 +106,7 @@ const CredentialDetail: React.FC = () => {
   }, [credential]);
 
   const formattedIssuedDate = credential?.issuedDate
-    ? dayjs(credential.issuedDate).format("DD MMMM, YYYY")
+    ? dayjs(credential.issuedDate).format("DD/MM/YYYY")
     : "—";
 
   const handleCopyLink = async () => {
@@ -117,18 +120,46 @@ const CredentialDetail: React.FC = () => {
   };
 
   const handleDownloadCertificate = async () => {
-    if (!certificateRef.current || !credential) return;
-    const canvas = await html2canvas(certificateRef.current, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({
-      orientation: "landscape",
-      unit: "pt",
-      format: "a4",
-    });
-    const width = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(imgData, "PNG", 0, 0, width, height);
-    pdf.save(`${credential.credentialId}.pdf`);
+    if (!credential) return;
+
+    const fileUrl = (credential as any).fileUrl as string | undefined;
+    if (fileUrl) {
+      window.open(fileUrl, "_blank");
+      return;
+    }
+
+    try {
+      const blob = await downloadCredentialPdfApi(credential.id);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${(credential as any).credentialId || credential.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      void message.success("Đã tải xuống chứng chỉ");
+    } catch (err) {
+      void message.error(
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+        "Không thể tải xuống chứng chỉ",
+      );
+    }
+  };
+
+  const handleDownloadQr = () => {
+    if (!qrRef.current) return;
+    const canvas = qrRef.current.querySelector("canvas");
+    if (!canvas) {
+      void message.error("Không tìm thấy hình ảnh QR để tải");
+      return;
+    }
+
+    const url = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${credential?.credentialId || "credential"}-qr.png`;
+    link.click();
   };
 
   if (isLoading) {
@@ -179,7 +210,7 @@ const CredentialDetail: React.FC = () => {
       </div>
 
       <Row gutter={[24, 24]}>
-        <Col xs={24} lg={12}>
+        <Col xs={24} lg={14}>
           <Card className="credential-info-card" bordered={false}>
             <Space direction="vertical" size={12} style={{ width: "100%" }}>
               <Space>
@@ -229,6 +260,7 @@ const CredentialDetail: React.FC = () => {
                   <div className="info-row">
                     <span>Ngày hoàn thành</span>
                     <span>
+                      <CalendarOutlined style={{ marginRight: 6 }} />
                       {dayjs(credential.completionDate).format("DD/MM/YYYY")}
                     </span>
                   </div>
@@ -281,68 +313,47 @@ const CredentialDetail: React.FC = () => {
                       Sao chép liên kết
                     </Button>
                   )}
-                  <Button icon={<QrcodeOutlined />}>Mã QR</Button>
+                  {(credential as any).isOnBlockchain ? (
+                  <Tag icon={<BlockOutlined />} color="green">
+                    Đã ghi blockchain
+                  </Tag>
+                ) : (
+                  <Tag icon={<BlockOutlined />} color="default">
+                    Chưa ghi blockchain
+                  </Tag>
+                )}
                 </Space>
               </Space>
             </Space>
           </Card>
         </Col>
 
-        <Col xs={24} lg={12}>
-          <Card bordered={false} className="certificate-preview-card">
-            <div className="certificate-preview" ref={certificateRef}>
-              <div className="certificate-header">
-                <div className="issuer-block">
-                  <Text className="issuer-name">UAP Blockchain</Text>
-                  <Text className="certificate-type">
-                    {certificateLabels[credential.certificateType] ||
-                      "Chứng chỉ"}
-                  </Text>
-                </div>
-                <Badge
-                  count="Đã xác thực on-chain"
-                  style={{ backgroundColor: "#1a94fc" }}
-                />
-              </div>
-
-              <div className="certificate-body">
-                <Text className="caption">CHỨNG NHẬN RẰNG</Text>
-                <Title level={1} className="recipient">
-                  {displayName}
-                </Title>
-                <Paragraph className="description">
-                  đã hoàn thành chương trình học
-                </Paragraph>
-                <Title level={2} className="program">
-                  {certificateTitle}
-                </Title>
-                <Paragraph className="details">
-                  Cấp ngày {formattedIssuedDate} · Mã sinh viên{" "}
-                  {credential.studentCode}
-                </Paragraph>
-              </div>
-
-              <div className="certificate-footer">
-                <div className="signature-block">
-                  <div className="signature" />
-                  <Text>Phòng Đào tạo</Text>
-                </div>
-                <div className="seal">FAP</div>
-              </div>
-            </div>
-
-            <div className="certificate-actions">
-              <Button
-                type="primary"
-                icon={<CloudDownloadOutlined />}
-                onClick={handleDownloadCertificate}
-              >
-                Tải chứng chỉ PDF
-              </Button>
+        <Col xs={24} lg={10}>
+          <Card bordered={false} className="certificate-qr-card">
+            <Space direction="vertical" size={16} style={{ width: "100%" }}>
+              <Title level={4} style={{ margin: 0 }}>
+                Mã QR xác thực
+              </Title>
               <Text type="secondary">
-                * File PDF được xuất giống như mẫu chứng chỉ đang hiển thị.
+                Quét mã QR này để mở trang xác thực chứng chỉ công khai.
               </Text>
-            </div>
+              <div ref={qrRef} style={{ textAlign: "center", marginTop: 8 }}>
+                {qrCodeData ? (
+                  <QRCode value={qrCodeData} size={200} />
+                ) : (
+                  <Text type="secondary">
+                    Không tìm thấy liên kết chia sẻ cho chứng chỉ này.
+                  </Text>
+                )}
+              </div>
+              <Button
+                icon={<QrcodeOutlined />}
+                onClick={handleDownloadQr}
+                disabled={!qrCodeData}
+              >
+                Tải mã QR
+              </Button>
+            </Space>
           </Card>
         </Col>
       </Row>

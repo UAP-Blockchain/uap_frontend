@@ -165,7 +165,7 @@ const CredentialDetail: React.FC = () => {
     } catch (err) {
       message.error(
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-          "Không thể tải xuống chứng chỉ"
+        "Không thể tải xuống chứng chỉ"
       );
     } finally {
       setActionLoading(false);
@@ -252,7 +252,7 @@ const CredentialDetail: React.FC = () => {
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/admin/credentials")}>
           Quay lại danh sách
         </Button>
-        
+
       </div>
 
       <Row gutter={[24, 24]}>
@@ -266,7 +266,7 @@ const CredentialDetail: React.FC = () => {
                   <Title level={3} style={{ margin: 0 }}>
                     {certificateTitle}
                   </Title>
-                </div> 
+                </div>
                 <Tag color="blue">{typeLabels[credential.certificateType] || credential.certificateType}</Tag>
               </Space>
               <Descriptions bordered size="small" column={2} layout="horizontal">
@@ -276,8 +276,17 @@ const CredentialDetail: React.FC = () => {
                 <Descriptions.Item label="Mã sinh viên">
                   {credential.studentCode || "—"}
                 </Descriptions.Item>
-                <Descriptions.Item label="Mã chứng chỉ">
-                  {(credential as any).credentialId || credential.id}
+                <Descriptions.Item label="Mã chứng chỉ" span={2}>
+                  <Space align="center">
+                    {(credential as any).credentialId || credential.id}
+                    <Tooltip title="Sao chép mã chứng chỉ">
+                      <Button
+                        size="small"
+                        icon={<CopyOutlined />}
+                        onClick={() => copyToClipboard((credential as any).credentialId)}
+                      />
+                    </Tooltip>
+                  </Space>
                 </Descriptions.Item>
                 <Descriptions.Item label="Ngày cấp" span={1}>
                   <Space>
@@ -308,8 +317,8 @@ const CredentialDetail: React.FC = () => {
                 {(credential as any).verificationHash && (
                   <Descriptions.Item label="Verification Hash" span={2}>
                     <Space align="center">
-                      <Text copyable>{(credential as any).verificationHash}</Text>
-                      <Tooltip title="Sao chép hash">
+                      <Text>{(credential as any).verificationHash}</Text>
+                      <Tooltip title="Sao chép Verification hash">
                         <Button
                           size="small"
                           icon={<CopyOutlined />}

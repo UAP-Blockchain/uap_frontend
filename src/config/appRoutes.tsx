@@ -125,6 +125,7 @@ export interface RouteConfig {
   path: string;
   element: React.ReactNode;
   children?: RouteConfig[];
+  errorElement?: React.ReactNode;
   // Menu metadata
   menuLabel?: string;
   menuIcon?: React.ReactNode;
