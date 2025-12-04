@@ -59,6 +59,9 @@ const RegisterUserDetail = lazy(
   () => import("../pages/admin/registerUser/detail")
 );
 const BulkRegister = lazy(() => import("../pages/admin/bulkRegister"));
+const AttendanceValidationAdminPage = lazy(
+  () => import("../pages/admin/attendanceValidation")
+);
 const SemestersManagement = lazy(() => import("../pages/admin/semesters"));
 const SemesterDetail = lazy(
   () => import("../pages/admin/semesters/SemesterDetail")
@@ -325,6 +328,16 @@ export const adminRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN],
       menuIndex: 6,
+      menuSection: "main",
+    },
+    {
+      path: "/admin/attendance-validation",
+      element: <AttendanceValidationAdminPage />,
+      menuLabel: "Cấu hình ngày điểm danh",
+      menuIcon: <CheckCircleOutlined />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.ADMIN],
+      menuIndex: 6.5,
       menuSection: "main",
     },
   ],

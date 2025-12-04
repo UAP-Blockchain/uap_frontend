@@ -38,7 +38,7 @@ const Profile: React.FC = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
 
   // Avatar từ public folder
-  const tempAvatar = "/image/avatarEx.jpg";
+
 
   useEffect(() => {
     fetchStudentProfile();
@@ -178,10 +178,10 @@ const Profile: React.FC = () => {
             <div className="profile-header">
               <div className="avatar-section">
                 <Avatar
+                  src={studentData.profileImageUrl}
                   size={100}
-                  src={tempAvatar}
                   icon={<UserOutlined />}
-                  className="profile-avatar"
+                  // className="profile-avatar"
                 />
               </div>
               <div className="profile-info">

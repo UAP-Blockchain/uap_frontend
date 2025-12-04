@@ -70,7 +70,7 @@ interface StudentDetailDto {
   totalClasses: number;
   totalGrades: number;
   totalAttendances: number;
-  profileImage?: string;
+  profileImageUrl?: string;
 }
 
 export type { Student, StudentFormData, StudentDetailDto, EnrollmentInfo, ClassInfo };

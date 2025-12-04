@@ -150,7 +150,7 @@ const StudentDetailPage: React.FC = () => {
     );
   }
 
-  const avatarSrc = user?.profileImageUrl || student?.profileImage;
+  const avatarSrc = user?.profileImageUrl || student?.profileImageUrl;
   const highlightedClasses: ClassInfo[] =
     student?.currentClasses?.slice(0, 2) ?? [];
   const highlightedEnrollments: EnrollmentInfo[] =

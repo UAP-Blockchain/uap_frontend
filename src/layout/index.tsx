@@ -259,6 +259,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       classes: "Lớp học",
       teachers: "Giảng viên",
       students: "Sinh viên",
+      "attendance-validation": "Cấu hình ngày điểm danh",
     };
 
     // For student-portal routes, create breadcrumb with "Cổng sinh viên" as first item
