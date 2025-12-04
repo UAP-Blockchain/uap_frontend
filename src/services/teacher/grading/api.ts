@@ -1,4 +1,5 @@
 import api from "../../../config/axios";
+import type { GradeComponentDto } from "../../../types/GradeComponent";
 
 // Types
 export interface TeachingClass {
@@ -209,24 +210,42 @@ export const getClassByIdApi = async (
 };
 
 /**
- * Get grade components for a subject
- * GET /api/grade-components
- * Note: Backend may not support subjectId filter, so we filter on frontend if needed
+ * Get grade components for a subject (hierarchical tree, flattened to leaves)
+ * GET /api/grade-components/subject/{subjectId}/tree
  */
 export const getGradeComponentsApi = async (
   subjectId?: string
 ): Promise<GradeComponent[]> => {
-  const response = await api.get<GradeComponent[]>("/grade-components", {
-    params: subjectId ? { subjectId } : undefined,
-  });
-  
-  // If backend doesn't filter by subjectId, return all components
-  // (In real implementation, backend should filter by subjectId)
-  const components = Array.isArray(response.data) ? response.data : [];
-  
-  // If subjectId is provided but backend doesn't filter, we can filter on frontend
-  // For now, return all components as backend may not have subjectId relationship
-  return components;
+  if (!subjectId) {
+    return [];
+  }
+
+  const response = await api.get<GradeComponentDto[]>(
+    `/grade-components/subject/${subjectId}/tree`
+  );
+
+  const tree = Array.isArray(response.data) ? response.data : [];
+
+  const flattened: GradeComponent[] = [];
+
+  const flattenNode = (node: GradeComponentDto): void => {
+    if (node.subComponents && node.subComponents.length > 0) {
+      node.subComponents.forEach(flattenNode);
+    } else {
+      // Leaf node – dùng để chấm điểm
+      flattened.push({
+        id: node.id,
+        name: node.name,
+        weightPercent: node.weightPercent,
+        maxScore: undefined,
+        description: undefined,
+      });
+    }
+  };
+
+  tree.forEach(flattenNode);
+
+  return flattened;
 };
 
 /**
@@ -296,9 +315,8 @@ export const submitStudentGradesApi = async (
 };
 
 /**
- * Update grades for a student
- * NOTE: Backend exposes PUT /api/grades/{id} for a single grade,
- * so here we fan-out and call it once per gradeId.
+ * Update grades for a student (bulk update)
+ * PUT /api/Grades - Updates multiple grades in a single request
  */
 export const updateStudentGradesApi = async (
   request: UpdateGradesRequest
@@ -307,12 +325,12 @@ export const updateStudentGradesApi = async (
     return;
   }
 
-  await Promise.all(
-    request.grades.map((grade) =>
-      api.put(`/Grades/${grade.gradeId}`, {
-        score: grade.score,
-      })
-    )
-  );
+  // Use bulk update endpoint: PUT /api/Grades
+  await api.put("/Grades", {
+    grades: request.grades.map((grade) => ({
+      gradeId: grade.gradeId,
+      score: grade.score,
+    })),
+  });
 };
 

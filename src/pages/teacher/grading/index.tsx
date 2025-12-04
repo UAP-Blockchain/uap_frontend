@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Card,
   Table,
@@ -56,10 +56,14 @@ const TeacherGrading: React.FC = () => {
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [loadingClassData, setLoadingClassData] = useState(false);
   const [activeTab, setActiveTab] = useState("grading");
+  const hasLoadedClassesRef = useRef(false);
 
-  // Load teacher's classes on mount
+  // Load teacher's classes on mount (avoid double-call in React StrictMode)
   useEffect(() => {
-    loadTeacherClasses();
+    if (!hasLoadedClassesRef.current) {
+      hasLoadedClassesRef.current = true;
+      loadTeacherClasses();
+    }
   }, []);
 
   // Load class data when class is selected
