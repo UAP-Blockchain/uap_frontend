@@ -37,20 +37,41 @@
   }
 
   .ant-table {
-    .ant-table-thead > tr > th {
-      background: #fafafa;
-      font-weight: 600;
-    }
-    
-    .ant-table-tbody > tr:hover > td {
-      background: rgba(24, 144, 255, 0.05);
-    }
-    
     .ant-input-number {
       &.ant-input-number-focused {
         border-color: #1890ff;
         box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
       }
+    }
+  }
+
+  // Custom table styling (matching admin subjects/slots)
+  .grading-table {
+    .ant-table-thead > tr > th {
+      background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 14px 16px;
+      border: none;
+      text-transform: none;
+    }
+
+    .ant-table-tbody > tr {
+      transition: all 0.2s ease;
+
+      &:hover > td {
+        background-color: #e6f7ff;
+      }
+
+      > td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+    }
+
+    .ant-table-tbody > tr:last-child > td {
+      border-bottom: none;
     }
   }
 
@@ -137,24 +158,53 @@
 
   .ant-btn {
     border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.3s ease;
     
     &.ant-btn-sm {
       height: 28px;
       padding: 0 8px;
       font-size: 12px;
-      
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
     }
     
     &.ant-btn-primary {
-      background: linear-gradient(135deg, #1890ff, #36cfc9);
-      border: none;
+      &:not(.ant-btn-ghost) {
+        background: linear-gradient(135deg, #1890ff, #36cfc9);
+        border: none;
+        box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2);
+        
+        &:hover {
+          background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+          box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+          transform: translateY(-1px);
+        }
+      }
       
-      &:hover {
-        background: linear-gradient(135deg, #40a9ff, #5cdbd3);
+      &.ant-btn-ghost,
+      &.update-grade-btn {
+        background: transparent !important;
+        border-color: #1890ff !important;
+        color: #1890ff !important;
+        box-shadow: 0 2px 4px rgba(24, 144, 255, 0.2) !important;
+        
+        &:hover {
+          background: transparent !important;
+          border-color: #40a9ff !important;
+          color: #40a9ff !important;
+          box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3) !important;
+          transform: translateY(-1px) !important;
+        }
+
+        &:active {
+          background: rgba(24, 144, 255, 0.1) !important;
+          border-color: #1890ff !important;
+          color: #1890ff !important;
+        }
+
+        &.ant-btn-loading {
+          background: transparent !important;
+          border-color: #1890ff !important;
+        }
       }
     }
   }
@@ -190,39 +240,41 @@
     }
   }
 
-  // Quick grading buttons
-  .ant-space {
+  // Quick grading buttons (only for non-ghost buttons in header space)
+  .grading-controls .ant-space {
     .ant-btn {
-      &:nth-child(1) {
-        background-color: #52c41a;
-        border-color: #52c41a;
-        color: white;
-        
-        &:hover {
-          background-color: #73d13d;
-          border-color: #73d13d;
+      &:not(.ant-btn-ghost) {
+        &:nth-child(1) {
+          background-color: #52c41a;
+          border-color: #52c41a;
+          color: white;
+          
+          &:hover {
+            background-color: #73d13d;
+            border-color: #73d13d;
+          }
         }
-      }
-      
-      &:nth-child(2) {
-        background-color: #fa8c16;
-        border-color: #fa8c16;
-        color: white;
         
-        &:hover {
-          background-color: #ffa940;
-          border-color: #ffa940;
+        &:nth-child(2) {
+          background-color: #fa8c16;
+          border-color: #fa8c16;
+          color: white;
+          
+          &:hover {
+            background-color: #ffa940;
+            border-color: #ffa940;
+          }
         }
-      }
-      
-      &:nth-child(3) {
-        background-color: #f5222d;
-        border-color: #f5222d;
-        color: white;
         
-        &:hover {
-          background-color: #ff4d4f;
-          border-color: #ff4d4f;
+        &:nth-child(3) {
+          background-color: #f5222d;
+          border-color: #f5222d;
+          color: white;
+          
+          &:hover {
+            background-color: #ff4d4f;
+            border-color: #ff4d4f;
+          }
         }
       }
     }

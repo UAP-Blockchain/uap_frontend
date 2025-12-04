@@ -233,6 +233,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     const routeNameMap: Record<string, string> = {
       admin: "Quản trị",
       "student-portal": "Cổng sinh viên",
+      teacher: "Cổng giảng viên",
       dashboard: "Bảng điều khiển",
       roadmap: "Lộ trình học tập",
       credentials: "Chứng chỉ của tôi",
@@ -260,6 +261,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       teachers: "Giảng viên",
       students: "Sinh viên",
       "attendance-validation": "Cấu hình ngày điểm danh",
+      schedule: "Lịch giảng dạy",
+      grading: "Chấm điểm",
     };
 
     // For student-portal routes, create breadcrumb with "Cổng sinh viên" as first item
@@ -289,6 +292,54 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
           const displayName =
             routeNameMap[path] ||
             path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+          breadcrumbs.push({
+            title:
+              index === subPaths.length - 1 ? (
+                displayName
+              ) : (
+                <Link to={href}>{displayName}</Link>
+              ),
+          });
+        });
+      }
+      return breadcrumbs;
+    }
+
+    // For teacher routes, create breadcrumb with "Cổng giảng viên" as first item
+    if (paths[0] === "teacher") {
+      const breadcrumbs: Array<{ title: React.ReactNode }> = [
+        {
+          title: <Link to="/teacher">Cổng giảng viên</Link>,
+        },
+      ];
+
+      // If only teacher, redirect to schedule (handled by route), so show schedule
+      if (paths.length === 1) {
+        breadcrumbs.push({
+          title: "Lịch giảng dạy",
+        });
+      } else {
+        // Add sub-routes
+        let subPaths = paths.slice(1);
+
+        // Special case: /teacher/class-list/:courseCode
+        // Breadcrumb chỉ hiển thị "Danh sách lớp", không thêm courseCode
+        if (subPaths.length >= 2 && subPaths[0] === "class-list") {
+          subPaths = subPaths.slice(0, 1);
+          subPaths[0] = "class-list"; // Keep "class-list" for mapping
+        }
+
+        subPaths.forEach((path, index) => {
+          const href = "/" + paths.slice(0, index + 2).join("/");
+          let displayName =
+            routeNameMap[path] ||
+            path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+          
+          // Special case: "classes" in teacher context should be "Lớp giảng dạy"
+          if (path === "classes") {
+            displayName = "Lớp giảng dạy";
+          }
+          
           breadcrumbs.push({
             title:
               index === subPaths.length - 1 ? (
