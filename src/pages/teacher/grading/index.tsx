@@ -303,10 +303,12 @@ const TeacherGrading: React.FC = () => {
         return (
           <Button
             type="primary"
+            ghost
             icon={<EditOutlined />}
             size="small"
             onClick={() => handleUpdateStudentGrades(student)}
             loading={studentLoading}
+            className="update-grade-btn"
           >
             Cập nhật điểm
           </Button>
@@ -369,6 +371,7 @@ const TeacherGrading: React.FC = () => {
                 size="middle"
                 scroll={{ x: 1200 }}
                 loading={loadingClassData}
+                className="grading-table"
               />
             </Card>
           </Spin>

@@ -435,7 +435,7 @@ const RegisterUser: React.FC = () => {
                 fetchData(page, pagination.pageSize, searchText, roleFilter),
             }}
             onRow={(record) => ({
-              onClick: () => navigate(`/admin/users/${record.id}`),
+              onClick: () => navigate(`/admin/user-management/${record.id}`),
             })}
             size="small"
             locale={{

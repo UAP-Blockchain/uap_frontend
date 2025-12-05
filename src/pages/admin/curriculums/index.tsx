@@ -421,27 +421,40 @@ const CurriculumManagementPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="filter-row">
-          <Search
-            placeholder="Tìm theo tên, mã hoặc mô tả khung"
-            allowClear
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onSearch={(value) => setSearchTerm(value)}
-            prefix={<SearchOutlined />}
-            size="large"
-            enterButton="Tìm kiếm"
-            className="curriculum-search-input"
-          />
-          <Select
-            value={sortOption}
-            onChange={(value: SortOption) => setSortOption(value)}
-            style={{ width: 220 }}
-          >
-            <Option value="recent">Mới nhất</Option>
-            <Option value="subject">Nhiều môn học</Option>
-            <Option value="credits">Tín chỉ cao</Option>
-          </Select>
+        <div className="filters-row compact-layout">
+          <Row gutter={[8, 8]} align="middle" className="filter-row-compact">
+            <Col xs={24} sm={12} md={8}>
+              <div className="filter-field">
+                <label>Sắp xếp</label>
+                <Select
+                  value={sortOption}
+                  onChange={(value: SortOption) => setSortOption(value)}
+                  size="middle"
+                  className="sort-select"
+                >
+                  <Option value="recent">Mới nhất</Option>
+                  <Option value="subject">Nhiều môn học</Option>
+                  <Option value="credits">Tín chỉ cao</Option>
+                </Select>
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={16}>
+              <div className="filter-field">
+                <label>Tìm kiếm</label>
+                <Search
+                  placeholder="Tìm theo tên, mã hoặc mô tả khung"
+                  allowClear
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onSearch={(value) => setSearchTerm(value)}
+                  prefix={<SearchOutlined />}
+                  size="large"
+                  enterButton="Tìm kiếm"
+                  className="curriculum-search-input"
+                />
+              </div>
+            </Col>
+          </Row>
         </div>
 
         <Table

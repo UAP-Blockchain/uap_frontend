@@ -306,7 +306,7 @@ export const adminRoutes: RouteConfig = {
     //   menuSection: "tools",
     // },
     {
-      path: "/admin/users/register",
+      path: "/admin/user-management",
       element: <RegisterUser />,
       menuLabel: "Quản lý Người dùng",
       menuIcon: <UserOutlined />,
@@ -316,13 +316,13 @@ export const adminRoutes: RouteConfig = {
       menuSection: "main",
     },
     {
-      path: "/admin/users/:userId",
+      path: "/admin/user-management/:userId",
       element: <RegisterUserDetail />,
       showInMenu: false,
       allowedRoles: [ROLE_CODES.ADMIN],
     },
     {
-      path: "/admin/users/bulk-register",
+      path: "/admin/bulk-register",
       element: <BulkRegister />,
       menuLabel: "Đăng ký hàng loạt",
       menuIcon: <TeamOutlined />,

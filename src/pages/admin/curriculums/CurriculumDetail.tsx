@@ -242,37 +242,43 @@ const CurriculumDetailPage: React.FC = () => {
 
   return (
     <div className="curriculum-detail-page">
-      <Card className="curriculum-detail-card">
-        <div className="detail-header">
+      <div className="curriculum-detail-header">
+        <div className="header-left">
           <Button
+            className="back-button"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate("/admin/curriculums")}
-            style={{ marginBottom: 16 }}
           >
             Quay lại
           </Button>
-          <div className="header-content">
-            <div>
-              <Title level={2} style={{ margin: 0 }}>
-                {curriculum.name}
-              </Title>
-              <Tag color="blue" style={{ marginTop: 8, fontSize: 14 }}>
-                {curriculum.code}
-              </Tag>
-            </div>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={openSubjectModal}
-              size="large"
-            >
-              Thêm môn học vào khung chương trình
-            </Button>
+          <div>
+            <Title level={3} className="page-title">
+              {curriculum.name}
+            </Title>
+            <Tag color="blue" style={{ marginTop: 8, fontSize: 14 }}>
+              {curriculum.code}
+            </Tag>
           </div>
         </div>
+        <div className="header-actions">
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={openSubjectModal}
+            size="large"
+          >
+            Thêm môn học vào khung chương trình
+          </Button>
+        </div>
+      </div>
 
+      <Card className="curriculum-detail-card">
         <Card className="info-card" style={{ marginBottom: 24 }}>
-          <Descriptions column={{ xxl: 4, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }} bordered>
+          <Descriptions
+            column={{ xxl: 4, xl: 3, lg: 2, md: 2, sm: 1, xs: 1 }}
+            bordered
+            className="curriculum-descriptions"
+          >
             <Descriptions.Item label="Mã chương trình">
               {curriculum.code}
             </Descriptions.Item>

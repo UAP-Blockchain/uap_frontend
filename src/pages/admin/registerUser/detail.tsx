@@ -158,20 +158,21 @@ const StudentDetailPage: React.FC = () => {
 
   return (
     <div className="user-detail-page">
-      <div className="page-banner">
-        <div>
-          <Title level={3}>Hồ sơ người dùng</Title>
-          <Text type="secondary">
-            Theo dõi thông tin sinh viên và tình trạng học tập
-          </Text>
+      <div className="user-detail-header">
+        <div className="header-left">
+          <Button
+            className="back-button"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate(-1)}
+          >
+            Quay lại
+          </Button>
+          <div>
+            <Title level={3} className="page-title">
+              Hồ sơ người dùng
+            </Title>
+          </div>
         </div>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          className="ghost-btn"
-          onClick={() => navigate(-1)}
-        >
-          Quay lại
-        </Button>
       </div>
 
       <Spin spinning={loading}>
@@ -249,7 +250,12 @@ const StudentDetailPage: React.FC = () => {
             <div className="panels-row">
               <Card className="info-card">
                 <h4>Thông tin liên hệ</h4>
-                <Descriptions bordered column={1} size="small">
+                <Descriptions
+                  bordered
+                  column={1}
+                  size="small"
+                  className="contact-descriptions"
+                >
                   <Descriptions.Item label="Họ tên">
                     {user.fullName}
                   </Descriptions.Item>

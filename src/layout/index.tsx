@@ -55,8 +55,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   useEffect(() => {
     const paths = pathname?.split("/").filter(Boolean) || [];
 
-    // Check if path is /admin/users/:userId
-    if (paths.length >= 3 && paths[0] === "admin" && paths[1] === "users") {
+    // Check if path is /admin/user-management/:userId or /admin/users/:userId
+    if (
+      paths.length >= 3 &&
+      paths[0] === "admin" &&
+      (paths[1] === "user-management" || paths[1] === "users")
+    ) {
       const userId = paths[2];
 
       // Check if it's a UUID and not already fetched or currently fetching
@@ -233,9 +237,10 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
     const routeNameMap: Record<string, string> = {
       admin: "Quản trị",
       "student-portal": "Cổng sinh viên",
+      teacher: "Cổng giảng viên",
       dashboard: "Bảng điều khiển",
       roadmap: "Lộ trình học tập",
-      credentials: "Chứng chỉ của tôi",
+      credentials: "Quản lý Chứng chỉ",
       "credential-requests": "Đơn yêu cầu chứng chỉ",
       "request-credential": "Yêu cầu chứng chỉ",
       timetable: "Thời khóa biểu",
@@ -250,6 +255,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       "credential-detail": "Chi tiết chứng chỉ",
       "my-credentials": "Chứng chỉ của tôi",
       users: "Người dùng",
+      "user-management": "Quản lý Người dùng",
       "bulk-register": "Đăng ký hàng loạt",
       register: "Đăng ký",
       curriculums: "Khung chương trình",
@@ -260,6 +266,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       teachers: "Giảng viên",
       students: "Sinh viên",
       "attendance-validation": "Cấu hình ngày điểm danh",
+      schedule: "Lịch giảng dạy",
+      grading: "Chấm điểm",
     };
 
     // For student-portal routes, create breadcrumb with "Cổng sinh viên" as first item
@@ -302,6 +310,54 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       return breadcrumbs;
     }
 
+    // For teacher routes, create breadcrumb with "Cổng giảng viên" as first item
+    if (paths[0] === "teacher") {
+      const breadcrumbs: Array<{ title: React.ReactNode }> = [
+        {
+          title: <Link to="/teacher">Cổng giảng viên</Link>,
+        },
+      ];
+
+      // If only teacher, redirect to schedule (handled by route), so show schedule
+      if (paths.length === 1) {
+        breadcrumbs.push({
+          title: "Lịch giảng dạy",
+        });
+      } else {
+        // Add sub-routes
+        let subPaths = paths.slice(1);
+
+        // Special case: /teacher/class-list/:courseCode
+        // Breadcrumb chỉ hiển thị "Danh sách lớp", không thêm courseCode
+        if (subPaths.length >= 2 && subPaths[0] === "class-list") {
+          subPaths = subPaths.slice(0, 1);
+          subPaths[0] = "class-list"; // Keep "class-list" for mapping
+        }
+
+        subPaths.forEach((path, index) => {
+          const href = "/" + paths.slice(0, index + 2).join("/");
+          let displayName =
+            routeNameMap[path] ||
+            path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
+          
+          // Special case: "classes" in teacher context should be "Lớp giảng dạy"
+          if (path === "classes") {
+            displayName = "Lớp giảng dạy";
+          }
+          
+          breadcrumbs.push({
+            title:
+              index === subPaths.length - 1 ? (
+                displayName
+              ) : (
+                <Link to={href}>{displayName}</Link>
+              ),
+          });
+        });
+      }
+      return breadcrumbs;
+    }
+
     // Default breadcrumb generation for other routes
     return paths.map((path, index) => {
       const href = "/" + paths.slice(0, index + 1).join("/");
@@ -309,8 +365,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       // Check if this is a UUID and we have the name mapped
       let displayName: string;
       if (isUUID(path)) {
-        // Check context: if previous path is "users", use userNameMap
-        if (index > 0 && paths[index - 1] === "users" && userNameMap[path]) {
+        // Check context: if previous path is "user-management" or "users", use userNameMap
+        if (
+          index > 0 &&
+          (paths[index - 1] === "user-management" || paths[index - 1] === "users") &&
+          userNameMap[path]
+        ) {
           displayName = userNameMap[path];
         }
         // Check context: if previous path is "semesters", use semesterNameMap

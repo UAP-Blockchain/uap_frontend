@@ -1,8 +1,6 @@
 @use "../../../styles/theme-variables" as *;
 
 .curriculum-management {
-
-
   .curriculum-panel {
     border-radius: 16px;
     border: 1px solid #e5e7eb;
@@ -25,12 +23,22 @@
           height: 42px;
           border-radius: 10px;
           background: linear-gradient(135deg, #1a94fc, #0d73c9);
-          color: white;
+          color: white !important;
           display: flex;
           align-items: center;
           justify-content: center;
           font-size: 18px;
           box-shadow: 0 6px 16px rgba(26, 148, 252, 0.3);
+
+          svg,
+          .anticon {
+            color: white !important;
+            fill: white !important;
+          }
+
+          * {
+            color: white !important;
+          }
         }
 
         .eyebrow {
@@ -105,26 +113,50 @@
       }
     }
 
-    .filter-row {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
+    .filters-row {
+      border-top: 1px solid #eef1f7;
+      padding-top: 12px;
+      margin-bottom: 8px;
 
-      .ant-input-affix-wrapper,
-      .ant-select {
-        flex: 1;
-        min-width: 220px;
+      &.compact-layout {
+        border-top: none;
+        padding-top: 6px;
       }
 
-      .curriculum-search-input {
-        .ant-input-affix-wrapper {
-          height: 44px;
-          padding: 8px 12px;
-          font-size: 15px;
+      .filter-row-compact {
+        .filter-field {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          width: 100%;
 
-          .ant-input {
-            font-size: 15px;
+          label {
+            font-size: 12px;
+            color: #6b7280;
+          }
+
+          .ant-input-affix-wrapper,
+          .ant-select-selector {
+            border-radius: 8px;
+            border: 1px solid #d9dce3;
+          }
+
+          .curriculum-search-input {
+            .ant-input-affix-wrapper {
+              height: 44px;
+              padding: 8px 12px;
+              font-size: 15px;
+
+              .ant-input {
+                font-size: 15px;
+              }
+            }
+          }
+
+          .sort-select {
+            .ant-select-selector {
+              min-height: 36px;
+            }
           }
         }
       }
@@ -254,4 +286,3 @@
     }
   }
 }
-
