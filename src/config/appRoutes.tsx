@@ -6,7 +6,6 @@
 
 import {
   AppstoreOutlined,
-  BellOutlined,
   BookOutlined,
   CalendarOutlined,
   CheckCircleOutlined,
@@ -18,7 +17,6 @@ import {
   IdcardOutlined,
   RiseOutlined,
   ScheduleOutlined,
-  SettingOutlined,
   ShareAltOutlined,
   TeamOutlined,
   TrophyOutlined,
@@ -52,8 +50,9 @@ const CurriculumManagement = lazy(() => import("../pages/admin/curriculums"));
 const CurriculumDetail = lazy(
   () => import("../pages/admin/curriculums/CurriculumDetail")
 );
-const ReportsManagement = lazy(() => import("../pages/admin/reports"));
-const SecurityManagement = lazy(() => import("../pages/admin/security"));
+const SpecializationsPage = lazy(
+  () => import("../pages/admin/specializations")
+);
 const RegisterUser = lazy(() => import("../pages/admin/registerUser"));
 const RegisterUserDetail = lazy(
   () => import("../pages/admin/registerUser/detail")
@@ -169,6 +168,16 @@ export const adminRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.ADMIN],
       menuIndex: 2,
+      menuSection: "main",
+    },
+    {
+      path: "/admin/specializations",
+      element: <SpecializationsPage />,
+      menuLabel: "Quản lý Chuyên môn",
+      menuIcon: <FlagOutlined />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.ADMIN],
+      menuIndex: 2.2,
       menuSection: "main",
     },
     {

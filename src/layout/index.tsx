@@ -260,6 +260,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       register: "Đăng ký",
       curriculums: "Khung chương trình",
       subjects: "Môn học",
+      specializations: "Chuyên môn",
       semesters: "Học kì",
       slots: "Ca học",
       classes: "Lớp học",
@@ -339,12 +340,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
           let displayName =
             routeNameMap[path] ||
             path.charAt(0).toUpperCase() + path.slice(1).replace(/-/g, " ");
-          
+
           // Special case: "classes" in teacher context should be "Lớp giảng dạy"
           if (path === "classes") {
             displayName = "Lớp giảng dạy";
           }
-          
+
           breadcrumbs.push({
             title:
               index === subPaths.length - 1 ? (
@@ -368,7 +369,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         // Check context: if previous path is "user-management" or "users", use userNameMap
         if (
           index > 0 &&
-          (paths[index - 1] === "user-management" || paths[index - 1] === "users") &&
+          (paths[index - 1] === "user-management" ||
+            paths[index - 1] === "users") &&
           userNameMap[path]
         ) {
           displayName = userNameMap[path];

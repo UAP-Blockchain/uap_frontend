@@ -94,18 +94,7 @@ function TimeSlotsManagement() {
         </div>
       ),
     },
-    {
-      title: "Tổng số slot",
-      dataIndex: "totalSlots",
-      key: "totalSlots",
-      width: 120,
-      align: "center" as const,
-      render: (total: number) => (
-        <Tag color="blue" style={{ fontSize: "14px", padding: "4px 12px" }}>
-          {total} slot
-            </Tag>
-      ),
-    },
+
     {
       title: "Hành động",
       key: "action",
