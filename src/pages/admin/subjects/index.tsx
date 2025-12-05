@@ -35,6 +35,8 @@ import {
   type CreateSubjectRequest,
 } from "../../../services/admin/subjects/api";
 import { useNavigate } from "react-router-dom";
+import type { SpecializationDto } from "../../../types/Specialization";
+import { fetchSpecializationsApi } from "../../../services/admin/specializations/api";
 import "./index.scss";
 
 const { Search } = Input;
@@ -59,6 +61,13 @@ const SubjectsManagement: React.FC = () => {
     []
   );
   const [loadingPrerequisites, setLoadingPrerequisites] = useState(false);
+  const [specializations, setSpecializations] = useState<SpecializationDto[]>(
+    []
+  );
+  const [specializationsLoading, setSpecializationsLoading] = useState(false);
+  const [specializationsError, setSpecializationsError] = useState<
+    string | null
+  >(null);
 
   const stats = useMemo(() => {
     const total = pagination.totalCount;
@@ -123,6 +132,40 @@ const SubjectsManagement: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    const loadSpecializations = async () => {
+      setSpecializationsLoading(true);
+      setSpecializationsError(null);
+      try {
+        const response = await fetchSpecializationsApi({
+          pageNumber: 1,
+          pageSize: 200,
+          isActive: true,
+        });
+        setSpecializations(response.data || []);
+      } catch (error) {
+        console.error("Failed to load specializations:", error);
+        setSpecializationsError(
+          "Không thể tải danh sách chuyên ngành. Vui lòng thử lại sau."
+        );
+        toast.error("Không thể tải danh sách chuyên ngành");
+      } finally {
+        setSpecializationsLoading(false);
+      }
+    };
+
+    loadSpecializations();
+  }, []);
+
+  const specializationOptions = useMemo(
+    () =>
+      specializations.map((spec) => ({
+        label: `${spec.code} - ${spec.name}`,
+        value: spec.name,
+      })),
+    [specializations]
+  );
 
   const handleSearch = (value: string) => {
     setSearchText(value);
@@ -283,19 +326,30 @@ const SubjectsManagement: React.FC = () => {
     },
     {
       title: "Chuyên ngành",
-      dataIndex: "department",
-      key: "department",
-      width: 180,
-      render: (department: string | undefined, record: SubjectDto) => (
-        <div className="department-cell">
-          <div className="department-name">
-            {department || "Chưa có chuyên ngành"}
-          </div>
-          {record.category && (
-            <span className="category-pill">{record.category}</span>
-          )}
-        </div>
-      ),
+      dataIndex: "specializations",
+      key: "specializations",
+      width: 250,
+      render: (
+        specializations: SubjectDto["specializations"],
+        record: SubjectDto
+      ) => {
+        if (specializations && specializations.length > 0) {
+          return (
+            <Space wrap size={[4, 4]}>
+              {specializations.map((spec) => (
+                <Tag key={spec.id} color="blue">
+                  {spec.code} - {spec.name}
+                </Tag>
+              ))}
+            </Space>
+          );
+        }
+        // Fallback to department if specializations not available
+        if (record.department) {
+          return <Tag color="default">{record.department}</Tag>;
+        }
+        return <Tag color="default">Chưa có chuyên ngành</Tag>;
+      },
     },
     {
       title: "Lớp mở",
@@ -567,10 +621,23 @@ const SubjectsManagement: React.FC = () => {
           <Form.Item
             name="department"
             label="Chuyên ngành"
-            extra="VD: Công nghệ thông tin, Kinh tế, Ngôn ngữ Anh..."
+            extra={
+              specializationsError ||
+              "VD: Công nghệ thông tin, Kinh tế, Ngôn ngữ Anh..."
+            }
           >
-            <Input
-              placeholder="Nhập chuyên ngành phụ trách môn học"
+            <Select
+              placeholder={
+                specializationsLoading
+                  ? "Đang tải chuyên ngành..."
+                  : "Chọn chuyên ngành"
+              }
+              loading={specializationsLoading}
+              options={specializationOptions}
+              showSearch
+              optionFilterProp="label"
+              allowClear
+              disabled={!specializations.length}
               size="large"
             />
           </Form.Item>

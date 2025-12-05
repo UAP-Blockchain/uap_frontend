@@ -46,6 +46,8 @@ import type {
   GradeComponentDto,
   CreateSubjectGradeComponentsRequest,
 } from "../../../types/GradeComponent";
+import type { SpecializationDto } from "../../../types/Specialization";
+import { fetchSpecializationsApi } from "../../../services/admin/specializations/api";
 import "./SubjectDetail.scss";
 
 const { Title, Text, Paragraph } = Typography;
@@ -128,6 +130,14 @@ const SubjectDetail: React.FC = () => {
   );
   const [loadingPrerequisites, setLoadingPrerequisites] =
     useState<boolean>(false);
+  const [specializations, setSpecializations] = useState<SpecializationDto[]>(
+    []
+  );
+  const [specializationsLoading, setSpecializationsLoading] =
+    useState<boolean>(false);
+  const [specializationsError, setSpecializationsError] = useState<
+    string | null
+  >(null);
   const [form] = Form.useForm<SubjectFormValues>();
   const [gradeComponents, setGradeComponents] = useState<GradeComponentDto[]>(
     []
@@ -245,6 +255,40 @@ const SubjectDetail: React.FC = () => {
     }
   }, [loadingPrerequisites]);
 
+  const loadSpecializations = useCallback(async () => {
+    if (specializationsLoading) {
+      return;
+    }
+
+    setSpecializationsLoading(true);
+    setSpecializationsError(null);
+    try {
+      const response = await fetchSpecializationsApi({
+        pageNumber: 1,
+        pageSize: 200,
+        isActive: true,
+      });
+      setSpecializations(response.data || []);
+    } catch (error) {
+      console.error("Failed to load specializations:", error);
+      setSpecializationsError(
+        "Không thể tải danh sách chuyên ngành. Vui lòng thử lại sau."
+      );
+      toast.error("Không thể tải danh sách chuyên ngành");
+    } finally {
+      setSpecializationsLoading(false);
+    }
+  }, [specializationsLoading]);
+
+  const specializationOptions = useMemo(
+    () =>
+      specializations.map((spec) => ({
+        label: `${spec.code} - ${spec.name}`,
+        value: spec.name,
+      })),
+    [specializations]
+  );
+
   useEffect(() => {
     if (!subjectId) {
       toast.error("Không tìm thấy mã môn học");
@@ -257,11 +301,18 @@ const SubjectDetail: React.FC = () => {
       hasLoadedGradeTreeRef.current = true;
       loadSubjectDetail(subjectId);
       loadGradeComponents(subjectId);
+      loadSpecializations();
     } else {
       // Lần render thứ hai chỉ cần reload lại thông tin môn (nhẹ hơn), không cần gọi tree nữa
       loadSubjectDetail(subjectId, { showLoading: false });
     }
-  }, [subjectId, loadSubjectDetail, loadGradeComponents, navigate]);
+  }, [
+    subjectId,
+    loadSubjectDetail,
+    loadGradeComponents,
+    loadSpecializations,
+    navigate,
+  ]);
 
   const handleStartEdit = () => {
     if (!subject) {
@@ -709,8 +760,30 @@ const SubjectDetail: React.FC = () => {
                   size="large"
                 />
               </Form.Item>
-              <Form.Item name="department" label="Bộ môn">
-                <Input placeholder="Nhập tên bộ môn" size="large" />
+              <Form.Item
+                name="department"
+                label="Bộ môn"
+                extra={specializationsError || undefined}
+              >
+                <Select
+                  placeholder={
+                    specializationsLoading
+                      ? "Đang tải chuyên ngành..."
+                      : "Chọn chuyên ngành"
+                  }
+                  loading={specializationsLoading}
+                  options={specializationOptions}
+                  showSearch
+                  optionFilterProp="label"
+                  allowClear
+                  disabled={!specializations.length}
+                  size="large"
+                  onDropdownVisibleChange={(open) => {
+                    if (open && !specializations.length) {
+                      loadSpecializations();
+                    }
+                  }}
+                />
               </Form.Item>
             </div>
 
@@ -777,8 +850,20 @@ const SubjectDetail: React.FC = () => {
             size="small"
             className="subject-descriptions"
           >
-            <Descriptions.Item label="Bộ môn">
-              {subject.department || "Chưa cập nhật"}
+            <Descriptions.Item label="Chuyên ngành">
+              {subject.specializations && subject.specializations.length > 0 ? (
+                <Space wrap>
+                  {subject.specializations.map((spec) => (
+                    <Tag key={spec.id} color="blue">
+                      {spec.code} - {spec.name}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : subject.department ? (
+                <Tag color="default">{subject.department}</Tag>
+              ) : (
+                "Chưa cập nhật"
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="Phân loại">
               {subject.category || "Chưa cập nhật"}
