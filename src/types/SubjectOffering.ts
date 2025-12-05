@@ -1,3 +1,5 @@
+import type { SpecializationDto } from "./Specialization";
+
 export interface SubjectOffering {
   id: string;
   subjectId: string;
@@ -14,6 +16,7 @@ export interface SubjectOffering {
   notes?: string;
   totalClasses?: number;
   totalStudents?: number;
+  specializations?: SpecializationDto[];
 }
 
 

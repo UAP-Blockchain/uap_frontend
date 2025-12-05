@@ -76,18 +76,14 @@ const TeacherProfile: React.FC = () => {
         value: profile.totalStudents,
         icon: <TeamOutlined />,
       },
-      {
-        title: "Chuyên môn chính",
-        value: profile.specialization,
-        icon: <UserOutlined />,
-        isText: true,
-      },
     ];
   }, [profile]);
 
   const selectedClass = useMemo(() => {
     if (!profile || profile.classes.length === 0) return null;
-    const found = profile.classes.find((cls) => cls.classId === selectedClassId);
+    const found = profile.classes.find(
+      (cls) => cls.classId === selectedClassId
+    );
     return found ?? profile.classes[0];
   }, [profile, selectedClassId]);
 
@@ -157,7 +153,20 @@ const TeacherProfile: React.FC = () => {
                 </Space>
               </Descriptions.Item>
               <Descriptions.Item label="Chuyên môn">
-                <Tag color="blue">{profile.specialization}</Tag>
+                {profile.specializations &&
+                profile.specializations.length > 0 ? (
+                  <Space wrap>
+                    {profile.specializations.map((spec) => (
+                      <Tag key={spec.id} color="blue">
+                        {spec.name}
+                      </Tag>
+                    ))}
+                  </Space>
+                ) : profile.specialization ? (
+                  <Tag color="blue">{profile.specialization}</Tag>
+                ) : (
+                  <Text type="secondary">Chưa có chuyên môn</Text>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Ngày vào trường">
                 {dayjs(profile.hireDate).format("DD/MM/YYYY")}
@@ -182,11 +191,6 @@ const TeacherProfile: React.FC = () => {
                       </Space>
                     }
                     value={stat.value}
-                    valueStyle={
-                      stat.isText
-                        ? { fontSize: 16, color: "#1a94fc" }
-                        : undefined
-                    }
                   />
                 </Card>
               </Col>
