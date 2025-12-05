@@ -69,6 +69,7 @@ export interface TeacherProfileDto {
   classes: TeacherClassSummaryDto[];
   totalClasses: number;
   totalStudents: number;
+  specializations?: SpecializationDto[];
 }
 
 export type { Teacher, TeacherFormData };
