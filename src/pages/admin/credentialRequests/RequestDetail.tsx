@@ -32,6 +32,7 @@ import {
   getCertificateTemplatesApi,
   type CertificateTemplateDto,
 } from "../../../services/admin/certificateTemplates/api";
+import "./RequestDetail.scss";
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -163,44 +164,46 @@ const CredentialRequestDetailAdmin: React.FC = () => {
 
   return (
     <div className="credential-request-detail-page">
-      <Card
-        title={
-          <Space>
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate(-1)}
-            />
+      <div className="detail-header">
+        <div className="header-left">
+          <Button
+            className="back-button"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate(-1)}
+          >
+            Quay lại
+          </Button>
+          <div className="header-title">
             <FileTextOutlined />
             <span>Chi tiết đơn yêu cầu chứng chỉ</span>
-          </Space>
-        }
-        extra={
-          <Space>
-            <Button
-              type="primary"
-              icon={<CheckCircleOutlined />}
-              disabled={disabledActions}
-              loading={processing && request?.status === "Pending"}
-              onClick={openApproveModal}
-            >
-              Duyệt
-            </Button>
-            <Button
-              danger
-              icon={<CloseCircleOutlined />}
-              disabled={disabledActions}
-              loading={processing && request?.status === "Pending"}
-              onClick={() => {
-                form.resetFields();
-                setRejectModalVisible(true);
-              }}
-            >
-              Từ chối
-            </Button>
-          </Space>
-        }
-      >
+          </div>
+        </div>
+        <Space>
+          <Button
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            disabled={disabledActions}
+            loading={processing && request?.status === "Pending"}
+            onClick={openApproveModal}
+          >
+            Duyệt
+          </Button>
+          <Button
+            danger
+            icon={<CloseCircleOutlined />}
+            disabled={disabledActions}
+            loading={processing && request?.status === "Pending"}
+            onClick={() => {
+              form.resetFields();
+              setRejectModalVisible(true);
+            }}
+          >
+            Từ chối
+          </Button>
+        </Space>
+      </div>
+
+      <Card>
         <Spin spinning={loading}>
           {request && (
             <Descriptions column={2} bordered>

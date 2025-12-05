@@ -1,6 +1,55 @@
 .credential-requests-page {
   padding: 16px;
 
+  .page-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+
+    .title-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      .title-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1a94fc, #0d73c9);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        box-shadow: 0 6px 16px rgba(26, 148, 252, 0.3);
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+        color: #8c8c8c;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: 22px;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+      }
+
+      .subtitle {
+        color: #8c8c8c;
+        font-size: 13px;
+        margin: 0;
+      }
+    }
+  }
+
   .ant-card {
     border-radius: 12px;
     box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
@@ -31,6 +80,64 @@
 
     .ant-table-tbody > tr:last-child > td {
       border-bottom: none;
+    }
+  }
+
+  .filters-row {
+    border-top: 1px solid #eef1f7;
+    padding-top: 12px;
+    margin-bottom: 8px;
+
+    &.compact-layout {
+      border-top: none;
+      padding-top: 6px;
+    }
+
+    .filter-row-compact {
+      .filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+
+        label {
+          font-size: 12px;
+          color: #6b7280;
+        }
+
+        .ant-input-affix-wrapper,
+        .ant-select-selector {
+          border-radius: 8px;
+          border: 1px solid #d9dce3;
+        }
+
+        .ant-input-search {
+          width: 100%;
+
+          .ant-input-affix-wrapper {
+            height: 44px;
+            padding: 8px 12px;
+            font-size: 15px;
+
+            .ant-input {
+              font-size: 15px;
+            }
+          }
+
+          .ant-input-search-button {
+            height: 44px;
+            background: #178bfa;
+            border-color: #178bfa;
+            color: white;
+            font-weight: 500;
+
+            &:hover {
+              background: #0d73c9;
+              border-color: #0d73c9;
+            }
+          }
+        }
+      }
     }
   }
 }

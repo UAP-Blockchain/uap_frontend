@@ -1,0 +1,76 @@
+.credential-request-detail-page {
+  padding: 16px;
+  background: #f5f6fa;
+
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 12px;
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-button {
+      border-radius: 8px;
+      height: 36px;
+    }
+
+    .header-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 18px;
+    }
+  }
+
+  .ant-descriptions {
+    .ant-descriptions-item-label {
+      font-weight: 600;
+      color: #2563eb !important;
+      background: #f4f7ff !important;
+      border-right: 1px solid #dbeafe !important;
+    }
+
+    .ant-descriptions-item-content {
+      color: #111827;
+      background: #ffffff;
+    }
+
+    .ant-tag {
+      border-radius: 999px;
+      border: none;
+      font-size: 11px;
+      padding: 2px 10px;
+      background: #e0edff;
+      color: #1d4ed8;
+
+      &.ant-tag-default {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+
+      &.ant-tag-red {
+        background: #fff1f0;
+        color: #cf1322;
+      }
+
+      &.ant-tag-green {
+        background: #f6ffed;
+        color: #389e0d;
+      }
+
+      &.ant-tag-gold {
+        background: #fffbe6;
+        color: #d48806;
+      }
+    }
+  }
+}
+

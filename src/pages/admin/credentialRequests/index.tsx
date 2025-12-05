@@ -21,6 +21,8 @@ import {
   UserOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
+  FilterOutlined,
+  SafetyOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type {
@@ -253,50 +255,77 @@ const CredentialRequestsPage: React.FC = () => {
 
   return (
     <div className="credential-requests-page">
-      <Card
-        title={
-          <Space>
-            <FileTextOutlined />
-            <span>Danh sách đơn yêu cầu cấp chứng chỉ</span>
-          </Space>
-        }
-      >
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={24} md={10}>
-            <Search
-              placeholder="Tìm theo tên, mã SV, loại chứng chỉ..."
-              allowClear
-              prefix={<SearchOutlined />}
-              onSearch={(value) => setSearchTerm(value)}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </Col>
-          <Col xs={12} md={7}>
-            <Select
-              value={statusFilter}
-              onChange={setStatusFilter}
-              style={{ width: "100%" }}
-            >
-              <Option value="all">Tất cả trạng thái</Option>
-              <Option value="Pending">Đang chờ</Option>
-              <Option value="Approved">Đã duyệt</Option>
-              <Option value="Rejected">Đã từ chối</Option>
-            </Select>
-          </Col>
-          <Col xs={12} md={7}>
-            <Select
-              value={typeFilter}
-              onChange={setTypeFilter}
-              style={{ width: "100%" }}
-            >
-              <Option value="all">Tất cả loại chứng chỉ</Option>
-              <Option value="Completion">Hoàn thành</Option>
-              <Option value="Subject">Môn học</Option>
-              <Option value="Semester">Học kỳ</Option>
-              <Option value="Roadmap">Lộ trình</Option>
-            </Select>
-          </Col>
-        </Row>
+      <div className="page-hero">
+        <div className="title-block">
+          <span className="title-icon">
+            <SafetyOutlined />
+          </span>
+          <div>
+            <div className="eyebrow">Blockchain Credential Vault</div>
+            <h2>Giám sát chứng chỉ</h2>
+            <p className="subtitle">
+              Cấp, xác thực và thu hồi chứng chỉ được ghi trên blockchain.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <Card>
+        <div className="filters-row compact-layout">
+          <Row gutter={[8, 8]} align="middle" className="filter-row-compact">
+            <Col xs={24} md={10}>
+              <div className="filter-field">
+                <label>Tìm kiếm</label>
+                <Search
+                  placeholder="Tìm theo tên, mã SV, loại chứng chỉ..."
+                  allowClear
+                  value={searchTerm}
+                  prefix={<SearchOutlined />}
+                  onSearch={(value) => setSearchTerm(value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  size="large"
+                  enterButton="Tìm kiếm"
+                  style={{ width: "100%" }}
+                />
+              </div>
+            </Col>
+            <Col xs={12} md={7}>
+              <div className="filter-field">
+                <label>Trạng thái</label>
+                <Select
+                  value={statusFilter}
+                  onChange={setStatusFilter}
+                  style={{ width: "100%" }}
+                  size="middle"
+                  suffixIcon={<FilterOutlined />}
+                >
+                  <Option value="all">Tất cả trạng thái</Option>
+                  <Option value="Pending">Đang chờ</Option>
+                  <Option value="Approved">Đã duyệt</Option>
+                  <Option value="Rejected">Đã từ chối</Option>
+                </Select>
+              </div>
+            </Col>
+            <Col xs={12} md={7}>
+              <div className="filter-field">
+                <label>Loại chứng chỉ</label>
+                <Select
+                  value={typeFilter}
+                  onChange={setTypeFilter}
+                  style={{ width: "100%" }}
+                  size="middle"
+                  suffixIcon={<FilterOutlined />}
+                >
+                  <Option value="all">Tất cả loại chứng chỉ</Option>
+                  <Option value="Completion">Hoàn thành</Option>
+                  <Option value="Subject">Môn học</Option>
+                  <Option value="Semester">Học kỳ</Option>
+                  <Option value="Roadmap">Lộ trình</Option>
+                </Select>
+              </div>
+            </Col>
+          </Row>
+        </div>
 
         <Table
           className="custom-table"

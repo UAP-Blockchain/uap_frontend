@@ -116,31 +116,9 @@ const HeaderComponent: React.FC<HeaderProps> = ({
       type: "divider",
     },
     {
-      key: "view-profile",
-      icon: <UserOutlined />,
-      label: "View Profile",
-      onClick: () => {
-        // Navigate to profile page based on role
-        if (userProfile?.roleCode === "R4") {
-          navigate("/student-portal/profile");
-        } else {
-          navigate("/admin/students");
-        }
-      },
-    },
-    {
-      key: "change-password",
-      icon: <LockOutlined />,
-      label: "Change Password",
-      onClick: () => navigate("/change-password"),
-    },
-    {
-      type: "divider",
-    },
-    {
       key: "sign-out",
       icon: <LogoutOutlined />,
-      label: "Sign Out",
+      label: "Đăng xuất",
       danger: true,
       onClick: handleLogout,
     },
@@ -152,10 +130,10 @@ const HeaderComponent: React.FC<HeaderProps> = ({
       label: (
         <div className="dropdown-footer">
           <Text type="secondary" className="footer-link">
-            Terms of Service
+            Điều khoản dịch vụ
           </Text>
           <Text type="secondary" className="footer-link">
-            Privacy
+            Chính sách bảo mật
           </Text>
         </div>
       ),
