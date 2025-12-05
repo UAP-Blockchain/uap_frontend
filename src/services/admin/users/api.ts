@@ -54,6 +54,12 @@ export interface UpdateUserRequest {
   phoneNumber?: string;
 }
 
+export interface UpdateUserOnChainRequest {
+  transactionHash: string;
+  blockNumber: number;
+  registeredAtUtc?: string;
+}
+
 const normalizeItems = <T>(payload: {
   data?: T[];
   items?: T[];
@@ -126,5 +132,12 @@ export const uploadUserProfilePictureApi = async (
     }
   );
   return response.data;
+};
+
+export const updateUserOnChainApi = async (
+  id: string,
+  payload: UpdateUserOnChainRequest
+): Promise<void> => {
+  await api.post(`/User/${id}/on-chain`, payload);
 };
 

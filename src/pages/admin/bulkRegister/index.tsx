@@ -35,6 +35,8 @@ import type {
   RegisterUserRequest,
   RegisterUserResponse,
 } from "../../../types/Auth";
+import { getUniversityManagementContract, mapRoleToEnum } from "../../../blockchain/user";
+import { updateUserOnChainApi } from "../../../services/admin/users/api";
 import type { CurriculumListItem } from "../../../types/Curriculum";
 import { fetchCurriculumsApi } from "../../../services/admin/curriculums/api";
 import "./index.scss";
@@ -53,6 +55,7 @@ const BulkRegister: React.FC = () => {
   const [curriculums, setCurriculums] = useState<CurriculumListItem[]>([]);
   const [curriculumsLoading, setCurriculumsLoading] = useState(false);
   const [curriculumError, setCurriculumError] = useState<string | null>(null);
+  const [onChainLoadingMap, setOnChainLoadingMap] = useState<Record<string, boolean>>({});
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { isAdmin, userProfile } = useRoleAccess();
@@ -78,6 +81,27 @@ const BulkRegister: React.FC = () => {
         navigate(-1); // Go back to previous page
       }, 2000);
     }
+
+    const debugContract = async () => {
+      try {
+        const contract = await getUniversityManagementContract();
+        // nếu contract có owner()
+        if ((contract as any).owner) {
+          const owner = await (contract as any).owner();
+          console.log("on-chain owner:", owner);
+        }
+        if ((contract as any).initialized) {
+          const initialized = await (contract as any).initialized();
+          console.log("initialized:", initialized);
+        }
+        const totalUsers = await (contract as any).getTotalUsers();
+        console.log("totalUsers:", totalUsers.toString());
+      } catch (e) {
+        console.error("DEBUG CONTRACT ERROR:", e);
+      }
+    };
+
+    debugContract();
   }, [isAuthenticated, accessToken, isAdminUser, navigate]);
 
   useEffect(() => {
@@ -420,6 +444,67 @@ const BulkRegister: React.FC = () => {
     }
   };
 
+  const handleRegisterUserOnChain = async (record: RegisterUserResponse) => {
+    if (!record.userId) {
+      message.error("Thiếu userId, không thể đăng ký on-chain.");
+      return;
+    }
+
+    const key = record.userId;
+    setOnChainLoadingMap((prev) => ({ ...prev, [key]: true }));
+
+    try {
+      const walletAddress = record.walletAddress;
+      if (!walletAddress) {
+        throw new Error("User chưa có ví (walletAddress) để đăng ký on-chain.");
+      }
+
+      const contract = await getUniversityManagementContract();
+      const roleEnum = mapRoleToEnum(record.roleName);
+
+      const tx = await contract.registerUser(
+        walletAddress,
+        record.userId,
+        record.fullName || record.email,
+        record.email,
+        roleEnum
+      );
+
+      const receipt = await tx.wait();
+      const txHash = receipt.hash as string;
+      const blockNumber = Number(receipt.blockNumber);
+
+      await updateUserOnChainApi(record.userId, {
+        transactionHash: txHash,
+        blockNumber,
+      });
+
+      message.success(`Đã đăng ký on-chain. Tx: ${txHash}`);
+
+      setResult((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          results: prev.results.map((r) =>
+            r.email === record.email
+              ? {
+                  ...r,
+                  blockchainTxHash: txHash,
+                  blockNumber,
+                  isOnBlockchain: true,
+                }
+              : r
+          ),
+        };
+      });
+    } catch (error: any) {
+      console.error(error);
+      message.error(error?.message || "Không thể đăng ký user on-chain");
+    } finally {
+      setOnChainLoadingMap((prev) => ({ ...prev, [key]: false }));
+    }
+  };
+
   const userColumns = [
     {
       title: "Email",
@@ -568,7 +653,6 @@ const BulkRegister: React.FC = () => {
       title: "Trạng thái",
       key: "status",
       width: 100,
-      fixed: "right" as const,
       render: (_: any, record: RegisterUserResponse) => (
         <Tag color={record.success ? "success" : "error"}>
           {record.success ? "Thành công" : "Thất bại"}
@@ -576,10 +660,19 @@ const BulkRegister: React.FC = () => {
       ),
     },
     {
+      title: "On-chain?",
+      key: "onchain",
+      width: 120,
+      render: (_: any, record: RegisterUserResponse) => (
+        <Tag color={record.isOnBlockchain ? "green" : "default"}>
+          {record.isOnBlockchain ? "On-chain" : "Off-chain"}
+        </Tag>
+      ),
+    },
+    {
       title: "Thông báo",
       key: "message",
       width: 250,
-      fixed: "right" as const,
       render: (_: any, record: RegisterUserResponse) => {
         // Combine message and errors array
         const messages: string[] = [];
@@ -611,6 +704,46 @@ const BulkRegister: React.FC = () => {
               </div>
             ))}
           </div>
+        );
+      },
+    },
+    {
+      title: "Hành động on-chain",
+      key: "onchain_action",
+      width: 200,
+      render: (_: any, record: RegisterUserResponse) => {
+        if (!record.success) {
+          return <Text type="secondary">Đăng ký off-chain thất bại</Text>;
+        }
+
+        if (record.isOnBlockchain) {
+          if (record.blockchainTxHash) {
+            return (
+              <div>
+                <Text type="success">Đã on-chain</Text>
+                <br />
+                <Text type="secondary">Tx: {record.blockchainTxHash}</Text>
+              </div>
+            );
+          }
+          return <Text type="success">Đã on-chain</Text>;
+        }
+
+        if (!record.userId || !record.walletAddress) {
+          return <Text type="warning">Thiếu userId hoặc ví</Text>;
+        }
+
+        const loading = onChainLoadingMap[record.userId] === true;
+
+        return (
+          <Button
+            type="primary"
+            size="small"
+            loading={loading}
+            onClick={() => handleRegisterUserOnChain(record)}
+          >
+            Đăng ký on-chain
+          </Button>
         );
       },
     },

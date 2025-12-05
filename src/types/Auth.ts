@@ -104,6 +104,12 @@ export interface RegisterUserResponse {
   hireDate?: string;
   specialization?: string;
   curriculumId?: number;
+  // Blockchain fields (from backend UserResponse.Blockchain)
+  walletAddress?: string | null;
+  blockchainTxHash?: string | null;
+  blockNumber?: number | null;
+  blockchainRegisteredAt?: string | null;
+  isOnBlockchain?: boolean;
 }
 
 export interface BulkRegisterResponse {
