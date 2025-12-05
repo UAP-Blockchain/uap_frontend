@@ -55,8 +55,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
   useEffect(() => {
     const paths = pathname?.split("/").filter(Boolean) || [];
 
-    // Check if path is /admin/users/:userId
-    if (paths.length >= 3 && paths[0] === "admin" && paths[1] === "users") {
+    // Check if path is /admin/user-management/:userId or /admin/users/:userId
+    if (
+      paths.length >= 3 &&
+      paths[0] === "admin" &&
+      (paths[1] === "user-management" || paths[1] === "users")
+    ) {
       const userId = paths[2];
 
       // Check if it's a UUID and not already fetched or currently fetching
@@ -236,7 +240,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       teacher: "Cổng giảng viên",
       dashboard: "Bảng điều khiển",
       roadmap: "Lộ trình học tập",
-      credentials: "Chứng chỉ của tôi",
+      credentials: "Quản lý Chứng chỉ",
       "credential-requests": "Đơn yêu cầu chứng chỉ",
       "request-credential": "Yêu cầu chứng chỉ",
       timetable: "Thời khóa biểu",
@@ -251,6 +255,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       "credential-detail": "Chi tiết chứng chỉ",
       "my-credentials": "Chứng chỉ của tôi",
       users: "Người dùng",
+      "user-management": "Quản lý Người dùng",
       "bulk-register": "Đăng ký hàng loạt",
       register: "Đăng ký",
       curriculums: "Khung chương trình",
@@ -360,8 +365,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
       // Check if this is a UUID and we have the name mapped
       let displayName: string;
       if (isUUID(path)) {
-        // Check context: if previous path is "users", use userNameMap
-        if (index > 0 && paths[index - 1] === "users" && userNameMap[path]) {
+        // Check context: if previous path is "user-management" or "users", use userNameMap
+        if (
+          index > 0 &&
+          (paths[index - 1] === "user-management" || paths[index - 1] === "users") &&
+          userNameMap[path]
+        ) {
           displayName = userNameMap[path];
         }
         // Check context: if previous path is "semesters", use semesterNameMap

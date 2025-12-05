@@ -718,9 +718,6 @@ const ClassDetail: React.FC = () => {
           >
             Quay lại
           </Button>
-          <Title level={2} className="page-title">
-            {classCode ? `Chi tiết lớp ${classCode}` : "Chi tiết lớp học"}
-          </Title>
         </div>
         <div className="header-actions">
           {isEditing ? (

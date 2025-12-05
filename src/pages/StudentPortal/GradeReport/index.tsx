@@ -18,7 +18,9 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../../../redux/store";
 import { StudentGradeServices } from "../../../services/student/api.service";
 import RoadmapServices from "../../../services/roadmap/api.service";
+import { fetchGradeComponentTreeApi } from "../../../services/admin/gradeComponents/api";
 import type { ComponentGradeDto, SubjectGradeDto } from "../../../types/Grade";
+import type { GradeComponentDto } from "../../../types/GradeComponent";
 import type {
   CurriculumRoadmapSummaryDto,
   CurriculumSemesterDto,
@@ -37,6 +39,11 @@ interface GradeRecord {
   comment?: string;
   isTotal?: boolean;
   isCourseTotal?: boolean;
+  isParent?: boolean;
+  isChild?: boolean;
+  children?: GradeRecord[];
+  gradeComponentId?: string;
+  parentId?: string | null;
 }
 
 const GradeReport: React.FC = () => {
@@ -62,6 +69,9 @@ const GradeReport: React.FC = () => {
   const [isLoadingGrades, setIsLoadingGrades] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingSubjectId, setPendingSubjectId] = useState<string | null>(null);
+  const [gradeComponentTree, setGradeComponentTree] = useState<
+    GradeComponentDto[]
+  >([]);
 
   const accessToken = useSelector((state: RootState) => state.auth.accessToken);
   const userProfile = useSelector((state: RootState) => state.auth.userProfile);
@@ -193,55 +203,123 @@ const GradeReport: React.FC = () => {
     []
   );
 
-  // Transform API grade data to table format
+  // Transform API grade data to table format using tree structure
   const transformGradeData = useCallback(
-    (subjectGrade: SubjectGradeDto): GradeRecord[] => {
-      const records: GradeRecord[] = [];
+    (
+      subjectGrade: SubjectGradeDto,
+      tree: GradeComponentDto[]
+    ): GradeRecord[] => {
+      const flattenedRecords: GradeRecord[] = [];
 
-      // Group component grades by category (componentName)
-      const groupedByCategory: Record<string, ComponentGradeDto[]> = {};
-      subjectGrade.componentGrades.forEach((component) => {
-        const category = component.componentName;
-        if (!groupedByCategory[category]) {
-          groupedByCategory[category] = [];
-        }
-        groupedByCategory[category].push(component);
+      // Create a map from gradeComponentId to ComponentGradeDto
+      const gradeMap = new Map<string, ComponentGradeDto>();
+      subjectGrade.componentGrades.forEach((grade) => {
+        gradeMap.set(grade.gradeComponentId, grade);
       });
 
-      // Create records for each category
-      Object.entries(groupedByCategory).forEach(([category, components]) => {
-        // Add individual component grades
-        components.forEach((component) => {
-          records.push({
-            gradeCategory: category,
-            gradeItem: component.componentName,
-            weight: `${component.componentWeight}%`,
-            value: component.score ?? 0,
-            comment: component.letterGrade || undefined,
+      // Helper function to extract child display name (remove parent name prefix)
+      const getChildDisplayName = (
+        childName: string,
+        parentName: string
+      ): string => {
+        // If child name starts with parent name, remove it
+        if (childName.toLowerCase().startsWith(parentName.toLowerCase())) {
+          const remaining = childName
+            .substring(parentName.length)
+            .trim();
+          // If remaining is just a number or starts with a number, return it
+          if (/^\d+/.test(remaining)) {
+            return remaining;
+          }
+          // Otherwise return the remaining part
+          return remaining || childName;
+        }
+        return childName;
+      };
+
+      // Recursive function to process tree nodes and flatten them
+      const processNode = (
+        node: GradeComponentDto,
+        parentCategory: string = "",
+        parentName: string = ""
+      ) => {
+        const grade = gradeMap.get(node.id);
+        const category = parentCategory || node.name;
+
+        // If node has children, don't add parent as separate row
+        // Instead, show parent name in category and children in items
+        if (node.subComponents && node.subComponents.length > 0) {
+          // Process all children (parent name will be in category column)
+          let childrenTotal = 0;
+          node.subComponents.forEach((child) => {
+            const childGrade = gradeMap.get(child.id);
+            const childDisplayName = getChildDisplayName(child.name, node.name);
+            
+            // Add child record with parent name in category
+            flattenedRecords.push({
+              gradeCategory: node.name, // Parent name in category column
+              gradeItem: childDisplayName, // Child name (shortened) in item column
+              weight: `${child.weightPercent}%`,
+              value: childGrade?.score ?? 0,
+              comment: childGrade?.letterGrade || undefined,
+              isChild: true,
+              gradeComponentId: child.id,
+              parentId: child.parentId,
+            });
+            
+            // Calculate child contribution to parent total
+            if (childGrade && childGrade.score !== null) {
+              childrenTotal +=
+                (childGrade.score ?? 0) * (child.weightPercent / 100);
+            }
           });
-        });
 
-        // Calculate total for this category
-        const categoryTotal = components.reduce((sum, comp) => {
-          return sum + (comp.score ?? 0) * (comp.componentWeight / 100);
-        }, 0);
-        const categoryWeight = components.reduce(
-          (sum, comp) => sum + comp.componentWeight,
-          0
-        );
+          // Add total row for parent
+          flattenedRecords.push({
+            gradeCategory: "", // Empty category for total
+            gradeItem: "Tổng",
+            weight: `${node.weightPercent}%`,
+            value: childrenTotal.toFixed(2),
+            isTotal: true,
+          });
+        } else {
+          // Leaf node (no children) - only add if it's a root component
+          // (children are already added when processing parent)
+          if (!node.parentId) {
+            flattenedRecords.push({
+              gradeCategory: category,
+              gradeItem: node.name,
+              weight: `${node.weightPercent}%`,
+              value: grade?.score ?? 0,
+              comment: grade?.letterGrade || undefined,
+              gradeComponentId: node.id,
+              parentId: node.parentId,
+            });
 
-        records.push({
-          gradeCategory: "",
-          gradeItem: "Tổng",
-          weight: `${categoryWeight}%`,
-          value: categoryTotal.toFixed(2),
-          isTotal: true,
-        });
+            // Add total for root leaf component
+            const componentTotal = grade && grade.score !== null
+              ? (grade.score * (node.weightPercent / 100)).toFixed(2)
+              : "0.00";
+            flattenedRecords.push({
+              gradeCategory: "",
+              gradeItem: "Tổng",
+              weight: `${node.weightPercent}%`,
+              value: componentTotal,
+              isTotal: true,
+            });
+          }
+          // Note: Child nodes are already handled when processing parent above
+        }
+      };
+
+      // Process all root nodes
+      tree.forEach((rootNode) => {
+        processNode(rootNode);
       });
 
       // Add course total
       if (subjectGrade.averageScore !== null) {
-        records.push({
+        flattenedRecords.push({
           gradeCategory: "TỔNG KẾT MÔN HỌC",
           gradeItem: "ĐIỂM TRUNG BÌNH",
           weight: "",
@@ -249,7 +327,7 @@ const GradeReport: React.FC = () => {
           isCourseTotal: true,
         });
 
-        records.push({
+        flattenedRecords.push({
           gradeCategory: "",
           gradeItem: "ĐIỂM CHỮ",
           weight: "",
@@ -258,7 +336,7 @@ const GradeReport: React.FC = () => {
         });
       }
 
-      return records;
+      return flattenedRecords;
     },
     [translateLetterGrade]
   );
@@ -268,21 +346,27 @@ const GradeReport: React.FC = () => {
       setIsLoadingGrades(true);
       setError(null);
       try {
-        const response = await StudentGradeServices.getMyGrades({
-          SubjectId: subjectId,
-        });
+        // Load both grades and grade component tree
+        const [gradesResponse, tree] = await Promise.all([
+          StudentGradeServices.getMyGrades({
+            SubjectId: subjectId,
+          }),
+          fetchGradeComponentTreeApi(subjectId).catch(() => []), // Fallback to empty array if tree API fails
+        ]);
 
         const subject =
-          response.subjects.find((s) => s.subjectId === subjectId) ||
-          response.subjects[0] ||
+          gradesResponse.subjects.find((s) => s.subjectId === subjectId) ||
+          gradesResponse.subjects[0] ||
           null;
 
         if (subject) {
           setSelectedSubject(subject);
-          setGradeData(transformGradeData(subject));
+          setGradeComponentTree(tree);
+          setGradeData(transformGradeData(subject, tree));
           ensureSemesterVisible(subject.semesterName);
         } else {
           setSelectedSubject(null);
+          setGradeComponentTree([]);
           setGradeData([]);
         }
       } catch (err) {
@@ -298,6 +382,7 @@ const GradeReport: React.FC = () => {
         setError(errorMessage);
         message.error(errorMessage);
         setSelectedSubject(null);
+        setGradeComponentTree([]);
         setGradeData([]);
       } finally {
         setIsLoadingGrades(false);
@@ -342,6 +427,14 @@ const GradeReport: React.FC = () => {
             </Text>
           );
         }
+        // If this is a child row, show parent name without indentation (same as root components)
+        if (record.isChild && category) {
+          return (
+            <Text strong>
+              {category}
+            </Text>
+          );
+        }
         return category ? <Text strong>{category}</Text> : null;
       },
     },
@@ -351,6 +444,9 @@ const GradeReport: React.FC = () => {
       key: "gradeItem",
       width: 200,
       render: (item: string, record: GradeRecord) => {
+        // For child rows, add more indentation (parent name is already indented in category column)
+        const indent = record.isChild ? 48 : 0; // More indentation for child items
+        
         if (record.isCourseTotal) {
           return (
             <Text
@@ -366,12 +462,23 @@ const GradeReport: React.FC = () => {
         }
         if (record.isTotal) {
           return (
-            <Text strong style={{ color: "#1a94fc" }}>
+            <Text strong style={{ color: "#1a94fc", paddingLeft: indent }}>
               {item}
             </Text>
           );
         }
-        return <Text>{item}</Text>;
+        if (record.isChild) {
+          return (
+            <Text style={{ paddingLeft: indent }}>
+              {item}
+            </Text>
+          );
+        }
+        return (
+          <Text>
+            {item}
+          </Text>
+        );
       },
     },
     {
@@ -595,6 +702,8 @@ const GradeReport: React.FC = () => {
                         )
                           return "status-row";
                         if (record.isTotal) return "total-row";
+                        if (record.isChild) return "child-row";
+                        if (record.isParent) return "parent-row";
                         return "";
                       }}
                     />

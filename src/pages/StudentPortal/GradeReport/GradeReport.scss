@@ -240,6 +240,16 @@
             font-weight: 600;
           }
 
+          &.parent-row > td {
+            background: #ffffff;
+            font-weight: 600;
+          }
+
+          &.child-row > td {
+            background: #f9fbff;
+            color: #4b5563;
+          }
+
           &.course-total-row > td {
             background: linear-gradient(135deg, #e6f7ff, #bae0ff);
             font-weight: 700;

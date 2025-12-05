@@ -584,9 +584,12 @@ const CredentialsManagement: React.FC = () => {
                 <Search
                   placeholder="Tên, mã sinh viên, chứng chỉ..."
                   allowClear
+                  value={searchText}
                   onSearch={handleSearch}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearchText(e.target.value)}
                   prefix={<SearchOutlined />}
+                  size="large"
+                  enterButton="Tìm kiếm"
                   style={{ width: "100%" }}
                 />
               </div>
