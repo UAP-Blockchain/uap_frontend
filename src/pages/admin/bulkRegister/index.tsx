@@ -35,10 +35,15 @@ import type {
   RegisterUserRequest,
   RegisterUserResponse,
 } from "../../../types/Auth";
-import { getUniversityManagementContract, mapRoleToEnum } from "../../../blockchain/user";
+import {
+  getUniversityManagementContract,
+  mapRoleToEnum,
+} from "../../../blockchain/user";
 import { updateUserOnChainApi } from "../../../services/admin/users/api";
 import type { CurriculumListItem } from "../../../types/Curriculum";
 import { fetchCurriculumsApi } from "../../../services/admin/curriculums/api";
+import type { SpecializationDto } from "../../../types/Specialization";
+import { fetchSpecializationsApi } from "../../../services/admin/specializations/api";
 import "./index.scss";
 
 const { Title, Text } = Typography;
@@ -55,7 +60,16 @@ const BulkRegister: React.FC = () => {
   const [curriculums, setCurriculums] = useState<CurriculumListItem[]>([]);
   const [curriculumsLoading, setCurriculumsLoading] = useState(false);
   const [curriculumError, setCurriculumError] = useState<string | null>(null);
-  const [onChainLoadingMap, setOnChainLoadingMap] = useState<Record<string, boolean>>({});
+  const [specializations, setSpecializations] = useState<SpecializationDto[]>(
+    []
+  );
+  const [specializationsLoading, setSpecializationsLoading] = useState(false);
+  const [specializationsError, setSpecializationsError] = useState<
+    string | null
+  >(null);
+  const [onChainLoadingMap, setOnChainLoadingMap] = useState<
+    Record<string, boolean>
+  >({});
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const { isAdmin, userProfile } = useRoleAccess();
@@ -134,7 +148,35 @@ const BulkRegister: React.FC = () => {
       }
     };
 
+    const loadSpecializations = async () => {
+      setSpecializationsLoading(true);
+      try {
+        const response = await fetchSpecializationsApi({
+          pageNumber: 1,
+          pageSize: 200,
+        });
+        const items = response.data || [];
+        if (isMounted) {
+          setSpecializations(items);
+          setSpecializationsError(null);
+        }
+      } catch (error) {
+        console.error("Failed to load specializations:", error);
+        if (isMounted) {
+          setSpecializationsError(
+            "Không thể tải danh sách chuyên ngành. Vui lòng thử lại sau."
+          );
+          message.error("Không thể tải danh sách chuyên ngành");
+        }
+      } finally {
+        if (isMounted) {
+          setSpecializationsLoading(false);
+        }
+      }
+    };
+
     loadCurriculums();
+    loadSpecializations();
 
     return () => {
       isMounted = false;
@@ -166,6 +208,15 @@ const BulkRegister: React.FC = () => {
         value: curriculum.id,
       })),
     [curriculums]
+  );
+
+  const specializationOptions = useMemo(
+    () =>
+      specializations.map((spec) => ({
+        label: `${spec.code} - ${spec.name}`,
+        value: spec.code || spec.name,
+      })),
+    [specializations]
   );
 
   const getCurriculumLabel = useCallback(
@@ -955,8 +1006,21 @@ const BulkRegister: React.FC = () => {
                               <Form.Item
                                 label="Chuyên ngành"
                                 name="specialization"
+                                extra={specializationsError || undefined}
                               >
-                                <Input placeholder="Ví dụ: Khoa học máy tính" />
+                                <Select
+                                  placeholder={
+                                    specializationsLoading
+                                      ? "Đang tải chuyên ngành..."
+                                      : "Chọn chuyên ngành"
+                                  }
+                                  loading={specializationsLoading}
+                                  options={specializationOptions}
+                                  showSearch
+                                  optionFilterProp="label"
+                                  allowClear
+                                  disabled={!specializations.length}
+                                />
                               </Form.Item>
                               <Form.Item
                                 label="Số điện thoại"

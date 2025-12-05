@@ -16,6 +16,8 @@ export interface GetSubjectsRequest {
 
 // ==================== Response Types ====================
 
+import type { SpecializationDto } from "./Specialization";
+
 export interface SubjectDto {
   id: string;
   subjectCode: string;
@@ -26,6 +28,7 @@ export interface SubjectDto {
   department?: string;
   prerequisites?: string;
   totalOfferings?: number;
+  specializations?: SpecializationDto[];
 }
 
 export interface SubjectFormValues {

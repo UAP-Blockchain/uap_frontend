@@ -248,22 +248,7 @@ const RegisterUser: React.FC = () => {
         </Tag>
       ),
     },
-    {
-      title: "Ngày",
-      key: "date",
-      width: 150,
-      render: (_, record) => (
-        <div className="date-info">
-          {record.enrollmentDate && (
-            <div>Nhập học: {formatDate(record.enrollmentDate)}</div>
-          )}
-          {record.hireDate && (
-            <div>Vào làm: {formatDate(record.hireDate)}</div>
-          )}
-          {!record.enrollmentDate && !record.hireDate && "-"}
-        </div>
-      ),
-    },
+    
     {
       title: "Thông tin thêm",
       key: "additional",
