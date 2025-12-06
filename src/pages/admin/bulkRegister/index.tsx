@@ -294,6 +294,10 @@ const BulkRegister: React.FC = () => {
       key: `user-${Date.now()}-${Math.random()}`,
     };
 
+    if (values.walletAddress) {
+      newUser.walletAddress = String(values.walletAddress).trim();
+    }
+
     if (values.roleName === "Student") {
       if (values.studentCode) newUser.studentCode = values.studentCode;
       if (values.enrollmentDate) {
@@ -622,6 +626,13 @@ const BulkRegister: React.FC = () => {
       render: (text: string) => text || "-",
     },
     {
+      title: "Wallet Address",
+      dataIndex: "walletAddress",
+      key: "walletAddress",
+      width: 260,
+      render: (text: string) => text || "-",
+    },
+    {
       title: "Thao tác",
       key: "action",
       width: 100,
@@ -698,6 +709,13 @@ const BulkRegister: React.FC = () => {
       dataIndex: "specialization",
       key: "specialization",
       width: 150,
+      render: (text: string) => text || "-",
+    },
+    {
+      title: "Wallet Address",
+      dataIndex: "walletAddress",
+      key: "walletAddress",
+      width: 260,
       render: (text: string) => text || "-",
     },
     {
@@ -933,6 +951,19 @@ const BulkRegister: React.FC = () => {
                       ]}
                     >
                       <Input.Password placeholder="Nhập mật khẩu" />
+                    </Form.Item>
+
+                    <Form.Item
+                      label="Địa chỉ ví (MetaMask)"
+                      name="walletAddress"
+                      rules={[
+                        {
+                          pattern: /^0x[a-fA-F0-9]{40}$/,
+                          message: "Địa chỉ ví không hợp lệ",
+                        },
+                      ]}
+                    >
+                      <Input placeholder="0x... (tùy chọn, có thể để trống)" />
                     </Form.Item>
 
                     {/* Conditional fields based on role */}

@@ -67,6 +67,15 @@ const TeacherClassStudentList: React.FC = () => {
   const [attendanceData, setAttendanceData] = useState<
     Record<string, { isPresent: boolean; notes?: string }>
   >({});
+  const [onChainTxs, setOnChainTxs] = useState<
+    {
+      attendanceId: string;
+      txHash: string;
+      statusText: string;
+      createdAt: string;
+      studentName: string;
+    }[]
+  >([]);
   const fetchedSlotIdRef = useRef<string | null>(null);
   const isFetchingRef = useRef(false);
 
@@ -486,6 +495,17 @@ const TeacherClassStudentList: React.FC = () => {
                     }
                   );
 
+                  setOnChainTxs((prev) => [
+                    {
+                      attendanceId: record.attendanceId,
+                      txHash: receipt.hash,
+                      statusText: isPresent ? "Có mặt" : "Vắng",
+                      createdAt: new Date().toISOString(),
+                      studentName: record.studentName,
+                    },
+                    ...prev,
+                  ]);
+
                   api.success({
                     message: "Ghi on-chain thành công",
                     description: `Tx: ${receipt.hash}`,
@@ -688,6 +708,32 @@ const TeacherClassStudentList: React.FC = () => {
             />
           </Spin>
         </Card>
+        {onChainTxs.length > 0 && (
+          <Card
+            className="student-table-card"
+            style={{ marginTop: 16 }}
+            title="Lịch sử giao dịch on-chain trong buổi học này"
+          >
+            {onChainTxs.map((tx) => (
+              <div
+                key={`${tx.attendanceId}-${tx.txHash}`}
+                style={{
+                  padding: "4px 0",
+                  fontSize: 13,
+                  borderBottom: "1px solid #f0f0f0",
+                }}
+              >
+                <Text strong>
+                  {tx.studentName} - {tx.statusText}
+                </Text>{" "}
+                <Text type="secondary">
+                  • TX: <span style={{ wordBreak: "break-all" }}>{tx.txHash}</span>{" "}
+                  • {dayjs(tx.createdAt).format("HH:mm:ss DD/MM/YYYY")}
+                </Text>
+              </div>
+            ))}
+          </Card>
+        )}
       </div>
     </>
   );

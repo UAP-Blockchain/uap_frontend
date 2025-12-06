@@ -32,6 +32,7 @@ import {
   getCertificateTemplatesApi,
   type CertificateTemplateDto,
 } from "../../../services/admin/certificateTemplates/api";
+import { issueCredentialOnChain } from "../../../blockchain/credentialFlow";
 import "./RequestDetail.scss";
 
 const { Text } = Typography;
@@ -106,17 +107,22 @@ const CredentialRequestDetailAdmin: React.FC = () => {
     }
   };
 
-  const handleApprove = async () => {
+  const handleApproveOnChain = async () => {
     if (!request) return;
     try {
       const values = await form.validateFields();
       setProcessing(true);
-      await approveCredentialRequestApi(request.id, {
-        action: "Approve",
-        templateId: values.templateId,
-        adminNotes: values.adminNotes,
-      } as any);
-      message.success("Đã phê duyệt và cấp chứng chỉ cho đơn này.");
+      const result = await issueCredentialOnChain({
+        requestId: request.id,
+        approvePayload: {
+          action: "Approve",
+          templateId: values.templateId,
+          adminNotes: values.adminNotes,
+        },
+      });
+      message.success(
+        `Đã phê duyệt + phát hành on-chain. Tx: ${result.transactionHash}`
+      );
       setApproveModalVisible(false);
       form.resetFields();
       loadRequest();
@@ -131,7 +137,42 @@ const CredentialRequestDetailAdmin: React.FC = () => {
     }
   };
 
-  const openApproveModal = () => {
+  const handleApproveOffline = async () => {
+    if (!request) return;
+    try {
+      const values = await form.validateFields();
+      setProcessing(true);
+      await approveCredentialRequestApi(request.id, {
+        action: "Approve",
+        notes: values.adminNotes,
+      } as any);
+      message.success("Đã phê duyệt đơn yêu cầu (không on-chain).");
+      setApproveModalVisible(false);
+      form.resetFields();
+      loadRequest();
+    } catch (error: any) {
+      if (!error?.errorFields) {
+        message.error(
+          error?.response?.data?.detail || "Không thể phê duyệt đơn yêu cầu"
+        );
+      }
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const [approveMode, setApproveMode] = useState<"offline" | "onchain">(
+    "offline"
+  );
+
+  const openApproveModalOffline = () => {
+    setApproveMode("offline");
+    form.resetFields();
+    setApproveModalVisible(true);
+  };
+
+  const openApproveModalOnChain = () => {
+    setApproveMode("onchain");
     form.resetFields();
     setApproveModalVisible(true);
   };
@@ -184,9 +225,19 @@ const CredentialRequestDetailAdmin: React.FC = () => {
             icon={<CheckCircleOutlined />}
             disabled={disabledActions}
             loading={processing && request?.status === "Pending"}
-            onClick={openApproveModal}
+            onClick={openApproveModalOffline}
           >
-            Duyệt
+            Duyệt (không on-chain)
+          </Button>
+          <Button
+            type="primary"
+            ghost
+            icon={<CheckCircleOutlined />}
+            disabled={disabledActions}
+            loading={processing && request?.status === "Pending"}
+            onClick={openApproveModalOnChain}
+          >
+            Duyệt + On-chain
           </Button>
           <Button
             danger
@@ -256,7 +307,7 @@ const CredentialRequestDetailAdmin: React.FC = () => {
       <Modal
         title="Xác nhận phê duyệt đơn yêu cầu"
         open={approveModalVisible}
-        onOk={handleApprove}
+        onOk={approveMode === "onchain" ? handleApproveOnChain : handleApproveOffline}
         onCancel={() => setApproveModalVisible(false)}
         okText="Duyệt"
         cancelText="Hủy"

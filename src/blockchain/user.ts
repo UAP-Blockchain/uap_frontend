@@ -363,10 +363,21 @@ export function mapRoleToEnum(roleName: string): number {
     case "admin":
       return 0;
     case "teacher":
-      return 1;
-    case "student":
       return 2;
+    case "student":
+      return 3;
     default:
       throw new Error(`Vai trò không hợp lệ: ${roleName}`);
   }
+}
+
+export async function getCurrentSignerAndRole() {
+  const signer = await getSigner();
+  const currentAddress = (await signer.getAddress()).toLowerCase();
+
+  const contract = await getUniversityManagementContract();
+  const roleBigInt: bigint = await contract.getUserRole(currentAddress);
+  const role = Number(roleBigInt);
+
+  return { currentAddress, role };
 }

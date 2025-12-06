@@ -45,6 +45,7 @@ export interface RegisterUserRequest {
   email: string;
   password: string;
   roleName: "Student" | "Teacher";
+  walletAddress?: string;
   // Student fields (optional)
   studentCode?: string;
   enrollmentDate?: string; // ISO date string

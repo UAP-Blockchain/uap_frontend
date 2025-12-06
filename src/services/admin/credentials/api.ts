@@ -171,6 +171,37 @@ export interface CredentialShareDto {
   qrCodeData: string;
 }
 
+// On-chain related DTOs
+export interface IssueCredentialRequest {
+  templateId?: string;
+  certificateType: string;
+  studentId: string;
+  subjectId?: string;
+  semesterId?: string;
+  roadmapId?: string;
+  completionDate: string;
+  finalGrade?: number;
+  letterGrade?: string;
+  classification?: string;
+}
+
+export interface SaveCredentialOnChainRequest {
+  transactionHash: string;
+  blockNumber?: number;
+  chainId?: number;
+  contractAddress?: string;
+}
+
+// Response from approve credential request / issue including on-chain payload
+export interface CredentialOnChainPayload extends CredentialDetailDto {
+  onChainData?: {
+    studentAddress: string;
+    credentialType: string;
+    credentialData: string;
+    expiresAt: string; // ISO string or timestamp
+  };
+}
+
 // ==================== CREDENTIALS API ====================
 
 // GET /api/credentials - Get all credentials (Admin)
@@ -203,6 +234,17 @@ export const createCredentialApi = async (
   payload: CreateCredentialRequest
 ): Promise<CredentialDetailDto> => {
   const response = await api.post<CredentialDetailDto>("/credentials", payload);
+  return response.data;
+};
+
+// POST /api/credentials/issue - Issue credential and prepare on-chain payload (Admin)
+export const issueCredentialApi = async (
+  payload: IssueCredentialRequest
+): Promise<CredentialDetailDto> => {
+  const response = await api.post<CredentialDetailDto>(
+    "/credentials/issue",
+    payload
+  );
   return response.data;
 };
 
@@ -240,6 +282,15 @@ export const getCredentialShareInfoApi = async (
   const response = await api.get<CredentialShareDto>(
     `/credentials/${id}/share`
   );
+  return response.data;
+};
+
+// POST /api/credentials/{id}/on-chain - Save on-chain info after frontend issues transaction
+export const saveCredentialOnChainApi = async (
+  id: string,
+  payload: SaveCredentialOnChainRequest
+) => {
+  const response = await api.post(`/credentials/${id}/on-chain`, payload);
   return response.data;
 };
 
