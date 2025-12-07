@@ -21,6 +21,13 @@ export interface CredentialDto {
   classification?: string;
 }
 
+export interface CredentialOnChainPayloadDto {
+  studentWalletAddress: string;
+  credentialType: string;
+  credentialDataJson: string;
+  expiresAtUnix: number;
+}
+
 export interface CredentialDetailDto extends CredentialDto {
   templateId?: string;
   completionDate: string;
@@ -31,6 +38,7 @@ export interface CredentialDetailDto extends CredentialDto {
   revocationReason?: string;
   createdAt: string;
   updatedAt: string;
+  onChainPayload?: CredentialOnChainPayloadDto | null;
 }
 
 export interface CertificatePublicDto {
@@ -187,19 +195,10 @@ export interface IssueCredentialRequest {
 
 export interface SaveCredentialOnChainRequest {
   transactionHash: string;
+  blockchainCredentialId?: string;
   blockNumber?: number;
   chainId?: number;
   contractAddress?: string;
-}
-
-// Response from approve credential request / issue including on-chain payload
-export interface CredentialOnChainPayload extends CredentialDetailDto {
-  onChainData?: {
-    studentAddress: string;
-    credentialType: string;
-    credentialData: string;
-    expiresAt: string; // ISO string or timestamp
-  };
 }
 
 // ==================== CREDENTIALS API ====================

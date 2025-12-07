@@ -22,7 +22,10 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import type { CredentialRequestDto } from "../../../services/admin/credentials/api";
+import type {
+  CredentialRequestDto,
+  CredentialDetailDto,
+} from "../../../services/admin/credentials/api";
 import {
   getCredentialRequestByIdApi,
   approveCredentialRequestApi,
@@ -32,7 +35,8 @@ import {
   getCertificateTemplatesApi,
   type CertificateTemplateDto,
 } from "../../../services/admin/certificateTemplates/api";
-import { issueCredentialOnChain } from "../../../blockchain/credentialFlow";
+import { getCredentialManagementContract } from "../../../blockchain/credential";
+import { saveCredentialOnChainApi } from "../../../services/admin/credentials/api";
 import "./RequestDetail.scss";
 
 const { Text } = Typography;
@@ -46,6 +50,9 @@ const CredentialRequestDetailAdmin: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [approveModalVisible, setApproveModalVisible] = useState(false);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
+  const [approvedCredential, setApprovedCredential] =
+    useState<CredentialDetailDto | null>(null);
+  const [isSigningOnChain, setIsSigningOnChain] = useState(false);
   const [form] = Form.useForm();
   const [templates, setTemplates] = useState<CertificateTemplateDto[]>([]);
 
@@ -112,41 +119,13 @@ const CredentialRequestDetailAdmin: React.FC = () => {
     try {
       const values = await form.validateFields();
       setProcessing(true);
-      const result = await issueCredentialOnChain({
-        requestId: request.id,
-        approvePayload: {
-          action: "Approve",
-          templateId: values.templateId,
-          adminNotes: values.adminNotes,
-        },
-      });
-      message.success(
-        `Đã phê duyệt + phát hành on-chain. Tx: ${result.transactionHash}`
-      );
-      setApproveModalVisible(false);
-      form.resetFields();
-      loadRequest();
-    } catch (error: any) {
-      if (!error?.errorFields) {
-        message.error(
-          error?.response?.data?.detail || "Không thể phê duyệt đơn yêu cầu"
-        );
-      }
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  const handleApproveOffline = async () => {
-    if (!request) return;
-    try {
-      const values = await form.validateFields();
-      setProcessing(true);
-      await approveCredentialRequestApi(request.id, {
+      const approved = await approveCredentialRequestApi(request.id, {
         action: "Approve",
-        notes: values.adminNotes,
+        templateId: values.templateId,
+        adminNotes: values.adminNotes,
       } as any);
-      message.success("Đã phê duyệt đơn yêu cầu (không on-chain).");
+      setApprovedCredential(approved);
+      message.success("Đã phê duyệt đơn yêu cầu nội bộ. Bây giờ hãy ký on-chain.");
       setApproveModalVisible(false);
       form.resetFields();
       loadRequest();
@@ -160,21 +139,82 @@ const CredentialRequestDetailAdmin: React.FC = () => {
       setProcessing(false);
     }
   };
-
-  const [approveMode, setApproveMode] = useState<"offline" | "onchain">(
-    "offline"
-  );
-
-  const openApproveModalOffline = () => {
-    setApproveMode("offline");
+  const openApproveModalOnChain = () => {
     form.resetFields();
     setApproveModalVisible(true);
   };
 
-  const openApproveModalOnChain = () => {
-    setApproveMode("onchain");
-    form.resetFields();
-    setApproveModalVisible(true);
+  const handleSignOnChain = async () => {
+    if (!approvedCredential) {
+      message.error("Chưa có chứng chỉ đã duyệt để ký on-chain.");
+      return;
+    }
+    try {
+      setIsSigningOnChain(true);
+      const payload: any = (approvedCredential as any).onChainPayload;
+
+      if (!payload) {
+        throw new Error("Backend không gửi OnChainPayload cho credential.");
+      }
+
+      const contract = await getCredentialManagementContract();
+
+      const expiresAtBigInt = BigInt(payload.expiresAtUnix ?? 0);
+
+      const tx = await contract.issueCredential(
+        payload.studentWalletAddress,
+        payload.credentialType,
+        payload.credentialDataJson,
+        expiresAtBigInt
+      );
+
+      const receipt = await tx.wait();
+
+      let blockchainCredentialId: string | undefined;
+      try {
+        const ev = contract.interface.getEvent("CredentialIssued");
+        const topic = (ev as any)?.topicHash as string | undefined;
+
+        if (topic) {
+          for (const log of receipt.logs) {
+            if (log.topics[0] === topic) {
+              const parsed = contract.interface.parseLog({
+                topics: log.topics,
+                data: log.data,
+              }) as any;
+              const idValue = parsed?.args?.[0];
+              if (idValue != null) {
+                blockchainCredentialId = idValue.toString();
+              }
+              break;
+            }
+          }
+        }
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("Không parse được CredentialIssued event", e);
+      }
+
+      await saveCredentialOnChainApi(approvedCredential.id, {
+        transactionHash: receipt.hash,
+        blockchainCredentialId,
+        blockNumber: receipt.blockNumber ? Number(receipt.blockNumber) : undefined,
+        chainId: receipt.chainId ? Number(receipt.chainId) : undefined,
+        contractAddress: (contract.target as any)?.toString?.(),
+      });
+
+      message.success(`Đã phát hành chứng chỉ on-chain. Tx: ${tx.hash}`);
+      setApprovedCredential(null);
+      loadRequest();
+    } catch (error: any) {
+      message.error(
+        error?.response?.data?.detail ||
+          error?.message ||
+          "Không thể ký và lưu on-chain chứng chỉ"
+      );
+    } finally {
+      setIsSigningOnChain(false);
+    }
   };
 
   const handleReject = async () => {
@@ -225,19 +265,19 @@ const CredentialRequestDetailAdmin: React.FC = () => {
             icon={<CheckCircleOutlined />}
             disabled={disabledActions}
             loading={processing && request?.status === "Pending"}
-            onClick={openApproveModalOffline}
+            onClick={openApproveModalOnChain}
           >
-            Duyệt (không on-chain)
+            Duyệt nội bộ
           </Button>
           <Button
             type="primary"
             ghost
             icon={<CheckCircleOutlined />}
-            disabled={disabledActions}
-            loading={processing && request?.status === "Pending"}
-            onClick={openApproveModalOnChain}
+            disabled={!approvedCredential || isSigningOnChain}
+            loading={isSigningOnChain}
+            onClick={handleSignOnChain}
           >
-            Duyệt + On-chain
+            Ký & lưu on-chain
           </Button>
           <Button
             danger
@@ -307,7 +347,7 @@ const CredentialRequestDetailAdmin: React.FC = () => {
       <Modal
         title="Xác nhận phê duyệt đơn yêu cầu"
         open={approveModalVisible}
-        onOk={approveMode === "onchain" ? handleApproveOnChain : handleApproveOffline}
+        onOk={handleApproveOnChain}
         onCancel={() => setApproveModalVisible(false)}
         okText="Duyệt"
         cancelText="Hủy"

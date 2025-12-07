@@ -110,7 +110,7 @@ const VerificationPortal: React.FC = () => {
       const verifyResult = await CredentialServices.verifyCredential({
         credentialNumber,
         verificationHash,
-      });
+      } as any);
 
       const { isValid, message: backendMessage, credential } =
         (verifyResult || {}) as {
@@ -119,7 +119,7 @@ const VerificationPortal: React.FC = () => {
           credential?: { credentialId?: string; id?: string };
         };
 
-      if (isValid === false) {
+      if (isValid === false || !credential) {
         notificationApi.error({
           message: "Không thể xác thực chứng chỉ",
           description:
@@ -129,10 +129,7 @@ const VerificationPortal: React.FC = () => {
       }
 
       const credentialNumberFromResult =
-        credential?.credentialId ||
-        credential?.id ||
-        credentialNumber ||
-        verificationHash;
+        credential.credentialId || credential.id || credentialNumber || verificationHash;
 
       if (!credentialNumberFromResult) {
         notificationApi.warning({
@@ -270,7 +267,7 @@ const VerificationPortal: React.FC = () => {
 
     try {
       setIsVerifying(true);
-      const verifyResult = await CredentialServices.verifyCredential(payload);
+      const verifyResult = await CredentialServices.verifyCredential(payload as any);
 
       const { isValid, message: backendMessage, credential } =
         (verifyResult || {}) as {
@@ -279,7 +276,7 @@ const VerificationPortal: React.FC = () => {
           credential?: { credentialId?: string; id?: string };
         };
 
-      if (isValid === false) {
+      if (isValid === false || !credential) {
         notificationApi.error({
           message: "Không thể xác thực chứng chỉ",
           description:
@@ -289,7 +286,7 @@ const VerificationPortal: React.FC = () => {
       }
 
       const credentialNumberFromResult =
-        credential?.credentialId || credential?.id || trimmed;
+        credential.credentialId || credential.id || trimmed;
 
       notificationApi.success({
         message: "Xác thực thành công",

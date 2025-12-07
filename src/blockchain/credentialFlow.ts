@@ -1,19 +1,10 @@
 import { getCredentialManagementContract } from "./credential";
 import {
-  approveCredentialRequestApi,
   saveCredentialOnChainApi,
   type SaveCredentialOnChainRequest,
+  type CredentialDetailDto,
 } from "../services/admin/credentials/api";
 import { getBrowserProvider } from "./index";
-
-export interface IssueCredentialOnChainParams {
-  requestId: string;
-  approvePayload: {
-    action: "Approve";
-    templateId: string;
-    adminNotes?: string;
-  };
-}
 
 export interface IssueCredentialOnChainResult {
   transactionHash: string;
@@ -22,28 +13,20 @@ export interface IssueCredentialOnChainResult {
 }
 
 /**
- * Phương án 2 helper: backend chuẩn bị dữ liệu, FE ký on-chain, rồi callback lưu /on-chain
+ * Phương án 2 helper: nhận CredentialDetailDto (đã được duyệt nội bộ),
+ * FE ký on-chain rồi callback lưu /on-chain.
  */
 export async function issueCredentialOnChain(
-  params: IssueCredentialOnChainParams
+  approved: CredentialDetailDto & {
+    onChainData?: {
+      studentAddress: string;
+      credentialType: string;
+      credentialData: string;
+      expiresAt: string | number;
+    };
+  }
 ): Promise<IssueCredentialOnChainResult> {
-  // 1) Gọi API approve để backend tạo credential + trả về payload on-chain
-  const approved = await approveCredentialRequestApi(params.requestId, {
-    action: params.approvePayload.action,
-    notes: params.approvePayload.adminNotes,
-  } as any);
-
-  // Giả định backend đã lưu credential và trả về thông tin cần thiết trong approved
-  // TODO: Nếu backend trả kèm payload on-chain riêng, map lại tại đây.
-  const anyApproved: any = approved as any;
-  const onChainData = anyApproved.onChainData as
-    | {
-        studentAddress: string;
-        credentialType: string;
-        credentialData: string;
-        expiresAt: string | number;
-      }
-    | undefined;
+  const onChainData = approved.onChainData;
 
   if (!onChainData) {
     throw new Error("Backend không gửi payload on-chain cho credential.");
