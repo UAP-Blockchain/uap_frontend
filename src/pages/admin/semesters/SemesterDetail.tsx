@@ -76,7 +76,7 @@ const SemesterDetail: React.FC = () => {
         setSemester(data);
         setFormValues(data);
       } catch {
-        toast.error("Không thể tải thông tin học kì");
+        toast.error("Không thể tải thông tin học kỳ");
         navigate("/admin/semesters");
       } finally {
         if (shouldShowLoading) {
@@ -89,7 +89,7 @@ const SemesterDetail: React.FC = () => {
 
   useEffect(() => {
     if (!semesterId) {
-      toast.error("Không tìm thấy học kì");
+      toast.error("Không tìm thấy học kỳ");
       navigate("/admin/semesters");
       return;
     }
@@ -121,7 +121,7 @@ const SemesterDetail: React.FC = () => {
 
     const [startDate, endDate] = values.dateRange;
     if (!startDate || !endDate) {
-      toast.error("Vui lòng chọn thời gian học kì");
+      toast.error("Vui lòng chọn thời gian học kỳ");
       return;
     }
 
@@ -139,11 +139,11 @@ const SemesterDetail: React.FC = () => {
     setIsSaving(true);
     try {
       await updateSemesterApi(semesterId, payload);
-      toast.success("Cập nhật học kì thành công");
+      toast.success("Cập nhật học kỳ thành công");
       setIsEditing(false);
       await loadSemester(semesterId, { showLoading: false });
     } catch {
-      toast.error("Không thể cập nhật học kì");
+      toast.error("Không thể cập nhật học kỳ");
     } finally {
       setIsSaving(false);
     }
@@ -157,14 +157,14 @@ const SemesterDetail: React.FC = () => {
     try {
       if (action === "activate") {
         await activeSemesterApi(semesterId);
-        toast.success("Đã kích hoạt học kì");
+        toast.success("Đã kích hoạt học kỳ");
       } else {
         await closeSemesterApi(semesterId);
-        toast.success("Đã đóng học kì");
+        toast.success("Đã đóng học kỳ");
       }
       await loadSemester(semesterId, { showLoading: false });
     } catch {
-      toast.error("Không thể cập nhật trạng thái học kì");
+      toast.error("Không thể cập nhật trạng thái học kỳ");
     } finally {
       setStatusAction(null);
     }
@@ -176,27 +176,27 @@ const SemesterDetail: React.FC = () => {
     }
 
     if (action === "activate" && (semester.isActive || semester.isClosed)) {
-      toast.warning("Học kì hiện không thể kích hoạt");
+      toast.warning("Học kỳ hiện không thể kích hoạt");
       return;
     }
 
     if (action === "close" && semester.isClosed) {
-      toast.warning("Học kì đã được đóng");
+      toast.warning("Học kỳ đã được đóng");
       return;
     }
 
     const messages =
       action === "activate"
         ? {
-            title: "Kích hoạt học kì",
-            content: "Bạn có chắc muốn kích hoạt học kì này?",
+            title: "Kích hoạt học kỳ",
+            content: "Bạn có chắc muốn kích hoạt học kỳ này?",
             okText: "Kích hoạt",
           }
         : {
-            title: "Đóng học kì",
+            title: "Đóng học kỳ",
             content:
-              "Bạn có chắc muốn đóng học kì này? Hành động này không thể hoàn tác.",
-            okText: "Đóng học kì",
+              "Bạn có chắc muốn đóng học kỳ này? Hành động này không thể hoàn tác.",
+            okText: "Đóng học kỳ",
           };
 
     Modal.confirm({
@@ -268,7 +268,7 @@ const SemesterDetail: React.FC = () => {
             Quay lại
           </Button>
           <Title level={2} className="page-title">
-            Chi tiết học kì
+            Chi tiết học kỳ
           </Title>
         </div>
         <div className="header-actions">
@@ -288,7 +288,7 @@ const SemesterDetail: React.FC = () => {
               disabled={semester.isClosed}
               loading={statusAction === "close"}
             >
-              Đóng học kì
+              Đóng học kỳ
             </Button>
             {isEditing ? (
               <>
@@ -338,15 +338,15 @@ const SemesterDetail: React.FC = () => {
               >
                 <Form.Item
                   name="name"
-                  label="Tên học kì"
-                  rules={[{ required: true, message: "Vui lòng nhập tên học kì!" }]}
+                  label="Tên học kỳ"
+                  rules={[{ required: true, message: "Vui lòng nhập tên học kỳ!" }]}
                 >
-                  <Input placeholder="Nhập tên học kì" size="large" />
+                  <Input placeholder="Nhập tên học kỳ" size="large" />
                 </Form.Item>
                 <Form.Item
                   name="dateRange"
-                  label="Thời gian học kì"
-                  rules={[{ required: true, message: "Vui lòng chọn thời gian học kì!" }]}
+                  label="Thời gian học kỳ"
+                  rules={[{ required: true, message: "Vui lòng chọn thời gian học kỳ!" }]}
                 >
                   <RangePicker
                     size="large"

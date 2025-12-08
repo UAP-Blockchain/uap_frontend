@@ -121,7 +121,7 @@ const SemestersManagement: React.FC = () => {
           totalCount: response.totalCount || response.data.length,
         });
       } catch {
-        message.error("Không thể tải danh sách học kì");
+        message.error("Không thể tải danh sách học kỳ");
       } finally {
         setLoading(false);
       }
@@ -164,7 +164,7 @@ const SemestersManagement: React.FC = () => {
   const handleOk = () => {
     form.validateFields().then(async (values) => {
       if (!values.dateRange || values.dateRange.length < 2) {
-        message.error("Vui lòng chọn thời gian học kì!");
+        message.error("Vui lòng chọn thời gian học kỳ!");
         return;
       }
 
@@ -180,10 +180,10 @@ const SemestersManagement: React.FC = () => {
       try {
         if (editingSemester) {
           await updateSemesterApi(editingSemester.id, payload);
-          toast.success("Cập nhật học kì thành công!");
+          toast.success("Cập nhật học kỳ thành công!");
         } else {
           await createSemesterApi(payload);
-          toast.success("Thêm học kì thành công!");
+          toast.success("Thêm học kỳ thành công!");
         }
         setIsModalVisible(false);
         fetchData(
@@ -191,7 +191,7 @@ const SemestersManagement: React.FC = () => {
           pagination.pageSize
         );
       } catch {
-        toast.error("Không thể lưu học kì");
+        toast.error("Không thể lưu học kỳ");
       }
     });
   };
@@ -205,7 +205,7 @@ const SemestersManagement: React.FC = () => {
         // Use PATCH /api/Semesters/{id}/active to activate
         if (!record.isActive) {
           await activeSemesterApi(record.id);
-          toast.success("Kích hoạt học kì thành công!");
+          toast.success("Kích hoạt học kỳ thành công!");
           // If filtering by "inactive", switch to "all" to see the updated semester
           // Otherwise, refresh with current filter
           const newStatusFilter =
@@ -222,14 +222,14 @@ const SemestersManagement: React.FC = () => {
         } else {
           // If already active, we might want to deactivate, but there's no deactivate API
           // So we can only activate, not deactivate via this button
-          message.warning("Học kì đã đang hoạt động");
+          message.warning("Học kỳ đã đang hoạt động");
           return;
         }
       } else if (field === "isClosed") {
         // Use PATCH /api/Semesters/{id}/close to close
         if (!record.isClosed) {
           await closeSemesterApi(record.id);
-          toast.success("Đã đóng học kì!");
+          toast.success("Đã đóng học kỳ!");
           // If filtering by "active" or "inactive", switch to "all" to see the updated semester
           // Otherwise, refresh with current filter
           const newStatusFilter =
@@ -246,7 +246,7 @@ const SemestersManagement: React.FC = () => {
             newStatusFilter
           );
         } else {
-          toast.warning("Học kì đã được đóng");
+          toast.warning("Học kỳ đã được đóng");
           return;
         }
       }
@@ -276,7 +276,7 @@ const SemestersManagement: React.FC = () => {
 
   const columns: ColumnsType<SemesterDto> = [
     {
-      title: "Tên học kì",
+      title: "Tên học kỳ",
       key: "name",
       width: 200,
       render: (_, record) => (
@@ -393,7 +393,7 @@ const SemestersManagement: React.FC = () => {
               <Popconfirm
                 title={`Bạn có chắc muốn ${
                   record.isActive ? "tắt kích hoạt" : "kích hoạt"
-                } học kì này?`}
+                } học kỳ này?`}
                 onConfirm={() => handleToggleStatus(record, "isActive")}
                 okText="Có"
                 cancelText="Không"
@@ -412,9 +412,9 @@ const SemestersManagement: React.FC = () => {
               </Popconfirm>
             </Tooltip>
           )}
-          <Tooltip title="Đóng học kì">
+          <Tooltip title="Đóng học kỳ">
             <Popconfirm
-              title="Bạn có chắc muốn đóng học kì này? Hành động này không thể hoàn tác!"
+              title="Bạn có chắc muốn đóng học kỳ này? Hành động này không thể hoàn tác!"
               onConfirm={() => handleToggleStatus(record, "isClosed")}
               okText="Có"
               cancelText="Không"
@@ -435,7 +435,7 @@ const SemestersManagement: React.FC = () => {
 
   const statsCards = [
     {
-      label: "Tổng học kì",
+      label: "Tổng học kỳ",
       value: stats.total,
       icon: <CalendarOutlined />,
       accent: "total",
@@ -470,9 +470,9 @@ const SemestersManagement: React.FC = () => {
             </div>
             <div>
               <p className="eyebrow">Bảng quản trị</p>
-              <h2>Quản lý Học kì</h2>
+              <h2>Quản lý Học kỳ</h2>
               <span className="subtitle">
-                Theo dõi và cập nhật trạng thái học kì trong hệ thống
+                Theo dõi và cập nhật trạng thái học kỳ trong hệ thống
               </span>
             </div>
           </div>
@@ -490,7 +490,7 @@ const SemestersManagement: React.FC = () => {
               className="primary-action"
               onClick={() => showModal()}
             >
-              Thêm học kì
+              Thêm học kỳ
             </Button>
           </div>
         </div>
@@ -526,9 +526,9 @@ const SemestersManagement: React.FC = () => {
           <Row gutter={showDetails ? 16 : 12} align="middle">
             {showDetails && (
               <Col xs={24} md={12} className="filter-field search-field">
-                <label>Tìm kiếm học kì</label>
+                <label>Tìm kiếm học kỳ</label>
                 <Search
-                  placeholder="Nhập tên học kì..."
+                  placeholder="Nhập tên học kỳ..."
                   allowClear
                   value={searchText}
                   onChange={(e) => handleSearch(e.target.value)}
@@ -629,7 +629,7 @@ const SemestersManagement: React.FC = () => {
       </Card>
 
       <Modal
-        title={editingSemester ? "Chỉnh sửa học kì" : "Thêm học kì mới"}
+        title={editingSemester ? "Chỉnh sửa học kỳ" : "Thêm học kỳ mới"}
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => setIsModalVisible(false)}
@@ -640,17 +640,17 @@ const SemestersManagement: React.FC = () => {
         <Form form={form} layout="vertical">
           <Form.Item
             name="name"
-            label="Tên học kì"
-            rules={[{ required: true, message: "Vui lòng nhập tên học kì!" }]}
+            label="Tên học kỳ"
+            rules={[{ required: true, message: "Vui lòng nhập tên học kỳ!" }]}
           >
             <Input placeholder="Ví dụ: Fall 2025, Spring 2025..." />
           </Form.Item>
 
           <Form.Item
             name="dateRange"
-            label="Thời gian học kì"
+            label="Thời gian học kỳ"
             rules={[
-              { required: true, message: "Vui lòng chọn thời gian học kì!" },
+              { required: true, message: "Vui lòng chọn thời gian học kỳ!" },
             ]}
           >
             <RangePicker
@@ -671,7 +671,7 @@ const SemestersManagement: React.FC = () => {
             >
               <p style={{ margin: 0, fontSize: 12, color: "#666" }}>
                 <strong>Lưu ý:</strong> Form này chỉ dùng để cập nhật tên và
-                ngày học kì. Để thay đổi trạng thái (kích hoạt/đóng), vui lòng
+                ngày học kỳ. Để thay đổi trạng thái (kích hoạt/đóng), vui lòng
                 sử dụng các nút trong cột "Thao tác" của bảng.
               </p>
             </div>

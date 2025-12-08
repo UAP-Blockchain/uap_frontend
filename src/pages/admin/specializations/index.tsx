@@ -1,32 +1,25 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  FlagOutlined,
+  PlusOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
 import {
   Button,
   Card,
   Form,
   Input,
   Modal,
-  Space,
-  Switch,
-  Table,
-  Tag,
-  Typography,
   Popconfirm,
+  Space,
+  Table,
+  Typography,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import {
-  FlagOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  SearchOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-} from "@ant-design/icons";
+import axios from "axios";
+import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-import type {
-  CreateSpecializationRequest,
-  SpecializationDto,
-} from "../../../types/Specialization";
 import {
   createSpecializationApi,
   deleteSpecializationApi,
@@ -34,6 +27,10 @@ import {
   getSpecializationByIdApi,
   updateSpecializationApi,
 } from "../../../services/admin/specializations/api";
+import type {
+  CreateSpecializationRequest,
+  SpecializationDto,
+} from "../../../types/Specialization";
 import "./index.scss";
 
 const { Title, Paragraph } = Typography;
@@ -54,15 +51,6 @@ const SpecializationsPage: React.FC = () => {
   const [editing, setEditing] = useState<SpecializationDto | null>(null);
   const [form] = Form.useForm<CreateSpecializationRequest>();
 
-  const headerStats = useMemo(
-    () => ({
-      total: pagination.total,
-      active: data.filter((item) => item.isActive).length,
-      inactive: data.filter((item) => item.isActive === false).length,
-    }),
-    [data, pagination.total]
-  );
-
   const fetchData = useCallback(
     async (page = 1, pageSize = pagination.pageSize, search = searchText) => {
       setLoading(true);
@@ -82,7 +70,7 @@ const SpecializationsPage: React.FC = () => {
       } catch (error: any) {
         const message =
           error?.response?.data?.message ||
-          "Không thể tải danh sách chuyên môn";
+          "Không thể tải danh sách chuyên ngành";
         toast.error(message);
       } finally {
         setLoading(false);
@@ -114,7 +102,7 @@ const SpecializationsPage: React.FC = () => {
         });
       } catch (error: any) {
         toast.error(
-          error?.response?.data?.message || "Không thể tải chuyên môn này"
+          error?.response?.data?.message || "Không thể tải chuyên ngành này"
         );
         return;
       } finally {
@@ -126,6 +114,18 @@ const SpecializationsPage: React.FC = () => {
       form.setFieldsValue({ isActive: true });
     }
     setIsModalOpen(true);
+  };
+
+  const mapErrorMessage = (message?: string) => {
+    if (!message) return "Không thể lưu chuyên ngành. Vui lòng thử lại.";
+    const lower = message.toLowerCase();
+
+    // Check for duplicate code error
+    if (lower.includes("already exists") || lower.includes("đã tồn tại")) {
+      return "Mã chuyên ngành đã tồn tại, vui lòng chọn mã khác.";
+    }
+
+    return message;
   };
 
   const handleSubmit = () => {
@@ -140,21 +140,28 @@ const SpecializationsPage: React.FC = () => {
       try {
         if (editing) {
           await updateSpecializationApi(editing.id, payload);
-          toast.success("Cập nhật chuyên môn thành công");
+          toast.success("Cập nhật chuyên ngành thành công");
         } else {
           await createSpecializationApi(payload);
-          toast.success("Thêm chuyên môn thành công");
+          toast.success("Thêm chuyên ngành thành công");
         }
         setIsModalOpen(false);
         form.resetFields();
         fetchData(pagination.page, pagination.pageSize, searchText);
-      } catch (error: any) {
-        toast.error(
-          error?.response?.data?.message ||
-            (editing
-              ? "Không thể cập nhật chuyên môn"
-              : "Không thể thêm chuyên môn")
-        );
+      } catch (error: unknown) {
+        let errorMessage = editing
+          ? "Không thể cập nhật chuyên ngành"
+          : "Không thể thêm chuyên ngành";
+
+        if (axios.isAxiosError(error) && error.response?.data) {
+          const data = error.response.data as {
+            message?: string;
+            detail?: string;
+          };
+          errorMessage = data.message || data.detail || errorMessage;
+        }
+
+        toast.error(mapErrorMessage(errorMessage));
       }
     });
   };
@@ -163,7 +170,7 @@ const SpecializationsPage: React.FC = () => {
     setLoading(true);
     try {
       await deleteSpecializationApi(id);
-      toast.success("Đã xóa chuyên môn");
+      toast.success("Đã xóa chuyên ngành");
       const nextPage =
         data.length === 1 && pagination.page > 1
           ? pagination.page - 1
@@ -171,7 +178,7 @@ const SpecializationsPage: React.FC = () => {
       fetchData(nextPage, pagination.pageSize, searchText);
     } catch (error: any) {
       toast.error(
-        error?.response?.data?.message || "Không thể xóa chuyên môn này"
+        error?.response?.data?.message || "Không thể xóa chuyên ngành này"
       );
     } finally {
       setLoading(false);
@@ -180,28 +187,36 @@ const SpecializationsPage: React.FC = () => {
 
   const columns: ColumnsType<SpecializationDto> = [
     {
-      title: "Mã chuyên môn",
+      title: "Mã chuyên ngành",
       dataIndex: "code",
       key: "code",
       width: 180,
       render: (code: string) => <span className="code-pill">{code}</span>,
     },
     {
-      title: "Tên chuyên môn",
+      title: "Tên chuyên ngành",
       dataIndex: "name",
       key: "name",
-      render: (name: string, record) => (
-        <div className="name-cell">
-          <div className="name-text">{name}</div>
-          {record.description && (
-            <Paragraph type="secondary" className="description">
-              {record.description}
-            </Paragraph>
-          )}
-        </div>
-      ),
+      width: 200,
+      render: (name: string) => <div className="name-text">{name}</div>,
     },
-   
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      render: (description?: string) =>
+        description ? (
+          <Paragraph
+            type="secondary"
+            className="description"
+            ellipsis={{ rows: 2, expandable: true }}
+          >
+            {description}
+          </Paragraph>
+        ) : (
+          <span style={{ color: "#bfbfbf" }}>Chưa có mô tả</span>
+        ),
+    },
     {
       title: "Thao tác",
       key: "actions",
@@ -218,7 +233,7 @@ const SpecializationsPage: React.FC = () => {
             Sửa
           </Button>
           <Popconfirm
-            title="Xóa chuyên môn?"
+            title="Xóa chuyên ngành?"
             okText="Xóa"
             cancelText="Hủy"
             onConfirm={() => handleDelete(record.id)}
@@ -243,16 +258,16 @@ const SpecializationsPage: React.FC = () => {
             <div>
               <p className="eyebrow">Bảng quản trị</p>
               <Title level={3} style={{ margin: 0 }}>
-                Quản lý chuyên môn
+                Quản lý chuyên ngành
               </Title>
               <Paragraph className="subtitle">
-                Thêm/sửa chuyên môn và trạng thái kích hoạt.
+                Thêm/sửa chuyên ngành và trạng thái kích hoạt.
               </Paragraph>
             </div>
           </div>
           <div className="header-actions">
             <Search
-              placeholder="Tìm mã hoặc tên chuyên môn"
+              placeholder="Tìm mã hoặc tên chuyên ngành"
               allowClear
               onSearch={handleSearch}
               onChange={(e) => setSearchText(e.target.value)}
@@ -265,23 +280,8 @@ const SpecializationsPage: React.FC = () => {
               onClick={() => openModal()}
               className="primary-action"
             >
-              Thêm chuyên môn
+              Thêm chuyên ngành
             </Button>
-          </div>
-        </div>
-
-        <div className="stats-row">
-          <div className="stat-card">
-            <span className="label">Tổng số</span>
-            <span className="value">{headerStats.total}</span>
-          </div>
-          <div className="stat-card">
-            <span className="label">Đang bật</span>
-            <span className="value success">{headerStats.active}</span>
-          </div>
-          <div className="stat-card">
-            <span className="label">Đang tắt</span>
-            <span className="value danger">{headerStats.inactive}</span>
           </div>
         </div>
 
@@ -296,7 +296,18 @@ const SpecializationsPage: React.FC = () => {
             pageSize: pagination.pageSize,
             total: pagination.total,
             showSizeChanger: true,
-            onChange: (page, pageSize) => fetchData(page, pageSize, searchText),
+            pageSizeOptions: ["10", "20", "50", "100"],
+            showTotal: (total, range) =>
+              `${range[0]}-${range[1]} của ${total} chuyên ngành`,
+            size: "default",
+            position: ["bottomRight"],
+            onChange: (page, pageSize) => {
+              const size = pageSize || pagination.pageSize;
+              fetchData(page, size, searchText);
+            },
+            onShowSizeChange: (current, size) => {
+              fetchData(1, size, searchText);
+            },
           }}
         />
       </Card>
@@ -307,7 +318,7 @@ const SpecializationsPage: React.FC = () => {
         onOk={handleSubmit}
         okText={editing ? "Cập nhật" : "Thêm mới"}
         cancelText="Hủy"
-        title={editing ? "Cập nhật chuyên môn" : "Thêm chuyên môn mới"}
+        title={editing ? "Cập nhật chuyên ngành" : "Thêm chuyên ngành mới"}
         confirmLoading={loading}
       >
         <Form
@@ -317,10 +328,10 @@ const SpecializationsPage: React.FC = () => {
           autoComplete="off"
         >
           <Form.Item
-            label="Mã chuyên môn"
+            label="Mã chuyên ngành"
             name="code"
             rules={[
-              { required: true, message: "Vui lòng nhập mã chuyên môn" },
+              { required: true, message: "Vui lòng nhập mã chuyên ngành" },
               { max: 50, message: "Tối đa 50 ký tự" },
             ]}
           >
@@ -328,10 +339,10 @@ const SpecializationsPage: React.FC = () => {
           </Form.Item>
 
           <Form.Item
-            label="Tên chuyên môn"
+            label="Tên chuyên ngành"
             name="name"
             rules={[
-              { required: true, message: "Vui lòng nhập tên chuyên môn" },
+              { required: true, message: "Vui lòng nhập tên chuyên ngành" },
               { max: 150, message: "Tối đa 150 ký tự" },
             ]}
           >
@@ -344,12 +355,10 @@ const SpecializationsPage: React.FC = () => {
             rules={[{ max: 500, message: "Tối đa 500 ký tự" }]}
           >
             <Input.TextArea
-              placeholder="Mô tả ngắn gọn về chuyên môn"
+              placeholder="Mô tả ngắn gọn về chuyên ngành"
               rows={3}
             />
           </Form.Item>
-
-       
         </Form>
       </Modal>
     </div>

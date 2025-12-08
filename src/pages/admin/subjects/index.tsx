@@ -24,6 +24,8 @@ import {
   DeleteOutlined,
   PlusOutlined,
   CalendarOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
 } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import type { SubjectDto, SubjectFormValues } from "../../../types/Subject";
@@ -75,6 +77,8 @@ const SubjectsManagement: React.FC = () => {
   const [specializationFilter, setSpecializationFilter] = useState<string | undefined>();
   const [prerequisiteFilter, setPrerequisiteFilter] = useState<string | undefined>();
   const [creditsFilter, setCreditsFilter] = useState<number | undefined>();
+  const [sortBy, setSortBy] = useState<string | undefined>();
+  const [isDescending, setIsDescending] = useState(false);
 
   const updateUrlParams = useCallback(
     (page: number, pageSize: number, search?: string) => {
@@ -159,7 +163,9 @@ const SubjectsManagement: React.FC = () => {
       search?: string,
       specialization?: string | undefined,
       prerequisite?: string | undefined,
-      credits?: number | undefined
+      credits?: number | undefined,
+      sortField?: string | undefined,
+      descending?: boolean
     ) => {
       setLoading(true);
       try {
@@ -167,6 +173,14 @@ const SubjectsManagement: React.FC = () => {
         const currentSpecialization = specialization !== undefined ? specialization : specializationFilter;
         const currentPrerequisite = prerequisite !== undefined ? prerequisite : prerequisiteFilter;
         const currentCredits = credits !== undefined ? credits : creditsFilter;
+        // Always prefer passed sortField/descending over state to avoid stale closure issues
+        // If sortField is explicitly provided (not undefined), use it; otherwise fallback to state
+        const currentSortBy = sortField !== undefined ? sortField : sortBy;
+        // For isDescending: if sortField is provided, use the passed descending value (default to false if undefined)
+        // If sortField is not provided, use state values
+        const currentIsDescending = sortField !== undefined 
+          ? (descending !== undefined ? descending : false)
+          : (sortBy ? isDescending : false);
         
         // If there are filters, load all data and filter + paginate on frontend
         const hasFilters = currentSpecialization || currentPrerequisite || currentCredits;
@@ -177,6 +191,8 @@ const SubjectsManagement: React.FC = () => {
             pageNumber: 1,
             pageSize: 10000,
             searchTerm: search && search.trim() !== "" ? search.trim() : undefined,
+            sortBy: currentSortBy,
+            isDescending: currentIsDescending,
           });
 
           let filteredData = allResponse.data || [];
@@ -215,20 +231,22 @@ const SubjectsManagement: React.FC = () => {
           });
         } else {
           // No filters, use API pagination
-          const response = await fetchSubjectsApi({
-            pageNumber,
-            pageSize,
+        const response = await fetchSubjectsApi({
+          pageNumber,
+          pageSize,
             searchTerm: search && search.trim() !== "" ? search.trim() : undefined,
-          });
+            sortBy: currentSortBy,
+            isDescending: currentIsDescending,
+        });
 
           const data = response.data || [];
-          setSubjects(data);
+        setSubjects(data);
 
-          setPagination({
-            pageNumber: response.pageNumber || pageNumber,
-            pageSize: response.pageSize || pageSize,
+        setPagination({
+          pageNumber: response.pageNumber || pageNumber,
+          pageSize: response.pageSize || pageSize,
             totalCount: response.totalCount ?? data.length,
-          });
+        });
         }
       } catch {
         toast.error("Không thể tải danh sách môn học");
@@ -236,7 +254,7 @@ const SubjectsManagement: React.FC = () => {
         setLoading(false);
       }
     },
-    [pagination.pageSize, specializationFilter, prerequisiteFilter, creditsFilter]
+    [pagination.pageSize, specializationFilter, prerequisiteFilter, creditsFilter, sortBy, isDescending]
   );
 
   useEffect(() => {
@@ -245,7 +263,7 @@ const SubjectsManagement: React.FC = () => {
       Number(searchParams.get("pageSize")) || DEFAULT_PAGE_SIZE;
     const initialSearch = searchParams.get("search") || "";
     setSearchText(initialSearch);
-    fetchData(initialPage, initialPageSize, initialSearch);
+    fetchData(initialPage, initialPageSize, initialSearch, undefined, undefined, undefined, sortBy, isDescending);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
@@ -285,7 +303,43 @@ const SubjectsManagement: React.FC = () => {
 
   const handleSearch = () => {
     updateUrlParams(1, pagination.pageSize, searchText);
-    fetchData(1, pagination.pageSize, searchText, specializationFilter, prerequisiteFilter, creditsFilter);
+    fetchData(1, pagination.pageSize, searchText, specializationFilter, prerequisiteFilter, creditsFilter, sortBy, isDescending);
+  };
+
+  const handleSort = (field: string) => {
+    // Determine new sort state based on current state
+    let newSortBy: string;
+    let newIsDescending: boolean;
+    
+    // Check if this is the same field being sorted
+    const isSameField = sortBy === field;
+    
+    if (isSameField) {
+      // Same field: toggle direction (ascending <-> descending)
+      newSortBy = field;
+      newIsDescending = !isDescending;
+    } else {
+      // Different field or first time (sortBy is undefined): set to ascending
+      newSortBy = field;
+      newIsDescending = false;
+    }
+    
+    // Update state
+    setSortBy(newSortBy);
+    setIsDescending(newIsDescending);
+    
+    // Immediately call fetchData with the new sort values
+    // Pass explicit values to avoid any closure issues
+    fetchData(
+      1, 
+      pagination.pageSize, 
+      searchText, 
+      specializationFilter, 
+      prerequisiteFilter, 
+      creditsFilter, 
+      newSortBy,  // Always pass the new value explicitly
+      newIsDescending  // Always pass the new value explicitly
+    );
   };
 
   const handleFilterChange = (
@@ -307,8 +361,10 @@ const SubjectsManagement: React.FC = () => {
     setPrerequisiteFilter(undefined);
     setCreditsFilter(undefined);
     setSearchText("");
+    setSortBy(undefined);
+    setIsDescending(false);
     updateUrlParams(1, pagination.pageSize, "");
-    fetchData(1, pagination.pageSize, "");
+    fetchData(1, pagination.pageSize, "", undefined, undefined, undefined, undefined, false);
   };
 
   const mapErrorMessage = (message?: string) => {
@@ -408,7 +464,7 @@ const SubjectsManagement: React.FC = () => {
         }
         setIsModalVisible(false);
         form.resetFields();
-        fetchData(pagination.pageNumber, pagination.pageSize);
+        fetchData(pagination.pageNumber, pagination.pageSize, searchText, specializationFilter, prerequisiteFilter, creditsFilter, sortBy, isDescending);
       } catch (error) {
         let errorMessage = "Không thể lưu môn học. Vui lòng thử lại.";
         if (axios.isAxiosError(error) && error.response?.data) {
@@ -424,10 +480,35 @@ const SubjectsManagement: React.FC = () => {
     try {
       await deleteSubjectApi(id);
       toast.success("Xóa môn học thành công");
-      fetchData(pagination.pageNumber, pagination.pageSize);
+      fetchData(pagination.pageNumber, pagination.pageSize, searchText, specializationFilter, prerequisiteFilter, creditsFilter, sortBy, isDescending);
     } catch {
       toast.error("Không thể xóa môn học");
     }
+  };
+
+  const renderSortableTitle = (title: string, sortField: string) => {
+    const isActive = sortBy === sortField;
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span>{title}</span>
+        <Button
+          type="text"
+          size="small"
+          icon={isActive ? (isDescending ? <ArrowDownOutlined /> : <ArrowUpOutlined />) : <ArrowUpOutlined />}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort(sortField);
+          }}
+          style={{
+            padding: 0,
+            width: 20,
+            height: 20,
+            minWidth: 20,
+            color: "#ffffff",
+          }}
+        />
+      </div>
+    );
   };
 
   const columns: ColumnsType<SubjectDto> = [
@@ -450,18 +531,6 @@ const SubjectsManagement: React.FC = () => {
             </div>
           )}
         </div>
-      ),
-    },
-    {
-      title: "Tín chỉ",
-      dataIndex: "credits",
-      key: "credits",
-      width: 100,
-      align: "center",
-      render: (credits: number) => (
-        <Tag color="purple" className="credit-tag">
-          {credits}
-        </Tag>
       ),
     },
     {
@@ -504,13 +573,25 @@ const SubjectsManagement: React.FC = () => {
       },
     },
     {
-      title: "Lớp mở",
+      title: renderSortableTitle("Lớp mở", "TotalOfferings"),
       dataIndex: "totalOfferings",
       key: "totalOfferings",
       width: 100,
       align: "center",
       render: (totalOfferings?: number) => (
         <span className="classes-count">{totalOfferings ?? 0}</span>
+      ),
+    },
+    {
+      title: renderSortableTitle("Tín chỉ", "Credits"),
+      dataIndex: "credits",
+      key: "credits",
+      width: 100,
+      align: "center",
+      render: (credits: number) => (
+        <Tag color="purple" className="credit-tag">
+          {credits}
+        </Tag>
       ),
     },
     {
@@ -719,11 +800,11 @@ const SubjectsManagement: React.FC = () => {
                 (() => {
                   const size = pageSize || pagination.pageSize;
                   updateUrlParams(page, size, searchText);
-                  fetchData(page, size, searchText);
+                  fetchData(page, size, searchText, specializationFilter, prerequisiteFilter, creditsFilter, sortBy, isDescending);
                 })(),
               onShowSizeChange: (current, size) => {
                 updateUrlParams(1, size, searchText);
-                fetchData(1, size, searchText);
+                fetchData(1, size, searchText, specializationFilter, prerequisiteFilter, creditsFilter, sortBy, isDescending);
               },
             }}
             scroll={{ x: 800 }}
@@ -873,14 +954,6 @@ const SubjectsManagement: React.FC = () => {
                   </Option>
                 ))}
             </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="department"
-            label="Bộ môn (tùy chọn)"
-            extra="Nhập bộ môn/khoa nếu cần"
-          >
-            <Input placeholder="Nhập bộ môn/khoa (tùy chọn)" size="large" />
           </Form.Item>
         </Form>
       </Modal>
