@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import {
   Button,
   Card,
@@ -69,6 +70,11 @@ const SubjectsManagement: React.FC = () => {
   const [specializationsError, setSpecializationsError] = useState<
     string | null
   >(null);
+  const [allSubjects, setAllSubjects] = useState<SubjectDto[]>([]);
+  const [loadingAllSubjects, setLoadingAllSubjects] = useState(false);
+  const [specializationFilter, setSpecializationFilter] = useState<string | undefined>();
+  const [prerequisiteFilter, setPrerequisiteFilter] = useState<string | undefined>();
+  const [creditsFilter, setCreditsFilter] = useState<number | undefined>();
 
   const updateUrlParams = useCallback(
     (page: number, pageSize: number, search?: string) => {
@@ -100,35 +106,137 @@ const SubjectsManagement: React.FC = () => {
     };
   }, [pagination.totalCount, subjects]);
 
+  // Load all subjects for filter options
+  const loadAllSubjectsForFilters = useCallback(async () => {
+    setLoadingAllSubjects(true);
+    try {
+      const response = await fetchSubjectsApi({
+        pageNumber: 1,
+        pageSize: 10000, // Load all for filter options
+      });
+      setAllSubjects(response.data || []);
+    } catch {
+      // Silent fail for filter options
+    } finally {
+      setLoadingAllSubjects(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAllSubjectsForFilters();
+  }, [loadAllSubjectsForFilters]);
+
+  // Get unique filter options
+  const prerequisiteFilterOptions = useMemo(() => {
+    const prerequisites = new Set<string>();
+    allSubjects.forEach((s) => {
+      if (s.prerequisites) {
+        // Split by comma, semicolon, or space
+        const prereqList = s.prerequisites
+          .split(/[,;]/)
+          .map((p) => p.trim())
+          .filter(Boolean);
+        prereqList.forEach((p) => prerequisites.add(p));
+      }
+    });
+    return Array.from(prerequisites).sort().map((prereq) => ({
+      label: prereq,
+      value: prereq,
+    }));
+  }, [allSubjects]);
+
+  const creditsOptions = useMemo(() => {
+    return Array.from({ length: 10 }, (_, i) => i + 1).map((credit) => ({
+      label: `${credit} tín chỉ`,
+      value: credit,
+    }));
+  }, []);
+
   const fetchData = useCallback(
     async (
       pageNumber = 1,
       pageSize = pagination.pageSize,
-      search = searchText
+      search?: string,
+      specialization?: string | undefined,
+      prerequisite?: string | undefined,
+      credits?: number | undefined
     ) => {
       setLoading(true);
       try {
-        const response = await fetchSubjectsApi({
-          pageNumber,
-          pageSize,
-          searchTerm: search && search.trim() !== "" ? search.trim() : undefined,
-        });
+        // Use passed filter values or current state
+        const currentSpecialization = specialization !== undefined ? specialization : specializationFilter;
+        const currentPrerequisite = prerequisite !== undefined ? prerequisite : prerequisiteFilter;
+        const currentCredits = credits !== undefined ? credits : creditsFilter;
+        
+        // If there are filters, load all data and filter + paginate on frontend
+        const hasFilters = currentSpecialization || currentPrerequisite || currentCredits;
+        
+        if (hasFilters) {
+          // Load all data for filtering
+          const allResponse = await fetchSubjectsApi({
+            pageNumber: 1,
+            pageSize: 10000,
+            searchTerm: search && search.trim() !== "" ? search.trim() : undefined,
+          });
 
-        const data = response.data || [];
-        setSubjects(data);
+          let filteredData = allResponse.data || [];
+          
+          // Apply filters
+          if (currentSpecialization) {
+            filteredData = filteredData.filter((s) =>
+              s.specializations?.some((spec) => spec.id === currentSpecialization)
+            );
+          }
+          if (currentPrerequisite) {
+            filteredData = filteredData.filter((s) => {
+              if (!s.prerequisites) return false;
+              const prereqList = s.prerequisites
+                .split(/[,;]/)
+                .map((p) => p.trim())
+                .filter(Boolean);
+              return prereqList.includes(currentPrerequisite);
+            });
+          }
+          if (currentCredits) {
+            filteredData = filteredData.filter((s) => s.credits === currentCredits);
+          }
 
-        setPagination({
-          pageNumber: response.pageNumber || pageNumber,
-          pageSize: response.pageSize || pageSize,
-          totalCount: response.totalCount ?? data.length,
-        });
+          // Paginate filtered data
+          const startIndex = (pageNumber - 1) * pageSize;
+          const endIndex = startIndex + pageSize;
+          const paginatedData = filteredData.slice(startIndex, endIndex);
+
+          setSubjects(paginatedData);
+
+          setPagination({
+            pageNumber,
+            pageSize,
+            totalCount: filteredData.length,
+          });
+        } else {
+          // No filters, use API pagination
+          const response = await fetchSubjectsApi({
+            pageNumber,
+            pageSize,
+            searchTerm: search && search.trim() !== "" ? search.trim() : undefined,
+          });
+
+          const data = response.data || [];
+          setSubjects(data);
+
+          setPagination({
+            pageNumber: response.pageNumber || pageNumber,
+            pageSize: response.pageSize || pageSize,
+            totalCount: response.totalCount ?? data.length,
+          });
+        }
       } catch {
         toast.error("Không thể tải danh sách môn học");
       } finally {
         setLoading(false);
       }
     },
-    [pagination.pageSize, searchText]
+    [pagination.pageSize, specializationFilter, prerequisiteFilter, creditsFilter]
   );
 
   useEffect(() => {
@@ -138,7 +246,8 @@ const SubjectsManagement: React.FC = () => {
     const initialSearch = searchParams.get("search") || "";
     setSearchText(initialSearch);
     fetchData(initialPage, initialPageSize, initialSearch);
-  }, [fetchData, searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   useEffect(() => {
     const loadSpecializations = async () => {
@@ -174,10 +283,41 @@ const SubjectsManagement: React.FC = () => {
     [specializations]
   );
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-    updateUrlParams(1, pagination.pageSize, value);
-    fetchData(1, pagination.pageSize, value);
+  const handleSearch = () => {
+    updateUrlParams(1, pagination.pageSize, searchText);
+    fetchData(1, pagination.pageSize, searchText, specializationFilter, prerequisiteFilter, creditsFilter);
+  };
+
+  const handleFilterChange = (
+    filterType: "specialization" | "prerequisite" | "credits",
+    value: string | number | undefined
+  ) => {
+    if (filterType === "specialization") {
+      setSpecializationFilter(value as string | undefined);
+    } else if (filterType === "prerequisite") {
+      setPrerequisiteFilter(value as string | undefined);
+    } else if (filterType === "credits") {
+      setCreditsFilter(value as number | undefined);
+    }
+    // Don't call fetchData here - let user click search button
+  };
+
+  const handleClearFilters = () => {
+    setSpecializationFilter(undefined);
+    setPrerequisiteFilter(undefined);
+    setCreditsFilter(undefined);
+    setSearchText("");
+    updateUrlParams(1, pagination.pageSize, "");
+    fetchData(1, pagination.pageSize, "");
+  };
+
+  const mapErrorMessage = (message?: string) => {
+    if (!message) return "Không thể lưu môn học. Vui lòng thử lại.";
+    const lower = message.toLowerCase();
+    if (lower.includes("already exists") || lower.includes("subject with code")) {
+      return "Mã môn học đã tồn tại, vui lòng chọn mã khác.";
+    }
+    return message;
   };
 
   const modalTitle = (
@@ -269,12 +409,13 @@ const SubjectsManagement: React.FC = () => {
         setIsModalVisible(false);
         form.resetFields();
         fetchData(pagination.pageNumber, pagination.pageSize);
-      } catch {
-        toast.error(
-          editingSubject
-            ? "Không thể cập nhật môn học"
-            : "Không thể tạo môn học"
-        );
+      } catch (error) {
+        let errorMessage = "Không thể lưu môn học. Vui lòng thử lại.";
+        if (axios.isAxiosError(error) && error.response?.data) {
+          const data = error.response.data as { message?: string; detail?: string };
+          errorMessage = data.message || data.detail || errorMessage;
+        }
+        toast.error(mapErrorMessage(errorMessage));
       }
     });
   };
@@ -472,20 +613,87 @@ const SubjectsManagement: React.FC = () => {
 
         <div className="filters-row compact-layout">
           <Row gutter={[8, 8]} align="middle" className="filter-row-compact">
-            <Col xs={24} sm={24} md={24}>
+            <Col xs={24} sm={12} md={6}>
               <div className="filter-field">
                 <label>Tìm kiếm</label>
-                <Search
-                  placeholder="Nhập mã môn học hoặc tên môn học..."
+                <Input
+                  placeholder="Mã hoặc tên môn học..."
                   allowClear
                   value={searchText}
                   onChange={(e) => setSearchText(e.target.value)}
-                  onSearch={handleSearch}
+                  onPressEnter={handleSearch}
                   prefix={<SearchOutlined />}
                   size="large"
-                  enterButton="Tìm kiếm"
                 />
               </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div className="filter-field">
+                <label>Chuyên ngành</label>
+                <Select
+                  placeholder="Tất cả chuyên ngành"
+                  allowClear
+                  value={specializationFilter}
+                  onChange={(value) => handleFilterChange("specialization", value)}
+                  options={specializationOptions}
+                  showSearch
+                  optionFilterProp="label"
+                  loading={specializationsLoading}
+                  size="large"
+                  style={{ width: "100%" }}
+                />
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div className="filter-field">
+                <label>Tiên quyết</label>
+                <Select
+                  placeholder="Tất cả tiên quyết"
+                  allowClear
+                  value={prerequisiteFilter}
+                  onChange={(value) => handleFilterChange("prerequisite", value)}
+                  options={prerequisiteFilterOptions}
+                  showSearch
+                  optionFilterProp="label"
+                  loading={loadingAllSubjects}
+                  size="large"
+                  style={{ width: "100%" }}
+                />
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div className="filter-field">
+                <label>Tín chỉ</label>
+                <Select
+                  placeholder="Tất cả tín chỉ"
+                  allowClear
+                  value={creditsFilter}
+                  onChange={(value) => handleFilterChange("credits", value)}
+                  options={creditsOptions}
+                  size="large"
+                  style={{ width: "100%" }}
+                />
+              </div>
+            </Col>
+          </Row>
+          <Row gutter={[8, 8]} align="middle" style={{ marginTop: 8 }}>
+            <Col xs={24} style={{ textAlign: "right" }}>
+              <Space>
+                <Button
+                  onClick={handleClearFilters}
+                  size="large"
+                >
+                  Xóa hết
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<SearchOutlined />}
+                  onClick={handleSearch}
+                  size="large"
+                >
+                  Tìm kiếm
+                </Button>
+              </Space>
             </Col>
           </Row>
         </div>

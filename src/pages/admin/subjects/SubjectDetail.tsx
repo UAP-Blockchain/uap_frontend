@@ -5,6 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import axios from "axios";
 import {
   Button,
   Card,
@@ -395,8 +396,19 @@ const SubjectDetail: React.FC = () => {
           replace: true,
         });
       }
-    } catch {
-      toast.error("Không thể cập nhật môn học");
+    } catch (error) {
+      const errMsg =
+        (axios.isAxiosError(error) && error.response?.data?.message) ||
+        undefined;
+      const mapErrorMessage = (message?: string) => {
+        if (!message) return "Không thể cập nhật môn học. Vui lòng thử lại.";
+        const lower = message.toLowerCase();
+        if (lower.includes("already exists") || lower.includes("subject with code")) {
+          return "Mã môn học đã tồn tại, vui lòng chọn mã khác.";
+        }
+        return message;
+      };
+      toast.error(mapErrorMessage(errMsg));
     } finally {
       setIsSaving(false);
     }

@@ -72,7 +72,9 @@ export const getSubjectByIdApi = async (id: string): Promise<SubjectDto> => {
 export const createSubjectApi = async (
   payload: CreateSubjectRequest
 ): Promise<SubjectDto> => {
-  const response = await api.post<SubjectDto>("/Subjects", payload);
+  const response = await api.post<SubjectDto>("/Subjects", payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -80,7 +82,9 @@ export const updateSubjectApi = async (
   id: string,
   payload: UpdateSubjectRequest
 ): Promise<SubjectDto> => {
-  const response = await api.put<SubjectDto>(`/Subjects/${id}`, payload);
+  const response = await api.put<SubjectDto>(`/Subjects/${id}`, payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
