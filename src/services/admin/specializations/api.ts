@@ -58,7 +58,10 @@ export const createSpecializationApi = async (
 ): Promise<SpecializationDto> => {
   const response = await api.post<SpecializationDto>(
     "/specializations",
-    payload
+    payload,
+    {
+      skipGlobalErrorHandler: true,
+    } as any
   );
   return response.data;
 };
@@ -69,7 +72,10 @@ export const updateSpecializationApi = async (
 ): Promise<SpecializationDto> => {
   const response = await api.put<SpecializationDto>(
     `/specializations/${id}`,
-    payload
+    payload,
+    {
+      skipGlobalErrorHandler: true,
+    } as any
   );
   return response.data;
 };
