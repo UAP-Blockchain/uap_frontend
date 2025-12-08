@@ -284,7 +284,7 @@ const SubjectDetail: React.FC = () => {
     () =>
       specializations.map((spec) => ({
         label: `${spec.code} - ${spec.name}`,
-        value: spec.name,
+        value: spec.id,
       })),
     [specializations]
   );
@@ -326,6 +326,7 @@ const SubjectDetail: React.FC = () => {
       description: subject.description,
       prerequisites: subject.prerequisites,
       department: subject.department,
+      specializationIds: subject.specializations?.map((s) => s.id) || [],
       category: subject.category,
     });
 
@@ -365,6 +366,7 @@ const SubjectDetail: React.FC = () => {
       subjectName: values.subjectName.trim(),
       credits: values.credits,
       description: values.description?.trim() || undefined,
+      specializationIds: values.specializationIds || [],
       department: values.department?.trim() || undefined,
       category: values.category?.trim() || undefined,
       prerequisites: values.prerequisites || undefined,
@@ -383,6 +385,7 @@ const SubjectDetail: React.FC = () => {
         credits: updated.credits,
         description: updated.description,
         prerequisites: updated.prerequisites,
+        specializationIds: updated.specializations?.map((s) => s.id) || [],
         department: updated.department,
         category: updated.category,
       });
@@ -718,6 +721,39 @@ const SubjectDetail: React.FC = () => {
             className="subject-edit-form"
             onFinish={handleSubmitEdit}
           >
+            <Form.Item
+              name="specializationIds"
+              label="Chuyên ngành"
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng chọn ít nhất 1 chuyên ngành!",
+                },
+              ]}
+              extra={specializationsError || undefined}
+            >
+              <Select
+                mode="multiple"
+                placeholder={
+                  specializationsLoading
+                    ? "Đang tải chuyên ngành..."
+                    : "Chọn chuyên ngành (có thể chọn nhiều)"
+                }
+                loading={specializationsLoading}
+                options={specializationOptions}
+                showSearch
+                optionFilterProp="label"
+                allowClear
+                disabled={!specializations.length}
+                size="large"
+                onDropdownVisibleChange={(open) => {
+                  if (open && !specializations.length) {
+                    loadSpecializations();
+                  }
+                }}
+              />
+            </Form.Item>
+
             <div className="subject-form-grid">
               <Form.Item
                 name="subjectCode"
@@ -762,28 +798,9 @@ const SubjectDetail: React.FC = () => {
               </Form.Item>
               <Form.Item
                 name="department"
-                label="Bộ môn"
-                extra={specializationsError || undefined}
+                label="Bộ môn (tùy chọn)"
               >
-                <Select
-                  placeholder={
-                    specializationsLoading
-                      ? "Đang tải chuyên ngành..."
-                      : "Chọn chuyên ngành"
-                  }
-                  loading={specializationsLoading}
-                  options={specializationOptions}
-                  showSearch
-                  optionFilterProp="label"
-                  allowClear
-                  disabled={!specializations.length}
-                  size="large"
-                  onDropdownVisibleChange={(open) => {
-                    if (open && !specializations.length) {
-                      loadSpecializations();
-                    }
-                  }}
-                />
+                <Input placeholder="Nhập bộ môn/khoa (tùy chọn)" size="large" />
               </Form.Item>
             </div>
 

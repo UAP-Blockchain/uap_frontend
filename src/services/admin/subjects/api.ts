@@ -13,6 +13,7 @@ export interface CreateSubjectRequest {
   category?: string;
   department?: string;
   prerequisites?: string;
+  specializationIds?: string[];
 }
 
 export type UpdateSubjectRequest = CreateSubjectRequest;

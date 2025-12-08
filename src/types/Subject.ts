@@ -37,8 +37,9 @@ export interface SubjectFormValues {
   credits: number;
   description?: string;
   category?: string;
-  department?: string;
   prerequisites?: string;
+  department?: string;
+  specializationIds?: string[];
 }
 
 export interface PagedSubjectsResponse {

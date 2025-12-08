@@ -34,7 +34,7 @@ import {
   deleteSubjectApi,
   type CreateSubjectRequest,
 } from "../../../services/admin/subjects/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import type { SpecializationDto } from "../../../types/Specialization";
 import { fetchSpecializationsApi } from "../../../services/admin/specializations/api";
 import "./index.scss";
@@ -46,6 +46,7 @@ const DEFAULT_PAGE_SIZE = 10;
 
 const SubjectsManagement: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [subjects, setSubjects] = useState<SubjectDto[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingSubject, setEditingSubject] = useState<SubjectDto | null>(null);
@@ -68,6 +69,18 @@ const SubjectsManagement: React.FC = () => {
   const [specializationsError, setSpecializationsError] = useState<
     string | null
   >(null);
+
+  const updateUrlParams = useCallback(
+    (page: number, pageSize: number, search?: string) => {
+      const params = new URLSearchParams();
+      if (page && page !== 1) params.set("page", String(page));
+      if (pageSize && pageSize !== DEFAULT_PAGE_SIZE)
+        params.set("pageSize", String(pageSize));
+      if (search && search.trim() !== "") params.set("search", search.trim());
+      setSearchParams(params);
+    },
+    [setSearchParams]
+  );
 
   const stats = useMemo(() => {
     const total = pagination.totalCount;
@@ -98,27 +111,16 @@ const SubjectsManagement: React.FC = () => {
         const response = await fetchSubjectsApi({
           pageNumber,
           pageSize,
-          searchTerm: search || undefined,
+          searchTerm: search && search.trim() !== "" ? search.trim() : undefined,
         });
 
-        let data = response.data || [];
-
-        // FE FILTER LẠI Ở ĐÂY 👇
-        if (search) {
-          const keyword = search.trim().toLowerCase();
-          data = data.filter(
-            (s) =>
-              s.subjectCode.toLowerCase().includes(keyword) ||
-              s.subjectName.toLowerCase().includes(keyword)
-          );
-        }
-
+        const data = response.data || [];
         setSubjects(data);
 
         setPagination({
           pageNumber: response.pageNumber || pageNumber,
           pageSize: response.pageSize || pageSize,
-          totalCount: data.length, // 👈 cập nhật lại total theo FE filter
+          totalCount: response.totalCount ?? data.length,
         });
       } catch {
         toast.error("Không thể tải danh sách môn học");
@@ -130,8 +132,13 @@ const SubjectsManagement: React.FC = () => {
   );
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    const initialPage = Number(searchParams.get("page")) || 1;
+    const initialPageSize =
+      Number(searchParams.get("pageSize")) || DEFAULT_PAGE_SIZE;
+    const initialSearch = searchParams.get("search") || "";
+    setSearchText(initialSearch);
+    fetchData(initialPage, initialPageSize, initialSearch);
+  }, [fetchData, searchParams]);
 
   useEffect(() => {
     const loadSpecializations = async () => {
@@ -162,13 +169,14 @@ const SubjectsManagement: React.FC = () => {
     () =>
       specializations.map((spec) => ({
         label: `${spec.code} - ${spec.name}`,
-        value: spec.name,
+        value: spec.id,
       })),
     [specializations]
   );
 
   const handleSearch = (value: string) => {
     setSearchText(value);
+    updateUrlParams(1, pagination.pageSize, value);
     fetchData(1, pagination.pageSize, value);
   };
 
@@ -218,6 +226,8 @@ const SubjectsManagement: React.FC = () => {
           description: subjectDetail.description,
           category: subjectDetail.category,
           department: subjectDetail.department,
+          specializationIds:
+            subjectDetail.specializations?.map((s) => s.id) || [],
           prerequisites: subjectDetail.prerequisites,
         });
       } catch {
@@ -246,6 +256,7 @@ const SubjectsManagement: React.FC = () => {
           category: values.category?.trim() || undefined,
           department: values.department?.trim() || undefined,
           prerequisites: values.prerequisites || undefined,
+          specializationIds: values.specializationIds || [],
         };
 
         if (editingSubject) {
@@ -490,12 +501,22 @@ const SubjectsManagement: React.FC = () => {
               current: pagination.pageNumber,
               pageSize: pagination.pageSize,
               total: pagination.totalCount,
-              showSizeChanger: false,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50", "100"],
               showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total}`,
-              size: "small",
-              onChange: (page) =>
-                fetchData(page, pagination.pageSize, searchText),
+                `${range[0]}-${range[1]} của ${total} môn học`,
+              size: "default",
+              position: ["bottomRight"],
+              onChange: (page, pageSize) =>
+                (() => {
+                  const size = pageSize || pagination.pageSize;
+                  updateUrlParams(page, size, searchText);
+                  fetchData(page, size, searchText);
+                })(),
+              onShowSizeChange: (current, size) => {
+                updateUrlParams(1, size, searchText);
+                fetchData(1, size, searchText);
+              },
             }}
             scroll={{ x: 800 }}
             size="small"
@@ -519,9 +540,37 @@ const SubjectsManagement: React.FC = () => {
         <Form
           form={form}
           layout="vertical"
-          initialValues={{ credits: 3 }}
+          initialValues={{ credits: 3, specializationIds: [] }}
           className="subject-modal__form"
         >
+          <Form.Item
+            name="specializationIds"
+            label="Chuyên ngành"
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn ít nhất 1 chuyên ngành!",
+              },
+            ]}
+            extra={specializationsError || undefined}
+          >
+            <Select
+              mode="multiple"
+              placeholder={
+                specializationsLoading
+                  ? "Đang tải chuyên ngành..."
+                  : "Chọn chuyên ngành (có thể chọn nhiều)"
+              }
+              loading={specializationsLoading}
+              options={specializationOptions}
+              showSearch
+              optionFilterProp="label"
+              allowClear
+              disabled={!specializations.length}
+              size="large"
+            />
+          </Form.Item>
+
           <div className="subject-modal__grid">
             <Form.Item
               name="subjectCode"
@@ -620,26 +669,10 @@ const SubjectsManagement: React.FC = () => {
 
           <Form.Item
             name="department"
-            label="Chuyên ngành"
-            extra={
-              specializationsError ||
-              "VD: Công nghệ thông tin, Kinh tế, Ngôn ngữ Anh..."
-            }
+            label="Bộ môn (tùy chọn)"
+            extra="Nhập bộ môn/khoa nếu cần"
           >
-            <Select
-              placeholder={
-                specializationsLoading
-                  ? "Đang tải chuyên ngành..."
-                  : "Chọn chuyên ngành"
-              }
-              loading={specializationsLoading}
-              options={specializationOptions}
-              showSearch
-              optionFilterProp="label"
-              allowClear
-              disabled={!specializations.length}
-              size="large"
-            />
+            <Input placeholder="Nhập bộ môn/khoa (tùy chọn)" size="large" />
           </Form.Item>
         </Form>
       </Modal>
