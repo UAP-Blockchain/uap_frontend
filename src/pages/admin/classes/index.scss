@@ -186,17 +186,37 @@
     padding-top: 12px;
     margin-bottom: 8px;
 
-    .filter-row-expanded {
+    .filter-row-compact {
       .filter-field {
-          display: flex;
+        display: flex;
         flex-direction: column;
-          gap: 6px;
+        gap: 6px;
         width: 100%;
 
         label {
           font-size: 12px;
           color: #6b7280;
-          }
+        }
+
+        .ant-input-affix-wrapper,
+        .ant-select-selector {
+          border-radius: 8px;
+          border: 1px solid #d9dce3;
+        }
+      }
+    }
+
+    .filter-row-expanded {
+      .filter-field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        width: 100%;
+
+        label {
+          font-size: 12px;
+          color: #6b7280;
+        }
 
         .ant-input-affix-wrapper,
         .ant-select-selector {

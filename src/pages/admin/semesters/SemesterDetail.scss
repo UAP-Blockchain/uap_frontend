@@ -92,6 +92,15 @@
           display: inline-flex;
           align-items: center;
           gap: 6px;
+          font-weight: 600;
+          color: #2563eb !important;
+          background: #f4f7ff !important;
+          border-right: 1px solid #dbeafe !important;
+        }
+
+        .ant-descriptions-item-content {
+          color: #111827;
+          background: #ffffff;
         }
 
         .status-tag {

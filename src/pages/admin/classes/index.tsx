@@ -22,6 +22,7 @@ import {
   Empty,
   Typography,
 } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import type { ColumnsType, TablePaginationConfig } from "antd/es/table";
@@ -123,6 +124,7 @@ const createDefaultPatterns = (): AutoPattern[] =>
   }));
 
 const { Option } = Select;
+const { Search } = Input;
 
 const ClassesManagement: React.FC = () => {
   const navigate = useNavigate();
@@ -136,6 +138,8 @@ const ClassesManagement: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [semesterFilter, setSemesterFilter] = useState<string>("all");
   const [teacherFilter, setTeacherFilter] = useState<string>("all");
+  const [onChainFilter, setOnChainFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [teachersForFilter, setTeachersForFilter] = useState<
     TeacherFilterOption[]
   >([]);
@@ -250,6 +254,8 @@ const ClassesManagement: React.FC = () => {
     pageSize?: number;
     semesterId?: string;
     teacherId?: string;
+    searchTerm?: string;
+    onChainFilter?: string;
   }) => {
     setLoading(true);
     try {
@@ -262,16 +268,31 @@ const ClassesManagement: React.FC = () => {
         teacherId:
           overrides?.teacherId ??
           (teacherFilter !== "all" ? teacherFilter : undefined),
+        searchTerm:
+          overrides?.searchTerm !== undefined
+            ? overrides.searchTerm
+            : searchTerm || undefined,
       });
 
-      setClasses(response.items);
+      // Filter by on-chain status (frontend filtering)
+      let filteredItems = response.items;
+      const filterOnChain = overrides?.onChainFilter ?? onChainFilter;
+      if (filterOnChain !== "all") {
+        filteredItems = response.items.filter((item) => {
+          const hasOnChain =
+            typeof item.onChainClassId === "number" && item.onChainClassId > 0;
+          return filterOnChain === "yes" ? hasOnChain : !hasOnChain;
+        });
+      }
+
+      setClasses(filteredItems);
       setPaginationState({
         current: response.page,
         pageSize: response.pageSize,
-        total: response.totalCount,
+        total: filteredItems.length,
       });
 
-      await loadPendingEnrollments(response.items);
+      await loadPendingEnrollments(filteredItems);
     } catch {
       toast.error("Không thể tải dữ liệu lớp học");
     } finally {
@@ -729,19 +750,40 @@ const ClassesManagement: React.FC = () => {
 
   const handleSemesterFilterChange = (value: string) => {
     setSemesterFilter(value);
-    loadClassList({
-      page: 1,
-      semesterId: value !== "all" ? value : undefined,
-      teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
-    });
+    // Don't call loadClassList here - let user click search button
   };
 
   const handleTeacherFilterChange = (value: string) => {
     setTeacherFilter(value);
+    // Don't call loadClassList here - let user click search button
+  };
+
+  const handleOnChainFilterChange = (value: string) => {
+    setOnChainFilter(value);
+    // Don't call loadClassList here - let user click search button
+  };
+
+  const handleSearch = () => {
     loadClassList({
       page: 1,
-      teacherId: value !== "all" ? value : undefined,
+      searchTerm: searchTerm || undefined,
       semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
+      teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
+      onChainFilter: onChainFilter !== "all" ? onChainFilter : undefined,
+    });
+  };
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setSemesterFilter("all");
+    setTeacherFilter("all");
+    setOnChainFilter("all");
+    loadClassList({
+      page: 1,
+      searchTerm: undefined,
+      semesterId: undefined,
+      teacherId: undefined,
+      onChainFilter: undefined,
     });
   };
 
@@ -750,6 +792,8 @@ const ClassesManagement: React.FC = () => {
       page: 1,
       semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
       teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
+      searchTerm: searchTerm || undefined,
+      onChainFilter: onChainFilter,
     });
   };
 
@@ -757,6 +801,10 @@ const ClassesManagement: React.FC = () => {
     loadClassList({
       page: pagination.current,
       pageSize: pagination.pageSize,
+      semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
+      teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
+      searchTerm: searchTerm || undefined,
+      onChainFilter: onChainFilter,
     });
   };
 
@@ -1624,52 +1672,112 @@ const ClassesManagement: React.FC = () => {
           </Col>
         </Row>
 
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Select
-              placeholder="Lọc theo kỳ học"
-              value={semesterFilter}
-              onChange={handleSemesterFilterChange}
-              style={{ width: "100%" }}
-              allowClear
-            >
-              <Option value="all">Tất cả kỳ học</Option>
-              {semesterOptions.map((semester) => (
-                <Option key={semester.id} value={semester.id}>
-                  {semester.name}
-                </Option>
-              ))}
-            </Select>
-          </Col>
-          <Col xs={24} sm={12} md={8} lg={6}>
-            <Select
-              placeholder="Lọc theo giảng viên"
-              value={teacherFilter}
-              onChange={handleTeacherFilterChange}
-              style={{ width: "100%" }}
-              allowClear
-              showSearch
-              optionFilterProp="label"
-              filterOption={(input, option) => {
-                const label = option?.label as string | undefined;
-                return (label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase());
-              }}
-            >
-              <Option value="all">Tất cả giảng viên</Option>
-              {teachersForFilter.map((teacher) => (
-                <Option
-                  key={teacher.id}
-                  value={teacher.id}
-                  label={teacher.fullName}
+        <div className="filters-row compact-layout">
+          <Row gutter={[8, 8]} align="middle" className="filter-row-compact">
+            <Col xs={24} sm={12} md={6}>
+              <div className="filter-field">
+                <label>Tìm kiếm</label>
+                <Input
+                  placeholder="Tìm kiếm lớp học..."
+                  allowClear
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onPressEnter={handleSearch}
+                  prefix={<SearchOutlined />}
+                  size="large"
+                />
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div className="filter-field">
+                <label>Kỳ học</label>
+                <Select
+                  placeholder="Tất cả kỳ học"
+                  value={semesterFilter}
+                  onChange={handleSemesterFilterChange}
+                  allowClear
+                  size="large"
+                  style={{ width: "100%" }}
                 >
-                  {teacher.fullName} ({teacher.teacherCode})
-                </Option>
-              ))}
-            </Select>
-          </Col>
-        </Row>
+                  <Option value="all">Tất cả kỳ học</Option>
+                  {semesterOptions.map((semester) => (
+                    <Option key={semester.id} value={semester.id}>
+                      {semester.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div className="filter-field">
+                <label>Giảng viên</label>
+                <Select
+                  placeholder="Tất cả giảng viên"
+                  value={teacherFilter}
+                  onChange={handleTeacherFilterChange}
+                  allowClear
+                  showSearch
+                  size="large"
+                  optionFilterProp="label"
+                  filterOption={(input, option) => {
+                    const label = option?.label as string | undefined;
+                    return (label ?? "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase());
+                  }}
+                  style={{ width: "100%" }}
+                >
+                  <Option value="all">Tất cả giảng viên</Option>
+                  {teachersForFilter.map((teacher) => (
+                    <Option
+                      key={teacher.id}
+                      value={teacher.id}
+                      label={teacher.fullName}
+                    >
+                      {teacher.fullName} ({teacher.teacherCode})
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={6}>
+              <div className="filter-field">
+                <label>On-chain</label>
+                <Select
+                  placeholder="Tất cả"
+                  value={onChainFilter}
+                  onChange={handleOnChainFilterChange}
+                  size="large"
+                  style={{ width: "100%" }}
+                >
+                  <Option value="all">Tất cả</Option>
+                  <Option value="yes">Đã on-chain</Option>
+                  <Option value="no">Chưa on-chain</Option>
+                </Select>
+              </div>
+            </Col>
+          </Row>
+          <Row gutter={[8, 8]} align="middle" style={{ marginTop: 8 }}>
+            <Col xs={24} style={{ textAlign: "right" }}>
+              <Space>
+                <Button
+                  onClick={handleClearFilters}
+                  size="large"
+                >
+                  Xóa hết
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<SearchOutlined />}
+                  onClick={handleSearch}
+                  size="large"
+                >
+                  Tìm kiếm
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </div>
 
         <Table
           columns={columns}

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import {
   Table,
   Card,
@@ -29,6 +30,8 @@ import {
   ClockCircleOutlined,
   CompressOutlined,
   ExpandAltOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import type { Dayjs } from "dayjs";
@@ -69,6 +72,8 @@ const SemestersManagement: React.FC = () => {
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [loading, setLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [sortBy, setSortBy] = useState<string | undefined>();
+  const [isDescending, setIsDescending] = useState(false);
   const [pagination, setPagination] = useState({
     pageNumber: 1,
     pageSize: DEFAULT_PAGE_SIZE,
@@ -104,14 +109,26 @@ const SemestersManagement: React.FC = () => {
       pageNumber = 1,
       pageSize = pagination.pageSize,
       search = searchText,
-      status = statusFilter
+      status = statusFilter,
+      sortField?: string | undefined,
+      descending?: boolean
     ) => {
       setLoading(true);
       try {
+        const currentSortBy = sortField !== undefined ? sortField : sortBy;
+        const currentIsDescending = descending !== undefined ? descending : isDescending;
+        
+        // Only send sortBy to API if it's supported (not TotalSubjects)
+        // TotalSubjects will be sorted on frontend
+        const apiSortBy = currentSortBy === "TotalSubjects" ? undefined : currentSortBy;
+        const apiIsDescending = currentSortBy === "TotalSubjects" ? undefined : currentIsDescending;
+        
         const response = await fetchSemestersApi({
           pageNumber,
           pageSize,
           searchTerm: search || undefined,
+          sortBy: apiSortBy,
+          isDescending: apiIsDescending,
           ...buildStatusParams(status),
         });
         setSemesters(response.data);
@@ -126,21 +143,67 @@ const SemestersManagement: React.FC = () => {
         setLoading(false);
       }
     },
-    [pagination.pageSize, searchText, statusFilter]
+    [pagination.pageSize, searchText, statusFilter, sortBy, isDescending]
   );
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData(1, pagination.pageSize, searchText, statusFilter, sortBy, isDescending);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearch = (value: string) => {
     setSearchText(value);
-    fetchData(1, pagination.pageSize, value, statusFilter);
+    fetchData(1, pagination.pageSize, value, statusFilter, sortBy, isDescending);
+  };
+
+  const handleSort = (field: string) => {
+    let newSortBy: string;
+    let newIsDescending: boolean;
+    
+    const isSameField = sortBy === field;
+    
+    if (isSameField) {
+      newSortBy = field;
+      newIsDescending = !isDescending;
+    } else {
+      newSortBy = field;
+      newIsDescending = false;
+    }
+    
+    setSortBy(newSortBy);
+    setIsDescending(newIsDescending);
+    
+    fetchData(1, pagination.pageSize, searchText, statusFilter, newSortBy, newIsDescending);
+  };
+
+  const renderSortableTitle = (title: string, sortField: string) => {
+    const isActive = sortBy === sortField;
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+        <span>{title}</span>
+        <Button
+          type="text"
+          size="small"
+          icon={isActive ? (isDescending ? <ArrowDownOutlined /> : <ArrowUpOutlined />) : <ArrowUpOutlined />}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSort(sortField);
+          }}
+          style={{
+            padding: 0,
+            width: 20,
+            height: 20,
+            minWidth: 20,
+            color: "#ffffff",
+          }}
+        />
+      </div>
+    );
   };
 
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value);
-    fetchData(1, pagination.pageSize, searchText, value);
+    fetchData(1, pagination.pageSize, searchText, value, sortBy, isDescending);
   };
 
   const handleYearFilter = (value: string) => {
@@ -159,6 +222,18 @@ const SemestersManagement: React.FC = () => {
       form.resetFields();
     }
     setIsModalVisible(true);
+  };
+
+  const mapErrorMessage = (message?: string) => {
+    if (!message) return "Không thể lưu học kỳ. Vui lòng thử lại.";
+    const lower = message.toLowerCase();
+    
+    // Check for duplicate name error
+    if (lower.includes("already exists") || lower.includes("đã tồn tại")) {
+      return "Tên học kỳ đã tồn tại, vui lòng chọn tên khác.";
+    }
+    
+    return message;
   };
 
   const handleOk = () => {
@@ -188,10 +263,24 @@ const SemestersManagement: React.FC = () => {
         setIsModalVisible(false);
         fetchData(
           editingSemester ? pagination.pageNumber : 1,
-          pagination.pageSize
+          pagination.pageSize,
+          searchText,
+          statusFilter,
+          sortBy,
+          isDescending
         );
-      } catch {
-        toast.error("Không thể lưu học kỳ");
+      } catch (error: unknown) {
+        let errorMessage = "Không thể lưu học kỳ";
+        
+        if (axios.isAxiosError(error) && error.response?.data) {
+          const data = error.response.data as {
+            message?: string;
+            detail?: string;
+          };
+          errorMessage = data.message || data.detail || errorMessage;
+        }
+        
+        toast.error(mapErrorMessage(errorMessage));
       }
     });
   };
@@ -217,7 +306,9 @@ const SemestersManagement: React.FC = () => {
             pagination.pageNumber,
             pagination.pageSize,
             searchText,
-            newStatusFilter
+            newStatusFilter,
+            sortBy,
+            isDescending
           );
         } else {
           // If already active, we might want to deactivate, but there's no deactivate API
@@ -243,7 +334,9 @@ const SemestersManagement: React.FC = () => {
             pagination.pageNumber,
             pagination.pageSize,
             searchText,
-            newStatusFilter
+            newStatusFilter,
+            sortBy,
+            isDescending
           );
         } else {
           toast.warning("Học kỳ đã được đóng");
@@ -266,13 +359,27 @@ const SemestersManagement: React.FC = () => {
   };
 
   const filteredSemesters = useMemo(() => {
-    if (yearFilter === "all") {
-      return semesters;
+    let filtered = semesters;
+    
+    // Filter by year
+    if (yearFilter !== "all") {
+      filtered = filtered.filter(
+        (sem) => dayjs(sem.startDate).year().toString() === yearFilter
+      );
     }
-    return semesters.filter(
-      (sem) => dayjs(sem.startDate).year().toString() === yearFilter
-    );
-  }, [semesters, yearFilter]);
+    
+    // Sort by TotalSubjects if needed (frontend sort since API may not support it)
+    if (sortBy === "TotalSubjects") {
+      filtered = [...filtered].sort((a, b) => {
+        if (isDescending) {
+          return b.totalSubjects - a.totalSubjects;
+        }
+        return a.totalSubjects - b.totalSubjects;
+      });
+    }
+    
+    return filtered;
+  }, [semesters, yearFilter, sortBy, isDescending]);
 
   const columns: ColumnsType<SemesterDto> = [
     {
@@ -299,7 +406,7 @@ const SemestersManagement: React.FC = () => {
       ),
     },
     {
-      title: "Ngày bắt đầu",
+      title: renderSortableTitle("Ngày bắt đầu", "StartDate"),
       dataIndex: "startDate",
       key: "startDate",
       width: 150,
@@ -323,7 +430,7 @@ const SemestersManagement: React.FC = () => {
       ),
     },
     {
-      title: "Số môn học",
+      title: renderSortableTitle("Số môn học", "TotalSubjects"),
       dataIndex: "totalSubjects",
       key: "totalSubjects",
       width: 120,
@@ -523,60 +630,59 @@ const SemestersManagement: React.FC = () => {
             showDetails ? "expanded" : "compact-layout"
           }`}
         >
-          <Row gutter={showDetails ? 16 : 12} align="middle">
-            {showDetails && (
-              <Col xs={24} md={12} className="filter-field search-field">
+          <Row gutter={[8, 8]} align="middle">
+            <Col xs={24} sm={12} md={8} className="filter-field search-field">
+              <div className="filter-field">
                 <label>Tìm kiếm học kỳ</label>
                 <Search
                   placeholder="Nhập tên học kỳ..."
                   allowClear
                   value={searchText}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearchText(e.target.value)}
                   onSearch={handleSearch}
                   prefix={<SearchOutlined />}
                   size="large"
+                  enterButton="Tìm kiếm"
                 />
-              </Col>
-            )}
-            <Col
-              xs={showDetails ? 12 : 12}
-              md={showDetails ? 6 : 12}
-              className="filter-field status-field"
-            >
-              {showDetails && <label>Trạng thái</label>}
-              <Select
-                value={statusFilter}
-                onChange={handleStatusFilter}
-                suffixIcon={<FilterOutlined />}
-                size={showDetails ? "large" : "middle"}
-                className="status-select"
-              >
-                <Option value="all">Tất cả</Option>
-                <Option value="active">Đang hoạt động</Option>
-                <Option value="inactive">Chưa kích hoạt</Option>
-                <Option value="closed">Đã đóng</Option>
-              </Select>
+              </div>
             </Col>
-            <Col
-              xs={showDetails ? 12 : 12}
-              md={showDetails ? 6 : 12}
-              className="filter-field year-field"
-            >
-              {showDetails && <label>Năm</label>}
-              <Select
-                value={yearFilter}
-                onChange={handleYearFilter}
-                placeholder="Chọn năm"
-                size={showDetails ? "large" : "middle"}
-                allowClear={false}
-              >
-                <Option value="all">Tất cả năm</Option>
-                {yearOptions.map((year) => (
-                  <Option key={year} value={year}>
-                    {year}
-                  </Option>
-                ))}
-              </Select>
+            <Col xs={24} sm={12} md={8} className="filter-field status-field">
+              <div className="filter-field">
+                <label>Trạng thái</label>
+                <Select
+                  value={statusFilter}
+                  onChange={handleStatusFilter}
+                  suffixIcon={<FilterOutlined />}
+                  size="large"
+                  className="status-select"
+                  style={{ width: "100%" }}
+                >
+                  <Option value="all">Tất cả</Option>
+                  <Option value="active">Đang hoạt động</Option>
+                  <Option value="inactive">Chưa kích hoạt</Option>
+                  <Option value="closed">Đã đóng</Option>
+                </Select>
+              </div>
+            </Col>
+            <Col xs={24} sm={12} md={8} className="filter-field year-field">
+              <div className="filter-field">
+                <label>Năm</label>
+                <Select
+                  value={yearFilter}
+                  onChange={handleYearFilter}
+                  placeholder="Chọn năm"
+                  size="large"
+                  allowClear={false}
+                  style={{ width: "100%" }}
+                >
+                  <Option value="all">Tất cả năm</Option>
+                  {yearOptions.map((year) => (
+                    <Option key={year} value={year}>
+                      {year}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
             </Col>
 
             {showDetails && (
@@ -614,13 +720,19 @@ const SemestersManagement: React.FC = () => {
               current: pagination.pageNumber,
               pageSize: pagination.pageSize,
               total: pagination.totalCount,
-              showSizeChanger: false,
-              showQuickJumper: false,
+              showSizeChanger: true,
+              pageSizeOptions: ["10", "20", "50", "100"],
               showTotal: (total, range) =>
-                `${range[0]}-${range[1]} của ${total}`,
-              size: "small",
-              onChange: (page) =>
-                fetchData(page, pagination.pageSize, searchText, statusFilter),
+                `${range[0]}-${range[1]} của ${total} học kỳ`,
+              size: "default",
+              position: ["bottomRight"],
+              onChange: (page, pageSize) => {
+                const size = pageSize || pagination.pageSize;
+                fetchData(page, size, searchText, statusFilter, sortBy, isDescending);
+              },
+              onShowSizeChange: (current, size) => {
+                fetchData(1, size, searchText, statusFilter, sortBy, isDescending);
+              },
             }}
             scroll={{ x: 1000 }}
             size="small"

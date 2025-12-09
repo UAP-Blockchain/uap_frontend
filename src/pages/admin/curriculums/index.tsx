@@ -59,6 +59,10 @@ const CurriculumManagementPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("recent");
   const [loading, setLoading] = useState(false);
+  const [paginationState, setPaginationState] = useState({
+    current: 1,
+    pageSize: 10,
+  });
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingCurriculum, setEditingCurriculum] =
@@ -166,6 +170,12 @@ const CurriculumManagementPage: React.FC = () => {
       }
     });
   }, [curriculums, searchTerm, sortOption]);
+
+  const paginatedCurriculums = useMemo(() => {
+    const start = (paginationState.current - 1) * paginationState.pageSize;
+    const end = start + paginationState.pageSize;
+    return filteredCurriculums.slice(start, end);
+  }, [filteredCurriculums, paginationState]);
 
   const openCreateModal = () => {
     setEditingCurriculum(null);
@@ -428,7 +438,10 @@ const CurriculumManagementPage: React.FC = () => {
                 <label>Sắp xếp</label>
                 <Select
                   value={sortOption}
-                  onChange={(value: SortOption) => setSortOption(value)}
+                  onChange={(value: SortOption) => {
+                    setSortOption(value);
+                    setPaginationState({ current: 1, pageSize: paginationState.pageSize });
+                  }}
                   size="middle"
                   className="sort-select"
                 >
@@ -445,8 +458,14 @@ const CurriculumManagementPage: React.FC = () => {
                   placeholder="Tìm theo tên, mã hoặc mô tả khung"
                   allowClear
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onSearch={(value) => setSearchTerm(value)}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setPaginationState({ current: 1, pageSize: paginationState.pageSize });
+                  }}
+                  onSearch={(value) => {
+                    setSearchTerm(value);
+                    setPaginationState({ current: 1, pageSize: paginationState.pageSize });
+                  }}
                   prefix={<SearchOutlined />}
                   size="large"
                   enterButton="Tìm kiếm"
@@ -461,8 +480,22 @@ const CurriculumManagementPage: React.FC = () => {
           rowKey="id"
           loading={loading}
           columns={columns}
-          dataSource={filteredCurriculums}
-          pagination={{ pageSize: 8, showSizeChanger: false }}
+          dataSource={paginatedCurriculums}
+          pagination={{
+            current: paginationState.current,
+            pageSize: paginationState.pageSize,
+            total: filteredCurriculums.length,
+            showSizeChanger: true,
+            pageSizeOptions: ["10", "20", "50", "100"],
+            showTotal: (total) => `Tổng ${total} khung chương trình`,
+            position: ["bottomRight"],
+            onChange: (page, pageSize) => {
+              setPaginationState({ current: page, pageSize });
+            },
+            onShowSizeChange: (current, size) => {
+              setPaginationState({ current: 1, pageSize: size });
+            },
+          }}
           locale={{
             emptyText: <Empty description="Chưa có khung chương trình" />,
           }}

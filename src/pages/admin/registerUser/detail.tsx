@@ -277,7 +277,7 @@ const StudentDetailPage: React.FC = () => {
                           {user.specializations.map((spec) => (
                             <Tag key={spec.id} color="blue">
                               {spec.code} - {spec.name}
-                            </Tag>
+                      </Tag>
                           ))}
                         </Space>
                       ) : (
@@ -300,7 +300,7 @@ const StudentDetailPage: React.FC = () => {
                       {user.phoneNumber}
                     </Descriptions.Item>
                   )}
-                </Descriptions>
+                  </Descriptions>
               </Card>
             </div>
 

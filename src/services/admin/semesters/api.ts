@@ -28,7 +28,9 @@ export const getSemesterByIdApi = async (
 export const createSemesterApi = async (
   payload: CreateSemesterRequest
 ): Promise<SemesterDto> => {
-  const response = await api.post<SemesterDto>(SEMESTER_ENDPOINT, payload);
+  const response = await api.post<SemesterDto>(SEMESTER_ENDPOINT, payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -38,7 +40,10 @@ export const updateSemesterApi = async (
 ): Promise<SemesterDto> => {
   const response = await api.put<SemesterDto>(
     `${SEMESTER_ENDPOINT}/${id}`,
-    payload
+    payload,
+    {
+      skipGlobalErrorHandler: true,
+    } as any
   );
   return response.data;
 };

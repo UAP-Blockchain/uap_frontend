@@ -25,6 +25,8 @@ import {
   CloseCircleOutlined,
   TeamOutlined,
   BookOutlined,
+  ArrowUpOutlined,
+  ArrowDownOutlined,
 } from "@ant-design/icons";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
@@ -70,6 +72,8 @@ const RegisterUser: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("Student");
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [sortOrder, setSortOrder] = useState<string | undefined>(undefined);
   const [pagination, setPagination] = useState({
     pageNumber: 1,
     pageSize: DEFAULT_PAGE_SIZE,
@@ -96,7 +100,9 @@ const RegisterUser: React.FC = () => {
       pageNumber = 1,
       pageSize = DEFAULT_PAGE_SIZE,
       search = searchText,
-      role = roleFilter
+      role = roleFilter,
+      sortField?: string,
+      order?: string
     ) => {
       setLoading(true);
       try {
@@ -106,6 +112,8 @@ const RegisterUser: React.FC = () => {
             search && search.trim() !== "" ? search.trim() : undefined,
           page: pageNumber,
           pageSize,
+          sortBy: sortField,
+          sortOrder: order,
         });
         const usersList = response.data || [];
         setUsers(usersList);
@@ -130,12 +138,12 @@ const RegisterUser: React.FC = () => {
 
   const handleSearch = (value: string) => {
     setSearchText(value);
-    fetchData(1, pagination.pageSize, value, roleFilter);
+    fetchData(1, pagination.pageSize, value, roleFilter, sortBy, sortOrder);
   };
 
   const handleRoleFilter = (value: string) => {
     setRoleFilter(value);
-    fetchData(1, pagination.pageSize, searchText, value);
+    fetchData(1, pagination.pageSize, searchText, value, sortBy, sortOrder);
   };
 
   const openEditModal = (user: UserDto) => {
@@ -265,16 +273,70 @@ const RegisterUser: React.FC = () => {
       : []),
 
     {
-      title: "Thông tin thêm",
-      key: "additional",
-      width: 200,
+      title: "Số điện thoại",
+      key: "phoneNumber",
+      width: 150,
       render: (_, record) => (
-        <div className="additional-info">
-          {record.specialization && (
-            <div>Chuyên môn: {record.specialization}</div>
-          )}
-          {record.phoneNumber && <div>Điện thoại: {record.phoneNumber}</div>}
-          {!record.specialization && !record.phoneNumber && "-"}
+        <div className="phone-number">
+          {record.phoneNumber || "-"}
+        </div>
+      ),
+    },
+    {
+      title: (() => {
+        const isActive = sortBy === "CreatedAt";
+        const isDescending = sortOrder === "desc";
+        return (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <span>Ngày tạo</span>
+            <Button
+              type="text"
+              size="small"
+              icon={
+                isActive ? (
+                  isDescending ? (
+                    <ArrowDownOutlined />
+                  ) : (
+                    <ArrowUpOutlined />
+                  )
+                ) : (
+                  <ArrowUpOutlined />
+                )
+              }
+              onClick={(e) => {
+                e.stopPropagation();
+                const newSortBy = "CreatedAt";
+                const newSortOrder =
+                  isActive && !isDescending ? "desc" : "asc";
+                setSortBy(newSortBy);
+                setSortOrder(newSortOrder);
+                fetchData(
+                  pagination.pageNumber,
+                  pagination.pageSize,
+                  searchText,
+                  roleFilter,
+                  newSortBy,
+                  newSortOrder
+                );
+              }}
+              style={{
+                padding: 0,
+                width: 20,
+                height: 20,
+                minWidth: 20,
+                color: "#ffffff",
+              }}
+            />
+          </div>
+        );
+      })(),
+      key: "createdAt",
+      width: 150,
+      render: (_, record) => (
+        <div className="created-date">
+          {record.createdAt
+            ? dayjs(record.createdAt).format("DD/MM/YYYY")
+            : "-"}
         </div>
       ),
     },
@@ -432,10 +494,10 @@ const RegisterUser: React.FC = () => {
               pageSizeOptions: ["10", "20", "50", "100"],
               size: "default",
               onChange: (page, pageSize) => {
-                fetchData(page, pageSize || pagination.pageSize, searchText, roleFilter);
+                fetchData(page, pageSize || pagination.pageSize, searchText, roleFilter, sortBy, sortOrder);
               },
               onShowSizeChange: (current, size) => {
-                fetchData(1, size, searchText, roleFilter);
+                fetchData(1, size, searchText, roleFilter, sortBy, sortOrder);
               },
             }}
             onRow={(record) => ({

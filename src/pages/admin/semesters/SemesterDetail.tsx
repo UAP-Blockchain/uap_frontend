@@ -272,48 +272,29 @@ const SemesterDetail: React.FC = () => {
           </Title>
         </div>
         <div className="header-actions">
-          <Space size="small">
-            <Button
-              type="primary"
-              ghost
-              onClick={() => confirmStatusChange("activate")}
-              disabled={semester.isActive || semester.isClosed}
-              loading={statusAction === "activate"}
-            >
-              Kích hoạt
-            </Button>
-            <Button
-              danger
-              onClick={() => confirmStatusChange("close")}
-              disabled={semester.isClosed}
-              loading={statusAction === "close"}
-            >
-              Đóng học kỳ
-            </Button>
-            {isEditing ? (
-              <>
-                <Button onClick={handleCancelEdit} disabled={isSaving}>
-                  Hủy
-                </Button>
-                <Button
-                  type="primary"
-                  onClick={() => form.submit()}
-                  loading={isSaving}
-                >
-                  Lưu thay đổi
-                </Button>
-              </>
-            ) : (
-              <Button type="default" onClick={handleStartEdit}>
-                Chỉnh sửa
+          {isEditing ? (
+            <Space size="small">
+              <Button onClick={handleCancelEdit} disabled={isSaving}>
+                Hủy
               </Button>
-            )}
-          </Space>
+              <Button
+                type="primary"
+                onClick={() => form.submit()}
+                loading={isSaving}
+              >
+                Lưu thay đổi
+              </Button>
+            </Space>
+          ) : (
+            <Button type="default" onClick={handleStartEdit}>
+              Chỉnh sửa
+            </Button>
+          )}
         </div>
       </div>
 
       <Row gutter={16} className="semester-overview-row">
-        <Col xs={24} md={16}>
+        <Col xs={24}>
           <Card className={`semester-info-card${isEditing ? " editing" : ""}`}>
             <div className="semester-info-header">
               <div className="icon-wrapper">
@@ -359,7 +340,7 @@ const SemesterDetail: React.FC = () => {
             ) : (
               <Descriptions
                 bordered
-                column={{ xxl: 2, xl: 2, lg: 2, md: 1, sm: 1, xs: 1 }}
+                column={1}
                 className="semester-descriptions"
               >
                 <Descriptions.Item
@@ -410,53 +391,6 @@ const SemesterDetail: React.FC = () => {
                 </Descriptions.Item>
               </Descriptions>
             )}
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card className="semester-stats-card">
-            <Title level={4}>Thông tin nhanh</Title>
-            <div className="stats-list">
-              <div className="stat-item">
-                <div className="stat-icon status">
-                  {statusInfo?.icon ?? <Clock size={16} />}
-                </div>
-                <div className="stat-content">
-                  <span className="stat-label">Trạng thái</span>
-                  <span className="stat-value">{statusInfo?.label ?? "-"}</span>
-                </div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-icon subjects">
-                  <BookOpen size={16} />
-                </div>
-                <div className="stat-content">
-                  <span className="stat-label">Tổng môn học</span>
-                  <span className="stat-value">{semester.totalSubjects}</span>
-                </div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-icon calendar">
-                  <CalendarIcon size={16} />
-                </div>
-                <div className="stat-content">
-                  <span className="stat-label">Bắt đầu</span>
-                  <span className="stat-value">
-                    {dayjs(semester.startDate).format("DD/MM/YYYY")}
-                  </span>
-                </div>
-              </div>
-              <div className="stat-item">
-                <div className="stat-icon calendar">
-                  <CalendarIcon size={16} />
-                </div>
-                <div className="stat-content">
-                  <span className="stat-label">Kết thúc</span>
-                  <span className="stat-value">
-                    {dayjs(semester.endDate).format("DD/MM/YYYY")}
-                  </span>
-                </div>
-              </div>
-            </div>
           </Card>
         </Col>
       </Row>
