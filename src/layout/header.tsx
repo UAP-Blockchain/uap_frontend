@@ -125,20 +125,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
     {
       type: "divider",
     },
-    {
-      key: "footer",
-      label: (
-        <div className="dropdown-footer">
-          <Text type="secondary" className="footer-link">
-            Điều khoản dịch vụ
-          </Text>
-          <Text type="secondary" className="footer-link">
-            Chính sách bảo mật
-          </Text>
-        </div>
-      ),
-      disabled: true,
-    },
+   
   ];
 
   // Prevent SSR/Client mismatch by returning simplified header during server render
