@@ -216,6 +216,7 @@ export const fetchCredentialsApi = async (
       CertificateType: params?.certificateType,
       StudentId: params?.studentId,
     },
+    skipGlobalErrorHandler: true,
   });
   return response.data;
 };
@@ -224,7 +225,9 @@ export const fetchCredentialsApi = async (
 export const getCredentialByIdApi = async (
   id: string
 ): Promise<CredentialDetailDto> => {
-  const response = await api.get<CredentialDetailDto>(`/credentials/${id}`);
+  const response = await api.get<CredentialDetailDto>(`/credentials/${id}`, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -232,7 +235,9 @@ export const getCredentialByIdApi = async (
 export const createCredentialApi = async (
   payload: CreateCredentialRequest
 ): Promise<CredentialDetailDto> => {
-  const response = await api.post<CredentialDetailDto>("/credentials", payload);
+  const response = await api.post<CredentialDetailDto>("/credentials", payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -242,7 +247,8 @@ export const issueCredentialApi = async (
 ): Promise<CredentialDetailDto> => {
   const response = await api.post<CredentialDetailDto>(
     "/credentials/issue",
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -252,13 +258,17 @@ export const revokeCredentialApi = async (
   id: string,
   payload: RevokeCredentialRequest
 ): Promise<void> => {
-  await api.delete(`/credentials/${id}`, { data: payload });
+  await api.delete(`/credentials/${id}`, {
+    data: payload,
+    skipGlobalErrorHandler: true,
+  } as any);
 };
 
 // GET /api/credentials/{id}/pdf - Download credential PDF
 export const downloadCredentialPdfApi = async (id: string): Promise<Blob> => {
   const response = await api.get(`/credentials/${id}/pdf`, {
     responseType: "blob",
+    skipGlobalErrorHandler: true,
   });
   return response.data;
 };
@@ -270,6 +280,7 @@ export const getCredentialQRCodeApi = async (
 ): Promise<QRCodeResponse> => {
   const response = await api.get<QRCodeResponse>(`/credentials/${id}/qrcode`, {
     params: { size },
+    skipGlobalErrorHandler: true,
   });
   return response.data;
 };
@@ -279,7 +290,8 @@ export const getCredentialShareInfoApi = async (
   id: string
 ): Promise<CredentialShareDto> => {
   const response = await api.get<CredentialShareDto>(
-    `/credentials/${id}/share`
+    `/credentials/${id}/share`,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -289,7 +301,9 @@ export const saveCredentialOnChainApi = async (
   id: string,
   payload: SaveCredentialOnChainRequest
 ) => {
-  const response = await api.post(`/credentials/${id}/on-chain`, payload);
+  const response = await api.post(`/credentials/${id}/on-chain`, payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -310,7 +324,8 @@ export const approveCredentialApi = async (
 ): Promise<CredentialDetailDto> => {
   const response = await api.post<CredentialDetailDto>(
     `/credentials/${id}/approve`,
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -322,7 +337,8 @@ export const rejectCredentialApi = async (
 ): Promise<CredentialDetailDto> => {
   const response = await api.post<CredentialDetailDto>(
     `/credentials/${id}/reject`,
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -333,7 +349,8 @@ export const verifyCredentialApi = async (
 ): Promise<CredentialVerificationDto> => {
   const response = await api.post<CredentialVerificationDto>(
     "/credentials/verify",
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -400,6 +417,7 @@ export const fetchCredentialRequestsApi = async (
         CertificateType: params?.certificateType,
         StudentId: params?.studentId,
       },
+      skipGlobalErrorHandler: true,
     }
   );
   return response.data;
@@ -410,7 +428,8 @@ export const getCredentialRequestByIdApi = async (
   id: string
 ): Promise<CredentialRequestDto> => {
   const response = await api.get<CredentialRequestDto>(
-    `/credential-requests/${id}`
+    `/credential-requests/${id}`,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -421,7 +440,8 @@ export const createCredentialRequestApi = async (
 ): Promise<CredentialRequestDto> => {
   const response = await api.post<CredentialRequestDto>(
     "/credential-requests",
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -433,7 +453,8 @@ export const approveCredentialRequestApi = async (
 ): Promise<CredentialDetailDto> => {
   const response = await api.post<CredentialDetailDto>(
     `/credential-requests/${id}/approve`,
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return response.data;
 };
@@ -443,7 +464,9 @@ export const rejectCredentialRequestApi = async (
   id: string,
   payload: ProcessCredentialRequestRequest
 ): Promise<void> => {
-  await api.post(`/credential-requests/${id}/reject`, payload);
+  await api.post(`/credential-requests/${id}/reject`, payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
 };
 
 // GET /api/students/me/credential-requests - Get my requests (Student)
@@ -454,6 +477,7 @@ export const getMyCredentialRequestsApi = async (
     "/students/me/credential-requests",
     {
       params: { status },
+      skipGlobalErrorHandler: true,
     }
   );
   return response.data;

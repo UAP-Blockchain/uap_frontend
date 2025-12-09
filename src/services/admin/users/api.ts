@@ -88,6 +88,7 @@ export const fetchUsersApi = async (
       SortBy: params?.sortBy,
       SortOrder: params?.sortOrder,
     },
+    skipGlobalErrorHandler: true,
   });
   const apiData = response.data;
   // Normalize response to match our interface
@@ -100,7 +101,9 @@ export const fetchUsersApi = async (
 };
 
 export const getUserByIdApi = async (id: string): Promise<UserDto> => {
-  const response = await api.get<UserDto>(`/User/${id}`);
+  const response = await api.get<UserDto>(`/User/${id}`, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -108,16 +111,22 @@ export const updateUserApi = async (
   id: string,
   payload: UpdateUserRequest
 ): Promise<UserDto> => {
-  const response = await api.put<UserDto>(`/User/${id}`, payload);
+  const response = await api.put<UserDto>(`/User/${id}`, payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
 export const activateUserApi = async (id: string): Promise<void> => {
-  await api.patch(`/User/${id}/activate`);
+  await api.patch(`/User/${id}/activate`, undefined, {
+    skipGlobalErrorHandler: true,
+  } as any);
 };
 
 export const deactivateUserApi = async (id: string): Promise<void> => {
-  await api.patch(`/User/${id}/deactivate`);
+  await api.patch(`/User/${id}/deactivate`, undefined, {
+    skipGlobalErrorHandler: true,
+  } as any);
 };
 
 export const uploadUserProfilePictureApi = async (
@@ -131,6 +140,7 @@ export const uploadUserProfilePictureApi = async (
     formData,
     {
       headers: { "Content-Type": "multipart/form-data" },
+      skipGlobalErrorHandler: true,
     }
   );
   return response.data;
@@ -140,6 +150,8 @@ export const updateUserOnChainApi = async (
   id: string,
   payload: UpdateUserOnChainRequest
 ): Promise<void> => {
-  await api.post(`/User/${id}/on-chain`, payload);
+  await api.post(`/User/${id}/on-chain`, payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
 };
 

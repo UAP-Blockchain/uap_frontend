@@ -101,7 +101,10 @@ class AuthServices {
   ): Promise<BulkRegisterResponse> {
     const response = await api.post<BulkRegisterResponse>(
       "/Auth/register/bulk",
-      params
+      params,
+      {
+        skipGlobalErrorHandler: true,
+      } as any
     );
     return response.data;
   }

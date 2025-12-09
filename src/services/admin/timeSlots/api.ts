@@ -16,7 +16,9 @@ import type {
  * GET /api/TimeSlots
  */
 export const getAllTimeSlots = async (): Promise<TimeSlotDto[]> => {
-  const response = await api.get<TimeSlotDto[]>("/TimeSlots");
+  const response = await api.get<TimeSlotDto[]>("/TimeSlots", {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -25,7 +27,9 @@ export const getAllTimeSlots = async (): Promise<TimeSlotDto[]> => {
  * GET /api/TimeSlots/{id}
  */
 export const getTimeSlotById = async (id: string): Promise<TimeSlotDto> => {
-  const response = await api.get<TimeSlotDto>(`/TimeSlots/${id}`);
+  const response = await api.get<TimeSlotDto>(`/TimeSlots/${id}`, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 

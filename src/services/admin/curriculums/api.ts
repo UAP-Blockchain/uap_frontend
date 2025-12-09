@@ -35,7 +35,8 @@ const unwrapData = <T>(payload: ApiResponseEnvelope<T> | T | undefined, fallback
 
 export const fetchCurriculumsApi = async (): Promise<CurriculumListItem[]> => {
   const response = await api.get<ApiResponseEnvelope<CurriculumListItem[]>>(
-    "/Curriculum"
+    "/Curriculum",
+    { skipGlobalErrorHandler: true } as any
   );
   return unwrapData(response.data, []);
 };
@@ -44,7 +45,8 @@ export const getCurriculumByIdApi = async (
   id: number
 ): Promise<CurriculumDetailDto> => {
   const response = await api.get<ApiResponseEnvelope<CurriculumDetailDto>>(
-    `/Curriculum/${id}`
+    `/Curriculum/${id}`,
+    { skipGlobalErrorHandler: true } as any
   );
   return unwrapData(response.data);
 };
@@ -54,7 +56,8 @@ export const createCurriculumApi = async (
 ): Promise<CurriculumListItem> => {
   const response = await api.post<ApiResponseEnvelope<CurriculumListItem>>(
     "/Curriculum",
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return unwrapData(response.data);
 };
@@ -65,13 +68,14 @@ export const updateCurriculumApi = async (
 ): Promise<CurriculumListItem> => {
   const response = await api.put<ApiResponseEnvelope<CurriculumListItem>>(
     `/Curriculum/${id}`,
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return unwrapData(response.data);
 };
 
 export const deleteCurriculumApi = async (id: number): Promise<void> => {
-  await api.delete(`/Curriculum/${id}`);
+  await api.delete(`/Curriculum/${id}`, { skipGlobalErrorHandler: true } as any);
 };
 
 export const addSubjectToCurriculumApi = async (
@@ -80,7 +84,8 @@ export const addSubjectToCurriculumApi = async (
 ): Promise<CurriculumSubjectDto> => {
   const response = await api.post<ApiResponseEnvelope<CurriculumSubjectDto>>(
     `/Curriculum/${curriculumId}/subjects`,
-    payload
+    payload,
+    { skipGlobalErrorHandler: true } as any
   );
   return unwrapData(response.data);
 };
@@ -89,5 +94,7 @@ export const removeSubjectFromCurriculumApi = async (
   curriculumId: number,
   subjectId: string
 ): Promise<void> => {
-  await api.delete(`/Curriculum/${curriculumId}/subjects/${subjectId}`);
+  await api.delete(`/Curriculum/${curriculumId}/subjects/${subjectId}`, {
+    skipGlobalErrorHandler: true,
+  } as any);
 };
