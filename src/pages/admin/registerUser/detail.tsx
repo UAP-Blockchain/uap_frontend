@@ -228,10 +228,7 @@ const StudentDetailPage: React.FC = () => {
                         : "—"}
                     </strong>
                   </div>
-                  <div className="meta-item">
-                    <span>Ví blockchain</span>
-                    <strong>{student?.walletAddress || "Chưa cập nhật"}</strong>
-                  </div>
+               
                 </div>
               </div>
 
