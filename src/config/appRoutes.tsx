@@ -107,7 +107,6 @@ const RequestCredential = lazy(
 );
 const Profile = lazy(() => import("../pages/StudentPortal/Profile"));
 const Roadmap = lazy(() => import("../pages/StudentPortal/Roadmap"));
-const SharePortal = lazy(() => import("../pages/StudentPortal/SharePortal"));
 const WeeklyTimetable = lazy(
   () => import("../pages/StudentPortal/WeeklyTimetable")
 );
@@ -456,16 +455,6 @@ export const studentPortalRoutes: RouteConfig = {
       showInMenu: true,
       allowedRoles: [ROLE_CODES.STUDENT], // Only students
       menuIndex: 11,
-      menuSection: "main",
-    },
-    {
-      path: "share",
-      element: <SharePortal />,
-      menuLabel: "Cổng chia sẻ",
-      menuIcon: <ShareAltOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 12,
       menuSection: "main",
     },
     {

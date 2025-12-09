@@ -622,13 +622,6 @@ const Roadmap: React.FC = () => {
 
           <div className="roadmap-metrics">
             <Card className="metric-card compact">
-              <Statistic
-                title="Tín chỉ hoàn thành"
-                value={stats.completedCredits}
-                suffix={`/ ${stats.totalCredits}`}
-              />
-            </Card>
-            <Card className="metric-card compact">
               <Statistic title="GPA hiện tại" value={stats.gpa} precision={2} />
             </Card>
             <Card className="metric-card compact registration-card">

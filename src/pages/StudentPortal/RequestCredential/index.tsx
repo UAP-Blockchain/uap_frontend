@@ -39,6 +39,7 @@ import type {
   CurriculumSemesterDto,
   CurriculumRoadmapSubjectDto,
 } from "../../../types/Roadmap";
+import type { StudentRoadmapDto, RoadmapSubjectDto } from "../../../types/Roadmap";
 import type {
   RequestCredentialRequest,
   CredentialRequestDto,
@@ -171,6 +172,27 @@ const RequestCredential: React.FC = () => {
     form.resetFields();
   };
 
+  const findCapstoneRoadmapId = (
+    roadmap: StudentRoadmapDto | null | undefined
+  ): string | null => {
+    if (!roadmap) return null;
+    const allSubjects: RoadmapSubjectDto[] = roadmap.semesterGroups
+      .flatMap((g) => g.subjects)
+      .filter((s) => s.status === "Completed");
+
+    // Ưu tiên môn có mã chứa các pattern Capstone/Project/SEP490
+    const capstone = allSubjects.find((s) =>
+      /(SEP490|CAPSTONE|PROJECT)/i.test(s.subjectCode || "")
+    );
+    if (capstone?.id) return capstone.id;
+
+    // Fallback: lấy môn Completed có sequenceOrder lớn nhất
+    const sorted = [...allSubjects].sort(
+      (a, b) => (b.sequenceOrder || 0) - (a.sequenceOrder || 0)
+    );
+    return sorted[0]?.id ?? null;
+  };
+
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
@@ -184,8 +206,22 @@ const RequestCredential: React.FC = () => {
         };
       } else {
         // Graduation (RoadmapCompletion)
+        // Lấy roadmap để tìm môn Capstone đã hoàn thành
+        const roadmap = await RoadmapServices.getMyRoadmap();
+        const capstoneRoadmapId = findCapstoneRoadmapId(roadmap);
+        if (!capstoneRoadmapId) {
+          notification.error({
+            message: "Không tìm thấy môn đồ án/Capstone đã hoàn thành",
+            description:
+              "Vui lòng hoàn thành môn đồ án tốt nghiệp (ví dụ SEP490) trước khi yêu cầu chứng chỉ tốt nghiệp.",
+            placement: "topRight",
+          });
+          return;
+        }
+
         request = {
           certificateType: "RoadmapCompletion",
+          roadmapId: capstoneRoadmapId,
           notes: values.notes,
         };
       }
