@@ -93,7 +93,6 @@ const EnrollList = lazy(() => import("../pages/StudentPortal/EnrollList"));
 const CredentialDetail = lazy(
   () => import("../pages/StudentPortal/CredentialDetail")
 );
-const StudentDashboard = lazy(() => import("../pages/StudentPortal/Dashboard"));
 const AdminDashboard = lazy(() => import("../pages/admin/dashboard"));
 const GradeReport = lazy(() => import("../pages/StudentPortal/GradeReport"));
 const InstructorDetail = lazy(
@@ -364,17 +363,7 @@ export const studentPortalRoutes: RouteConfig = {
   children: [
     {
       path: "",
-      element: <StudentDashboard />,
-      menuLabel: "Bảng điều khiển",
-      menuIcon: <HomeOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 5,
-      menuSection: "main",
-    },
-    {
-      path: "dashboard",
-      element: <StudentDashboard />,
+      element: <Navigate to="roadmap" replace />,
       showInMenu: false,
     },
     {

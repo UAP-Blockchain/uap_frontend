@@ -141,6 +141,7 @@ const { Search } = Input;
 const ClassesManagement: React.FC = () => {
   const navigate = useNavigate();
   const [classes, setClasses] = useState<ClassSummary[]>([]);
+  const [allFilteredClasses, setAllFilteredClasses] = useState<ClassSummary[]>([]);
   const [subjectOfferings, setSubjectOfferings] = useState<SubjectOffering[]>(
     []
   );
@@ -274,6 +275,8 @@ const ClassesManagement: React.FC = () => {
     onChainFilter?: string;
   }) => {
     setLoading(true);
+    // Reset filtered classes khi load lại từ API (không phải từ search)
+    setAllFilteredClasses([]);
     try {
       const response = await fetchClassesApi({
         page: overrides?.page ?? paginationState.current,
@@ -777,14 +780,84 @@ const ClassesManagement: React.FC = () => {
     // Don't call loadClassList here - let user click search button
   };
 
-  const handleSearch = () => {
-    loadClassList({
-      page: 1,
-      searchTerm: searchTerm || undefined,
-      semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
-      teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
-      onChainFilter: onChainFilter !== "all" ? onChainFilter : undefined,
-    });
+  const handleSearch = async () => {
+    setLoading(true);
+    try {
+      // Gọi API nhiều lần với pageSize=100 để lấy TẤT CẢ classes
+      const allItems: ClassSummary[] = [];
+      let currentPage = 1;
+      const pageSize = 100; // API chỉ cho phép tối đa 100
+      let hasMore = true;
+
+      while (hasMore) {
+        const response = await fetchClassesApi({
+          page: currentPage,
+          pageSize: pageSize,
+          semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
+          teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
+          // Không truyền searchTerm vào API
+        });
+
+        allItems.push(...response.items);
+
+        // Kiểm tra xem còn trang nào không
+        // Nếu số items trả về < pageSize hoặc đã lấy hết (currentPage * pageSize >= totalCount)
+        const totalPages = Math.ceil(response.totalCount / pageSize);
+        if (response.items.length < pageSize || currentPage >= totalPages) {
+          hasMore = false;
+        } else {
+          currentPage++;
+        }
+      }
+
+      // Filter ở frontend dựa trên searchTerm
+      let filteredItems = allItems;
+      
+      if (searchTerm && searchTerm.trim()) {
+        const searchLower = searchTerm.toLowerCase().trim();
+        filteredItems = allItems.filter((item) => {
+          return (
+            item.classCode?.toLowerCase().includes(searchLower) ||
+            item.subjectName?.toLowerCase().includes(searchLower) ||
+            item.subjectCode?.toLowerCase().includes(searchLower) ||
+            item.teacherName?.toLowerCase().includes(searchLower) ||
+            item.teacherCode?.toLowerCase().includes(searchLower) ||
+            item.semesterName?.toLowerCase().includes(searchLower)
+          );
+        });
+      }
+
+      // Filter by on-chain status
+      if (onChainFilter !== "all") {
+        filteredItems = filteredItems.filter((item) => {
+          const hasOnChain =
+            typeof item.onChainClassId === "number" && item.onChainClassId > 0;
+          return onChainFilter === "yes" ? hasOnChain : !hasOnChain;
+        });
+      }
+
+      // Lưu tất cả filtered items để paginate sau
+      setAllFilteredClasses(filteredItems);
+
+      // Áp dụng pagination cho kết quả đã filter
+      const displayPageSize = paginationState.pageSize;
+      const startIndex = 0;
+      const endIndex = startIndex + displayPageSize;
+      const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+      setClasses(paginatedItems);
+      setPaginationState({
+        current: 1, // Reset về trang 1 khi search
+        pageSize: paginationState.pageSize,
+        total: filteredItems.length,
+      });
+
+      await loadPendingEnrollments(paginatedItems);
+    } catch {
+      toast.error("Không thể tải dữ liệu lớp học");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleClearFilters = () => {
@@ -792,6 +865,7 @@ const ClassesManagement: React.FC = () => {
     setSemesterFilter("all");
     setTeacherFilter("all");
     setOnChainFilter("all");
+    setAllFilteredClasses([]); // Reset filtered classes
     loadClassList({
       page: 1,
       searchTerm: undefined,
@@ -812,14 +886,33 @@ const ClassesManagement: React.FC = () => {
   };
 
   const handleTableChange = (pagination: TablePaginationConfig) => {
-    loadClassList({
-      page: pagination.current,
-      pageSize: pagination.pageSize,
-      semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
-      teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
-      searchTerm: searchTerm || undefined,
-      onChainFilter: onChainFilter,
-    });
+    // Nếu đã có filtered classes từ search, paginate từ đó
+    if (allFilteredClasses.length > 0) {
+      const pageSize = pagination.pageSize || paginationState.pageSize;
+      const currentPage = pagination.current || 1;
+      const startIndex = (currentPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedItems = allFilteredClasses.slice(startIndex, endIndex);
+
+      setClasses(paginatedItems);
+      setPaginationState({
+        current: currentPage,
+        pageSize: pageSize,
+        total: allFilteredClasses.length,
+      });
+
+      loadPendingEnrollments(paginatedItems);
+    } else {
+      // Nếu chưa search, gọi API như bình thường
+      loadClassList({
+        page: pagination.current,
+        pageSize: pagination.pageSize,
+        semesterId: semesterFilter !== "all" ? semesterFilter : undefined,
+        teacherId: teacherFilter !== "all" ? teacherFilter : undefined,
+        searchTerm: searchTerm || undefined,
+        onChainFilter: onChainFilter,
+      });
+    }
   };
 
   const handleNextStep = async () => {
