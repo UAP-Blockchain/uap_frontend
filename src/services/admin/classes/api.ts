@@ -73,7 +73,7 @@ export const fetchClassesApi = async (
 export const createClassApi = async (
   payload: CreateClassRequest
 ): Promise<void> => {
-  await api.post("/Classes", payload);
+  await api.post("/Classes", payload, { skipGlobalErrorHandler: true });
 };
 
 export const fetchSubjectsApi = async (): Promise<SubjectDto[]> => {
@@ -84,6 +84,7 @@ export const fetchSubjectsApi = async (): Promise<SubjectDto[]> => {
         pageNumber: 1,
         pageSize: 200,
       },
+      skipGlobalErrorHandler: true,
     }
   );
   return normalizeItems<SubjectDto>(response.data);
@@ -122,12 +123,16 @@ export interface TeachersResponse {
 }
 
 export const fetchTeachersForFilterApi = async (): Promise<TeacherFilterOption[]> => {
-  const response = await api.get<TeachersResponse>("/teachers");
+  const response = await api.get<TeachersResponse>("/teachers", {
+    skipGlobalErrorHandler: true,
+  });
   return response.data.items || [];
 };
 
 export const getClassByIdApi = async (id: string): Promise<ClassSummary> => {
-  const response = await api.get<ClassSummary>(`/Classes/${id}`);
+  const response = await api.get<ClassSummary>(`/Classes/${id}`, {
+    skipGlobalErrorHandler: true,
+  });
   return response.data;
 };
 
@@ -135,32 +140,37 @@ export const updateClassApi = async (
   id: string,
   payload: UpdateClassRequest
 ): Promise<void> => {
-  await api.put(`/Classes/${id}`, payload);
+  await api.put(`/Classes/${id}`, payload, { skipGlobalErrorHandler: true });
 };
 
 export const getClassSlotsApi = async (id: string): Promise<SlotDto[]> => {
   const response = await api.get<{ data?: SlotDto[]; items?: SlotDto[] }>(
-    `/Classes/${id}/slots`
+    `/Classes/${id}/slots`,
+    { skipGlobalErrorHandler: true }
   );
   return normalizeItems<SlotDto>(response.data);
 };
 
 export const deleteClassApi = async (id: string): Promise<void> => {
-  await api.delete(`/Classes/${id}`);
+  await api.delete(`/Classes/${id}`, { skipGlobalErrorHandler: true });
 };
 
 export const createSlotApi = async (payload: CreateSlotRequest) => {
-  const response = await api.post("/Slots", payload);
+  const response = await api.post("/Slots", payload, {
+    skipGlobalErrorHandler: true,
+  });
   return response.data;
 };
 
 export const updateSlotApi = async (id: string, payload: UpdateSlotRequest) => {
-  const response = await api.put(`/Slots/${id}`, payload);
+  const response = await api.put(`/Slots/${id}`, payload, {
+    skipGlobalErrorHandler: true,
+  });
   return response.data;
 };
 
 export const deleteSlotApi = async (id: string) => {
-  await api.delete(`/Slots/${id}`);
+  await api.delete(`/Slots/${id}`, { skipGlobalErrorHandler: true });
 };
 
 export interface StudentRoster {
@@ -189,7 +199,9 @@ interface ClassRosterResponse {
 export const getClassRosterApi = async (
   id: string
 ): Promise<StudentRoster[]> => {
-  const response = await api.get<ClassRosterResponse>(`/Classes/${id}/roster`);
+  const response = await api.get<ClassRosterResponse>(`/Classes/${id}/roster`, {
+    skipGlobalErrorHandler: true,
+  });
 
   if (Array.isArray(response.data?.students)) {
     return response.data.students.map((student) => ({
@@ -213,7 +225,9 @@ export const getEligibleStudentsForClassApi = async (
     data?: EligibleStudent[];
     items?: EligibleStudent[];
     students?: EligibleStudent[];
-  }>(`/students/eligible-for-class/${classId}`);
+  }> (`/students/eligible-for-class/${classId}`, {
+    skipGlobalErrorHandler: true,
+  });
 
   if (Array.isArray(response.data?.students)) {
     return response.data.students;
@@ -226,7 +240,11 @@ export const assignStudentsToClassApi = async (
   classId: string,
   studentIds: string[]
 ): Promise<void> => {
-  await api.post(`/Classes/${classId}/students`, { studentIds });
+  await api.post(
+    `/Classes/${classId}/students`,
+    { studentIds },
+    { skipGlobalErrorHandler: true }
+  );
 };
 
 export interface UpdateOnChainClassIdRequest {
@@ -237,6 +255,8 @@ export const updateOnChainClassIdApi = async (
   classId: string,
   payload: UpdateOnChainClassIdRequest
 ): Promise<void> => {
-  await api.put(`/Classes/${classId}/onchain`, payload);
+  await api.put(`/Classes/${classId}/onchain`, payload, {
+    skipGlobalErrorHandler: true,
+  });
 };
 

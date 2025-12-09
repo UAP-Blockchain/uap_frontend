@@ -293,7 +293,7 @@ const ClassesManagement: React.FC = () => {
       setPaginationState({
         current: response.page,
         pageSize: response.pageSize,
-        total: filteredItems.length,
+        total: response.totalCount ?? filteredItems.length,
       });
 
       await loadPendingEnrollments(filteredItems);
