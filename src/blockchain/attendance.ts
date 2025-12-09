@@ -4,7 +4,7 @@ import { getSigner } from "./index";
 // Địa chỉ AttendanceManagement trên Quorum, khớp với appsettings
 export const ATTENDANCE_MANAGEMENT_ADDRESS =
   import.meta.env.VITE_ATTENDANCE_MANAGEMENT_ADDRESS ||
-  "0x9E545E3C0baAB3E08CdfD552C960A1050f373042";
+  "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570";
 
 export const ATTENDANCE_MANAGEMENT_ABI = [
   {

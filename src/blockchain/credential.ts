@@ -2,7 +2,7 @@ import { Contract, Interface } from "ethers";
 import { getSigner } from "./index";
 
 export const CREDENTIAL_MANAGEMENT_ADDRESS =
-  "0x84eA74d481Ee0A5332c457a4d796187F6Ba67fEB";
+  "0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00";
 
 export const CREDENTIAL_MANAGEMENT_ABI = [
   {

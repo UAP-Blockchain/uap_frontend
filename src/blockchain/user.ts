@@ -2,7 +2,7 @@ import { Contract } from "ethers";
 import { getSigner } from "./index";
 
 export const UNIVERSITY_MANAGEMENT_ADDRESS =
-  "0xc3e53F4d16Ae77Db1c982e75a937B9f60FE63690";
+  "0x9d4454B023096f34B160D6B654540c56A1F81688";
 
 export const UNIVERSITY_MANAGEMENT_ABI = [
   {
