@@ -61,7 +61,10 @@ import { getAllTimeSlots } from "../../../services/admin/timeSlots/api";
 import type { SemesterDto } from "../../../types/Semester";
 import { fetchSemestersApi } from "../../../services/admin/semesters/api";
 import dayjs, { Dayjs } from "dayjs";
-import { getClassManagementContract, createOnChainClass } from "../../../blockchain/class";
+import {
+  getClassManagementContract,
+  createOnChainClass,
+} from "../../../blockchain/class";
 
 const { Text } = Typography;
 
@@ -1141,10 +1144,12 @@ const ClassesManagement: React.FC = () => {
             allowClear={false}
           >
             {semesters
-              .filter((s) => !s.isClosed)
+              .filter((s) => s.isActive && !s.isClosed)
               .sort((a, b) => {
                 // Sort by startDate descending (newest first)
-                return dayjs(b.startDate).valueOf() - dayjs(a.startDate).valueOf();
+                return (
+                  dayjs(b.startDate).valueOf() - dayjs(a.startDate).valueOf()
+                );
               })
               .map((semester) => (
                 <Option key={semester.id} value={semester.id}>
@@ -1662,32 +1667,32 @@ const ClassesManagement: React.FC = () => {
               <p className="eyebrow">Bảng quản trị</p>
               <h2>Quản lý Lớp học</h2>
               <span className="subtitle">
-              Quản lý các lớp học trong hệ thống
+                Quản lý các lớp học trong hệ thống
               </span>
             </div>
           </div>
           <div className="header-actions">
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleReload}
-                loading={loading}
-              >
-                Làm mới
-              </Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={handleReload}
+              loading={loading}
+            >
+              Làm mới
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
               className="primary-action"
-                onClick={() => {
-                  form.resetFields();
-                  setSelectedOfferingSemester("all");
-                  resetScheduleBuilder();
-                  setCurrentStep(0);
-                  setIsModalVisible(true);
-                }}
-              >
-                Thêm lớp học
-              </Button>
+              onClick={() => {
+                form.resetFields();
+                setSelectedOfferingSemester("all");
+                resetScheduleBuilder();
+                setCurrentStep(0);
+                setIsModalVisible(true);
+              }}
+            >
+              Thêm lớp học
+            </Button>
           </div>
         </div>
 
@@ -1710,53 +1715,53 @@ const ClassesManagement: React.FC = () => {
             <Col xs={24} sm={12} md={6}>
               <div className="filter-field">
                 <label>Học kỳ</label>
-            <Select
+                <Select
                   placeholder="Tất cả học kỳ"
-              value={semesterFilter}
-              onChange={handleSemesterFilterChange}
-              allowClear
+                  value={semesterFilter}
+                  onChange={handleSemesterFilterChange}
+                  allowClear
                   size="large"
                   style={{ width: "100%" }}
-            >
+                >
                   <Option value="all">Tất cả học kỳ</Option>
-              {semesterOptions.map((semester) => (
-                <Option key={semester.id} value={semester.id}>
-                  {semester.name}
-                </Option>
-              ))}
-            </Select>
+                  {semesterOptions.map((semester) => (
+                    <Option key={semester.id} value={semester.id}>
+                      {semester.name}
+                    </Option>
+                  ))}
+                </Select>
               </div>
-          </Col>
+            </Col>
             <Col xs={24} sm={12} md={6}>
               <div className="filter-field">
                 <label>Giảng viên</label>
-            <Select
+                <Select
                   placeholder="Tất cả giảng viên"
-              value={teacherFilter}
-              onChange={handleTeacherFilterChange}
-              allowClear
-              showSearch
+                  value={teacherFilter}
+                  onChange={handleTeacherFilterChange}
+                  allowClear
+                  showSearch
                   size="large"
-              optionFilterProp="label"
-              filterOption={(input, option) => {
-                const label = option?.label as string | undefined;
-                return (label ?? "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase());
-              }}
+                  optionFilterProp="label"
+                  filterOption={(input, option) => {
+                    const label = option?.label as string | undefined;
+                    return (label ?? "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase());
+                  }}
                   style={{ width: "100%" }}
-            >
-              <Option value="all">Tất cả giảng viên</Option>
-              {teachersForFilter.map((teacher) => (
-                <Option
-                  key={teacher.id}
-                  value={teacher.id}
-                  label={teacher.fullName}
                 >
-                  {teacher.fullName} ({teacher.teacherCode})
-                </Option>
-              ))}
-            </Select>
+                  <Option value="all">Tất cả giảng viên</Option>
+                  {teachersForFilter.map((teacher) => (
+                    <Option
+                      key={teacher.id}
+                      value={teacher.id}
+                      label={teacher.fullName}
+                    >
+                      {teacher.fullName} ({teacher.teacherCode})
+                    </Option>
+                  ))}
+                </Select>
               </div>
             </Col>
             <Col xs={24} sm={12} md={6}>
@@ -1774,15 +1779,12 @@ const ClassesManagement: React.FC = () => {
                   <Option value="no">Chưa on-chain</Option>
                 </Select>
               </div>
-          </Col>
-        </Row>
+            </Col>
+          </Row>
           <Row gutter={[8, 8]} align="middle" style={{ marginTop: 8 }}>
             <Col xs={24} style={{ textAlign: "right" }}>
               <Space>
-                <Button
-                  onClick={handleClearFilters}
-                  size="large"
-                >
+                <Button onClick={handleClearFilters} size="large">
                   Xóa hết
                 </Button>
                 <Button
