@@ -26,6 +26,7 @@ export interface CredentialOnChainPayloadDto {
   credentialType: string;
   credentialDataJson: string;
   expiresAtUnix: number;
+  verificationHash: string;
 }
 
 export interface CredentialDetailDto extends CredentialDto {
