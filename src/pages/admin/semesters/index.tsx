@@ -364,8 +364,8 @@ const SemestersManagement: React.FC = () => {
     // Filter by year
     if (yearFilter !== "all") {
       filtered = filtered.filter(
-        (sem) => dayjs(sem.startDate).year().toString() === yearFilter
-      );
+      (sem) => dayjs(sem.startDate).year().toString() === yearFilter
+    );
     }
     
     // Sort by TotalSubjects if needed (frontend sort since API may not support it)
@@ -645,43 +645,43 @@ const SemestersManagement: React.FC = () => {
                   enterButton="Tìm kiếm"
                 />
               </div>
-            </Col>
+              </Col>
             <Col xs={24} sm={12} md={8} className="filter-field status-field">
               <div className="filter-field">
                 <label>Trạng thái</label>
-                <Select
-                  value={statusFilter}
-                  onChange={handleStatusFilter}
-                  suffixIcon={<FilterOutlined />}
+              <Select
+                value={statusFilter}
+                onChange={handleStatusFilter}
+                suffixIcon={<FilterOutlined />}
                   size="large"
-                  className="status-select"
+                className="status-select"
                   style={{ width: "100%" }}
-                >
-                  <Option value="all">Tất cả</Option>
-                  <Option value="active">Đang hoạt động</Option>
-                  <Option value="inactive">Chưa kích hoạt</Option>
-                  <Option value="closed">Đã đóng</Option>
-                </Select>
+              >
+                <Option value="all">Tất cả</Option>
+                <Option value="active">Đang hoạt động</Option>
+                <Option value="inactive">Chưa kích hoạt</Option>
+                <Option value="closed">Đã đóng</Option>
+              </Select>
               </div>
             </Col>
             <Col xs={24} sm={12} md={8} className="filter-field year-field">
               <div className="filter-field">
                 <label>Năm</label>
-                <Select
-                  value={yearFilter}
-                  onChange={handleYearFilter}
-                  placeholder="Chọn năm"
+              <Select
+                value={yearFilter}
+                onChange={handleYearFilter}
+                placeholder="Chọn năm"
                   size="large"
-                  allowClear={false}
+                allowClear={false}
                   style={{ width: "100%" }}
-                >
-                  <Option value="all">Tất cả năm</Option>
-                  {yearOptions.map((year) => (
-                    <Option key={year} value={year}>
-                      {year}
-                    </Option>
-                  ))}
-                </Select>
+              >
+                <Option value="all">Tất cả năm</Option>
+                {yearOptions.map((year) => (
+                  <Option key={year} value={year}>
+                    {year}
+                  </Option>
+                ))}
+              </Select>
               </div>
             </Col>
 

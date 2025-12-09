@@ -273,23 +273,23 @@ const SemesterDetail: React.FC = () => {
         </div>
         <div className="header-actions">
           {isEditing ? (
-            <Space size="small">
-              <Button onClick={handleCancelEdit} disabled={isSaving}>
-                Hủy
-              </Button>
-              <Button
-                type="primary"
-                onClick={() => form.submit()}
-                loading={isSaving}
-              >
-                Lưu thay đổi
-              </Button>
+          <Space size="small">
+                <Button onClick={handleCancelEdit} disabled={isSaving}>
+                  Hủy
+                </Button>
+                <Button
+                  type="primary"
+                  onClick={() => form.submit()}
+                  loading={isSaving}
+                >
+                  Lưu thay đổi
+                </Button>
             </Space>
-          ) : (
-            <Button type="default" onClick={handleStartEdit}>
-              Chỉnh sửa
-            </Button>
-          )}
+            ) : (
+              <Button type="default" onClick={handleStartEdit}>
+                Chỉnh sửa
+              </Button>
+            )}
         </div>
       </div>
 

@@ -151,7 +151,11 @@ const ClassesManagement: React.FC = () => {
   const [pendingEnrollments, setPendingEnrollments] = useState<
     Record<string, number>
   >({});
-  const [form] = Form.useForm<CreateClassRequest>();
+  // Form type includes semesterId for filtering, but it's not part of CreateClassRequest
+  interface ClassFormValues extends CreateClassRequest {
+    semesterId?: string;
+  }
+  const [form] = Form.useForm<ClassFormValues>();
   const [manualSlotForm] = Form.useForm<ManualSlotFormValues>();
   const [timeSlots, setTimeSlots] = useState<TimeSlotDto[]>([]);
   const [semesters, setSemesters] = useState<SemesterDto[]>([]);
@@ -361,16 +365,10 @@ const ClassesManagement: React.FC = () => {
   }, []);
 
   const semesterOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    subjectOfferings.forEach((offering) => {
-      if (!map.has(offering.semesterId)) {
-        map.set(offering.semesterId, offering.semesterName);
-      }
-    });
-    return Array.from(map.entries())
-      .map(([id, name]) => ({ id, name }))
+    return semesters
+      .map((semester) => ({ id: semester.id, name: semester.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [subjectOfferings]);
+  }, [semesters]);
 
   const filteredSubjectOfferings = useMemo(() => {
     if (selectedOfferingSemester === "all") {
@@ -533,7 +531,7 @@ const ClassesManagement: React.FC = () => {
       ),
     },
     {
-      title: "Kỳ học",
+      title: "Học kỳ",
       dataIndex: "semesterName",
       key: "semesterName",
       width: 120,
@@ -1072,8 +1070,10 @@ const ClassesManagement: React.FC = () => {
         }
       }
 
+      // Remove semesterId from values as it's only for filtering, not part of CreateClassRequest
+      const { semesterId, ...classRequestValues } = values;
       const payload: CreateClassRequest = {
-        ...values,
+        ...classRequestValues,
         initialSlots: mapEntriesToPayload(scheduleEntries),
       };
       await createClassApi(payload);
@@ -1113,18 +1113,39 @@ const ClassesManagement: React.FC = () => {
           classCode: "",
           subjectOfferingId: undefined,
           teacherId: undefined,
+          semesterId: undefined,
         }}
       >
-        <Form.Item label="Kỳ học">
+        <Form.Item
+          label="Học kỳ"
+          name="semesterId"
+          rules={[
+            { required: true, message: "Vui lòng chọn học kỳ" },
+            {
+              validator: (_, value) => {
+                if (!value || value === "all") {
+                  return Promise.reject(new Error("Vui lòng chọn học kỳ"));
+                }
+                return Promise.resolve();
+              },
+            },
+          ]}
+        >
           <Select
-            placeholder="Chọn kỳ học để lọc Subject Offering"
+            placeholder="Chọn học kỳ để lọc Subject Offering"
             value={selectedOfferingSemester}
-            onChange={(value) => setSelectedOfferingSemester(value)}
+            onChange={(value) => {
+              setSelectedOfferingSemester(value);
+              form.setFieldsValue({ semesterId: value });
+            }}
             allowClear={false}
           >
-            <Option value="all">Tất cả kỳ học</Option>
             {semesters
               .filter((s) => !s.isClosed)
+              .sort((a, b) => {
+                // Sort by startDate descending (newest first)
+                return dayjs(b.startDate).valueOf() - dayjs(a.startDate).valueOf();
+              })
               .map((semester) => (
                 <Option key={semester.id} value={semester.id}>
                   {semester.name} (
@@ -1632,21 +1653,20 @@ const ClassesManagement: React.FC = () => {
   return (
     <div className="classes-management">
       <Card className="classes-panel">
-        <Row
-          justify="space-between"
-          align="middle"
-          style={{ marginBottom: 24 }}
-        >
-          <Col>
-            <h2 style={{ margin: 0, fontSize: "24px", fontWeight: 600 }}>
-              Quản lý Lớp học
-            </h2>
-            <p style={{ margin: "4px 0 0 0", color: "#999", fontSize: "14px" }}>
+        <div className="overview-header">
+          <div className="title-block">
+            <div className="title-icon">
+              <BookOutlined />
+            </div>
+            <div>
+              <p className="eyebrow">Bảng quản trị</p>
+              <h2>Quản lý Lớp học</h2>
+              <span className="subtitle">
               Quản lý các lớp học trong hệ thống
-            </p>
-          </Col>
-          <Col>
-            <Space>
+              </span>
+            </div>
+          </div>
+          <div className="header-actions">
               <Button
                 icon={<ReloadOutlined />}
                 onClick={handleReload}
@@ -1657,6 +1677,7 @@ const ClassesManagement: React.FC = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
+              className="primary-action"
                 onClick={() => {
                   form.resetFields();
                   setSelectedOfferingSemester("all");
@@ -1664,13 +1685,11 @@ const ClassesManagement: React.FC = () => {
                   setCurrentStep(0);
                   setIsModalVisible(true);
                 }}
-                size="large"
               >
                 Thêm lớp học
               </Button>
-            </Space>
-          </Col>
-        </Row>
+          </div>
+        </div>
 
         <div className="filters-row compact-layout">
           <Row gutter={[8, 8]} align="middle" className="filter-row-compact">
@@ -1690,54 +1709,54 @@ const ClassesManagement: React.FC = () => {
             </Col>
             <Col xs={24} sm={12} md={6}>
               <div className="filter-field">
-                <label>Kỳ học</label>
-                <Select
-                  placeholder="Tất cả kỳ học"
-                  value={semesterFilter}
-                  onChange={handleSemesterFilterChange}
-                  allowClear
+                <label>Học kỳ</label>
+            <Select
+                  placeholder="Tất cả học kỳ"
+              value={semesterFilter}
+              onChange={handleSemesterFilterChange}
+              allowClear
                   size="large"
                   style={{ width: "100%" }}
-                >
-                  <Option value="all">Tất cả kỳ học</Option>
-                  {semesterOptions.map((semester) => (
-                    <Option key={semester.id} value={semester.id}>
-                      {semester.name}
-                    </Option>
-                  ))}
-                </Select>
+            >
+                  <Option value="all">Tất cả học kỳ</Option>
+              {semesterOptions.map((semester) => (
+                <Option key={semester.id} value={semester.id}>
+                  {semester.name}
+                </Option>
+              ))}
+            </Select>
               </div>
-            </Col>
+          </Col>
             <Col xs={24} sm={12} md={6}>
               <div className="filter-field">
                 <label>Giảng viên</label>
-                <Select
+            <Select
                   placeholder="Tất cả giảng viên"
-                  value={teacherFilter}
-                  onChange={handleTeacherFilterChange}
-                  allowClear
-                  showSearch
+              value={teacherFilter}
+              onChange={handleTeacherFilterChange}
+              allowClear
+              showSearch
                   size="large"
-                  optionFilterProp="label"
-                  filterOption={(input, option) => {
-                    const label = option?.label as string | undefined;
-                    return (label ?? "")
-                      .toLowerCase()
-                      .includes(input.toLowerCase());
-                  }}
+              optionFilterProp="label"
+              filterOption={(input, option) => {
+                const label = option?.label as string | undefined;
+                return (label ?? "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase());
+              }}
                   style={{ width: "100%" }}
+            >
+              <Option value="all">Tất cả giảng viên</Option>
+              {teachersForFilter.map((teacher) => (
+                <Option
+                  key={teacher.id}
+                  value={teacher.id}
+                  label={teacher.fullName}
                 >
-                  <Option value="all">Tất cả giảng viên</Option>
-                  {teachersForFilter.map((teacher) => (
-                    <Option
-                      key={teacher.id}
-                      value={teacher.id}
-                      label={teacher.fullName}
-                    >
-                      {teacher.fullName} ({teacher.teacherCode})
-                    </Option>
-                  ))}
-                </Select>
+                  {teacher.fullName} ({teacher.teacherCode})
+                </Option>
+              ))}
+            </Select>
               </div>
             </Col>
             <Col xs={24} sm={12} md={6}>
@@ -1755,8 +1774,8 @@ const ClassesManagement: React.FC = () => {
                   <Option value="no">Chưa on-chain</Option>
                 </Select>
               </div>
-            </Col>
-          </Row>
+          </Col>
+        </Row>
           <Row gutter={[8, 8]} align="middle" style={{ marginTop: 8 }}>
             <Col xs={24} style={{ textAlign: "right" }}>
               <Space>
