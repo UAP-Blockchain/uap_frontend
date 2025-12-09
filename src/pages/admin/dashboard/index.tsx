@@ -126,16 +126,16 @@ const Dashboard: React.FC = () => {
           subtext: "Đang hoạt động",
           icon: <ApartmentOutlined />,
           accent: "#6366f1",
-        },
-        {
+    },
+    {
           id: "classes",
           title: "Lớp học",
           value: statistics.activeClasses.toString(),
           subtext: "Đang hoạt động",
           icon: <BookOutlined />,
           accent: "#22c55e",
-        },
-        {
+    },
+    {
           id: "subjects",
           title: "Môn học",
           value: statistics.activeSubjects.toString(),
@@ -158,7 +158,7 @@ const Dashboard: React.FC = () => {
           subtext: "Đang hoạt động",
           icon: <UserOutlined />,
           accent: "#14b8a6",
-        },
+    },
       ]
     : [];
 
@@ -269,9 +269,9 @@ const Dashboard: React.FC = () => {
                 </Text>
               </div>
               {renderTrend(card.trend)}
-            </Card>
+          </Card>
           ))}
-        </div>
+                </div>
 
         <Row gutter={[24, 24]} className="dashboard-main">
           <Col xs={24} lg={14}>
@@ -319,8 +319,8 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
               </div>
-            </Card>
-          </Col>
+          </Card>
+        </Col>
 
           <Col xs={24} lg={10}>
             <Card className="section-card" bordered={false}>
@@ -332,17 +332,17 @@ const Dashboard: React.FC = () => {
                   </Text>
                 </div>
               </div>
-              <Table
+            <Table
                 columns={columns}
                 dataSource={overviewData}
-                pagination={false}
-                size="small"
+              pagination={false}
+              size="small"
                 rowKey="key"
                 className="overview-table"
-              />
-            </Card>
-          </Col>
-        </Row>
+            />
+          </Card>
+        </Col>
+      </Row>
       </Spin>
     </div>
   );

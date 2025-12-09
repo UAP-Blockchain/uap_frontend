@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import axios from "axios";
 import {
   Button,
   Card,
@@ -74,6 +75,17 @@ const WEEKDAY_OPTIONS: Array<{ label: string; value: number }> = [
   { label: "Thứ 7", value: 6 },
   { label: "Chủ nhật", value: 0 },
 ];
+
+// Map weekday names from English to Vietnamese
+const weekdayMap: Record<string, string> = {
+  Monday: "Thứ 2",
+  Tuesday: "Thứ 3",
+  Wednesday: "Thứ 4",
+  Thursday: "Thứ 5",
+  Friday: "Thứ 6",
+  Saturday: "Thứ 7",
+  Sunday: "Chủ nhật",
+};
 
 interface AutoPattern {
   label: string;
@@ -425,17 +437,21 @@ const ClassesManagement: React.FC = () => {
 
   const scheduleTableData = useMemo(
     () =>
-      scheduleEntries.map((entry, index) => ({
-        key: entry.id,
-        index: index + 1,
-        dateText: entry.date.format("DD/MM/YYYY"),
-        weekday: entry.date.format("dddd"),
-        timeSlotLabel: getTimeSlotLabel(entry.timeSlotId),
-        teacherName: getTeacherName(entry.substituteTeacherId),
-        substitutionReason: entry.substitutionReason,
-        notes: entry.notes,
-        entry,
-      })),
+      scheduleEntries.map((entry, index) => {
+        const englishWeekday = entry.date.format("dddd");
+        const vietnameseWeekday = weekdayMap[englishWeekday] || englishWeekday;
+        return {
+          key: entry.id,
+          index: index + 1,
+          dateText: entry.date.format("DD/MM/YYYY"),
+          weekday: vietnameseWeekday,
+          timeSlotLabel: getTimeSlotLabel(entry.timeSlotId),
+          teacherName: getTeacherName(entry.substituteTeacherId),
+          substitutionReason: entry.substitutionReason,
+          notes: entry.notes,
+          entry,
+        };
+      }),
     [scheduleEntries, getTeacherName, getTimeSlotLabel]
   );
 
@@ -808,8 +824,20 @@ const ClassesManagement: React.FC = () => {
 
   const handleNextStep = async () => {
     try {
-      await form.validateFields();
-      setCurrentStep(1);
+      if (currentStep === 0) {
+        await form.validateFields();
+        setCurrentStep(1);
+        return;
+      }
+
+      if (currentStep === 1) {
+        if (scheduleEntries.length === 0) {
+          toast.error("Vui lòng thêm ít nhất 1 buổi học trước khi tiếp tục");
+          return;
+        }
+        setCurrentStep(2);
+        return;
+      }
     } catch {
       // validation errors are shown by antd
     }
@@ -986,6 +1014,10 @@ const ClassesManagement: React.FC = () => {
   };
 
   const handleEditScheduleEntry = (entry: ScheduleEntry) => {
+    // Nếu đang ở bước 3, chuyển về bước 2 để edit
+    if (currentStep === 2) {
+      setCurrentStep(1);
+    }
     manualSlotForm.setFieldsValue({
       date: entry.date,
       timeSlotId: entry.timeSlotId,
@@ -1086,11 +1118,23 @@ const ClassesManagement: React.FC = () => {
       setSelectedSubjectOfferingId(undefined);
       await loadClassList({ page: 1 });
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Không thể tạo lớp học mới");
+      let errorMessage = "Không thể tạo lớp học mới";
+      if (axios.isAxiosError(error)) {
+        const data = error.response?.data as {
+          message?: string;
+          errors?: string[];
+          detail?: string;
+        };
+        errorMessage =
+          data?.errors?.[0] ||
+          data?.message ||
+          data?.detail ||
+          error.message ||
+          errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
       }
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -1254,18 +1298,11 @@ const ClassesManagement: React.FC = () => {
     return (
       <div className="auto-config">
         {selectedSemesterForStep2 ? (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              background: "#f0f5ff",
-              borderRadius: 6,
-            }}
-          >
-            <Text strong style={{ display: "block", marginBottom: 4 }}>
+          <div className="semester-info-card">
+            <Text strong style={{ display: "block", marginBottom: 4, color: "#ffffff" }}>
               Học kỳ: {selectedSemesterForStep2.name}
             </Text>
-            <Text type="secondary" style={{ fontSize: 13 }}>
+            <Text style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.9)" }}>
               Thời gian:{" "}
               {dayjs(selectedSemesterForStep2.startDate).format("DD/MM/YYYY")} -{" "}
               {dayjs(selectedSemesterForStep2.endDate).format("DD/MM/YYYY")}
@@ -1418,18 +1455,11 @@ const ClassesManagement: React.FC = () => {
     return (
       <div className="manual-config">
         {selectedSemesterForStep2 ? (
-          <div
-            style={{
-              marginBottom: 16,
-              padding: 12,
-              background: "#f0f5ff",
-              borderRadius: 6,
-            }}
-          >
-            <Text strong style={{ display: "block", marginBottom: 4 }}>
+          <div className="semester-info-card">
+            <Text strong style={{ display: "block", marginBottom: 4, color: "#ffffff" }}>
               Học kỳ: {selectedSemesterForStep2.name}
             </Text>
-            <Text type="secondary" style={{ fontSize: 13 }}>
+            <Text style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.9)" }}>
               Thời gian:{" "}
               {dayjs(selectedSemesterForStep2.startDate).format("DD/MM/YYYY")} -{" "}
               {dayjs(selectedSemesterForStep2.endDate).format("DD/MM/YYYY")}
@@ -1560,7 +1590,7 @@ const ClassesManagement: React.FC = () => {
     );
   };
 
-  const renderScheduleBuilder = () => (
+  const renderScheduleTabs = () => (
     <div className="schedule-step">
       {timeSlots.length === 0 ? (
         <Empty description="Chưa có TimeSlot để thiết lập lịch học" />
@@ -1582,33 +1612,35 @@ const ClassesManagement: React.FC = () => {
               },
             ]}
           />
-
-          <Divider />
-
-          <div className="schedule-table-header">
-            <div>
-              <h4>Danh sách buổi học</h4>
-              <p>Hiện có {scheduleEntries.length} buổi</p>
-            </div>
-            {scheduleEntries.length > 0 && (
-              <Button type="text" danger onClick={handleClearScheduleEntries}>
-                Xóa tất cả
-              </Button>
-            )}
-          </div>
-
-          {scheduleEntries.length === 0 ? (
-            <Empty description="Chưa có buổi học nào" />
-          ) : (
-            <Table
-              columns={scheduleColumns}
-              dataSource={scheduleTableData}
-              pagination={false}
-              size="small"
-              className="schedule-table"
-            />
-          )}
         </>
+      )}
+    </div>
+  );
+
+  const renderScheduleList = () => (
+    <div className="schedule-step">
+      <div className="schedule-table-header">
+        <div>
+          <h4>Danh sách buổi học</h4>
+          <p>Hiện có {scheduleEntries.length} buổi</p>
+        </div>
+        {scheduleEntries.length > 0 && (
+          <Button type="text" danger onClick={handleClearScheduleEntries}>
+            Xóa tất cả
+          </Button>
+        )}
+      </div>
+
+      {scheduleEntries.length === 0 ? (
+        <Empty description="Chưa có buổi học nào" />
+      ) : (
+        <Table
+          columns={scheduleColumns}
+          dataSource={scheduleTableData}
+          pagination={false}
+          size="small"
+          className="schedule-table modal-custom-table"
+        />
       )}
     </div>
   );
@@ -1616,7 +1648,8 @@ const ClassesManagement: React.FC = () => {
   const renderModalContent = () => (
     <>
       {renderClassInfoForm(currentStep !== 0)}
-      {currentStep === 1 && renderScheduleBuilder()}
+      {currentStep === 1 && renderScheduleTabs()}
+      {currentStep === 2 && renderScheduleList()}
     </>
   );
 
@@ -1625,6 +1658,20 @@ const ClassesManagement: React.FC = () => {
       return [
         <Button key="cancel" onClick={handleModalCancel}>
           Hủy
+        </Button>,
+        <Button key="next" type="primary" onClick={handleNextStep}>
+          Tiếp tục
+        </Button>,
+      ];
+    }
+
+    if (currentStep === 1) {
+      return [
+        <Button key="cancel" onClick={handleModalCancel}>
+          Hủy
+        </Button>,
+        <Button key="back" onClick={handlePrevStep}>
+          Quay lại
         </Button>,
         <Button key="next" type="primary" onClick={handleNextStep}>
           Tiếp tục
@@ -1824,13 +1871,18 @@ const ClassesManagement: React.FC = () => {
         onCancel={handleModalCancel}
         destroyOnClose
         width={920}
+        className="class-create-modal"
         footer={renderModalFooter()}
       >
         <Steps
           size="small"
           current={currentStep}
           className="class-modal-steps"
-          items={[{ title: "Thông tin lớp" }, { title: "Thiết lập lịch" }]}
+          items={[
+            { title: "Thông tin lớp" },
+            { title: "Thiết lập lịch" },
+            { title: "Danh sách buổi" },
+          ]}
         />
         <div className="modal-step-content">{renderModalContent()}</div>
       </Modal>

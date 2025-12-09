@@ -1,9 +1,6 @@
 @use "../../../styles/theme-variables" as *;
 
 .classes-management {
- 
-  
-
   .classes-panel {
     border-radius: 12px;
     border: 1px solid #e4e9f2;
@@ -92,14 +89,14 @@
         font-weight: 600;
         box-shadow: 0 8px 16px rgba(0, 85, 255, 0.15);
       }
-      }
-      }
+    }
+  }
 
   .stats-compact {
-          display: flex;
+    display: flex;
     flex-wrap: wrap;
     gap: 8px;
-          margin-bottom: 8px;
+    margin-bottom: 8px;
 
     .stat-chip {
       display: inline-flex;
@@ -109,7 +106,7 @@
       border-radius: 20px;
       background: #f5f7fb;
       font-size: 11px;
-              font-weight: 600;
+      font-weight: 600;
       color: #475467;
 
       .value {
@@ -120,7 +117,7 @@
 
       .label {
         font-size: 11px;
-            }
+      }
 
       &.total {
         background: #fff7e6;
@@ -129,7 +126,7 @@
       &.students {
         background: #f6ffed;
         color: #389e0d;
-            }
+      }
       &.enrollments {
         background: #e6f4ff;
         color: #0958d9;
@@ -137,9 +134,9 @@
       &.slots {
         background: #fef3ff;
         color: #a61bff;
-            }
-          }
-        }
+      }
+    }
+  }
 
   .stats-inline {
     display: grid;
@@ -176,7 +173,7 @@
           font-size: 20px;
           font-weight: 700;
           color: #111827;
-      }
+        }
 
         .stat-label {
           font-size: 12px;
@@ -213,15 +210,15 @@
 
     .filter-row-expanded {
       .filter-field {
-          display: flex;
+        display: flex;
         flex-direction: column;
-          gap: 6px;
+        gap: 6px;
         width: 100%;
 
         label {
           font-size: 12px;
           color: #6b7280;
-          }
+        }
 
         .ant-input-affix-wrapper,
         .ant-select-selector {
@@ -229,10 +226,10 @@
           border: 1px solid #d9dce3;
           min-height: 40px;
         }
-          }
+      }
 
       .filter-meta {
-            display: flex;
+        display: flex;
         align-items: flex-end;
         font-size: 12px;
         color: #6b7280;
@@ -240,18 +237,18 @@
 
         strong {
           color: #111827;
-            }
-          }
         }
       }
+    }
+  }
 
   .filters-row.compact-layout {
     border-top: none;
     padding-top: 6px;
 
     .filter-row-compact {
-          display: flex;
-          align-items: center;
+      display: flex;
+      align-items: center;
       gap: 8px;
 
       .ant-col {
@@ -277,8 +274,8 @@
         color: #6b7280;
         white-space: nowrap;
       }
-          }
-        }
+    }
+  }
 
   // Table styling - đồng bộ với slots
   .custom-table {
@@ -321,13 +318,13 @@
         color: #111827;
         margin-bottom: 2px;
         line-height: 1.3;
-          }
+      }
 
       .class-info__subject {
         font-size: 12px;
         color: #6b7280;
         line-height: 1.3;
-          }
+      }
 
       &.clickable {
         transition: all 0.2s ease;
@@ -367,9 +364,9 @@
     .credit-value,
     .number-value {
       font-size: 14px;
-        font-weight: 600;
+      font-weight: 600;
       color: #111827;
-      }
+    }
 
     .action-btn-edit,
     .action-btn-delete {
@@ -379,97 +376,263 @@
       &:hover {
         color: #1890ff;
         background: #e6f7ff;
-        }
       }
+    }
 
     .action-btn-delete:hover {
       color: #ff4d4f;
       background: #fff1f0;
     }
-      }
+  }
+}
 
-  .ant-modal {
-    .ant-modal-title {
-            font-weight: 600;
-        }
-
-    .ant-form-item-label > label {
-      font-weight: 500;
+.class-create-modal {
+  .ant-modal-content {
+    border-radius: 14px;
+    padding: 16px 18px 8px;
   }
 
-    .class-modal-steps {
+  .ant-modal-title {
+    font-weight: 700;
+  }
+
+  .ant-form-item-label > label {
+    font-weight: 500;
+  }
+
+  .class-modal-steps {
+    margin-bottom: 16px;
+  }
+
+  .modal-step-content {
+    max-height: 72vh;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .schedule-step {
+    .auto-config,
+    .manual-config {
       margin-bottom: 16px;
     }
 
-    .modal-step-content {
-      max-height: 70vh;
-      overflow-y: auto;
-      padding-right: 4px;
+    .semester-info-card {
+      margin-bottom: 16px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #1e90ff 0%, #0b75ff 100%);
+      box-shadow: 0 6px 18px rgba(30, 144, 255, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    .schedule-step {
-      .auto-config,
-      .manual-config {
-        margin-bottom: 16px;
-      }
+    padding-top: 8px;
 
-      .weekday-pattern {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
-        margin-bottom: 16px;
+    .weekday-pattern {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+      margin-top: 8px;
 
-        .pattern-item {
-          display: flex;
-          flex-direction: column;
-          gap: 6px;
-          padding: 12px;
-          border: 1px solid #f0f0f0;
-          border-radius: 8px;
-          background: #fafafa;
-        }
-      }
-
-      .auto-actions {
-        text-align: right;
-      }
-
-      .schedule-table-header {
+      .pattern-item {
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        gap: 6px;
+        padding: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        background: linear-gradient(135deg, #1e90ff 0%, #0b75ff 100%);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+        transition: all 0.2s ease;
+        color: #ffffff;
 
-        h4 {
-          margin: 0;
+        &:hover {
+          border-color: rgba(255, 255, 255, 0.35);
+          box-shadow: 0 14px 30px rgba(46, 119, 255, 0.28);
         }
 
-        p {
-          margin: 2px 0 0;
-          color: #8c8c8c;
+        .ant-checkbox-wrapper {
+          margin-inline-end: 0;
+          color: #ffffff !important;
+
+          .ant-checkbox {
+            .ant-checkbox-inner {
+              border-color: rgba(255, 255, 255, 0.5);
+            }
+
+            &.ant-checkbox-checked .ant-checkbox-inner {
+              background-color: #ffffff;
+              border-color: #ffffff;
+
+              &::after {
+                border-color: #1e90ff;
+              }
+            }
+          }
+
+          span {
+            color: #ffffff !important;
+            font-weight: 600;
+          }
+        }
+
+        .pattern-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+
+          .weekday-label {
+            font-weight: 700;
+            color: #ffffff;
+            min-width: 72px;
+          }
+
+          .ant-checkbox-wrapper {
+            margin-inline-end: 0;
+            color: #ffffff !important;
+
+            span {
+              color: #ffffff !important;
+            }
+          }
+        }
+
+        .ant-select {
+          width: 100%;
+
+          .ant-select-selector {
+            height: 40px;
+            border-radius: 10px !important;
+            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.95);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease,
+              background 0.2s ease;
+          }
+
+          &:hover .ant-select-selector,
+          &.ant-select-focused .ant-select-selector {
+            border-color: #ffffff;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+            background: #ffffff;
+          }
         }
       }
+    }
 
-      .schedule-date {
-        font-weight: 600;
+    .auto-actions {
+      text-align: right;
+    }
+
+    .schedule-table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      h4 {
+        margin: 0;
       }
 
-      .schedule-weekday {
-        font-size: 12px;
+      p {
+        margin: 2px 0 0;
         color: #8c8c8c;
-        text-transform: capitalize;
+      }
+    }
+
+    .schedule-date {
+      font-weight: 600;
+    }
+
+    .schedule-weekday {
+      font-size: 12px;
+      color: #8c8c8c;
+      text-transform: capitalize;
+    }
+
+    .schedule-table {
+      margin-top: 12px;
+    }
+  }
+
+  .modal-custom-table {
+    margin-top: 12px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    border: 1px solid #e4e9f2;
+
+    :where(.ant-table-wrapper) .ant-table-thead > tr > th {
+      background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%) !important;
+      color: #ffffff !important;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 18px 16px;
+      border: none !important;
+      letter-spacing: 0.02em;
+      border-right: 1px solid rgba(255, 255, 255, 0.15);
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+
+    :where(.ant-table-wrapper) .ant-table-tbody > tr {
+      transition: all 0.3s ease;
+
+      &:hover > td {
+        background-color: #f0f7ff;
       }
 
-      .schedule-table {
-        margin-top: 12px;
+      > td {
+        padding: 18px 16px;
+        border-bottom: 1px solid #f0f0f0;
+        font-size: 13px;
+        vertical-align: middle;
       }
+
+      &:nth-child(odd) > td {
+        background: #f8fbff;
+      }
+    }
+
+    :where(.ant-table-wrapper) .ant-table-tbody > tr:last-child > td {
+      border-bottom: none;
+    }
+
+    :where(.ant-table-wrapper) .ant-table-tbody > tr > td:last-child {
+      text-align: center;
+    }
+
+    .ant-btn-link {
+      padding: 0 10px;
+      height: 28px;
+      line-height: 28px;
+      border-radius: 16px;
+      border: 1px solid transparent;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      min-width: 64px;
+    }
+
+    .ant-btn-link:not(.ant-btn-dangerous) {
+      color: #1a94fc;
+      border-color: rgba(26, 148, 252, 0.2);
+      background: rgba(26, 148, 252, 0.08);
+    }
+
+    .ant-btn-link.ant-btn-dangerous {
+      color: #ff4d4f;
+      border-color: rgba(255, 77, 79, 0.3);
+      background: rgba(255, 77, 79, 0.08);
+    }
   }
 }
 
 @media (max-width: 768px) {
+  .classes-management {
     padding: 16px;
 
     .overview-header {
-        flex-direction: column;
+      flex-direction: column;
     }
 
     .header-actions {
@@ -477,12 +640,11 @@
 
       .ant-btn {
         flex: 1;
-        }
-      }
-
-    .filters-row .ant-row {
-          flex-direction: column;
-        }
       }
     }
 
+    .filters-row .ant-row {
+      flex-direction: column;
+    }
+  }
+}
