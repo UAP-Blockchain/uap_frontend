@@ -93,7 +93,8 @@ const EnrollList = lazy(() => import("../pages/StudentPortal/EnrollList"));
 const CredentialDetail = lazy(
   () => import("../pages/StudentPortal/CredentialDetail")
 );
-const Dashboard = lazy(() => import("../pages/StudentPortal/Dashboard"));
+const StudentDashboard = lazy(() => import("../pages/StudentPortal/Dashboard"));
+const AdminDashboard = lazy(() => import("../pages/admin/dashboard"));
 const GradeReport = lazy(() => import("../pages/StudentPortal/GradeReport"));
 const InstructorDetail = lazy(
   () => import("../pages/StudentPortal/InstructorDetail")
@@ -146,7 +147,7 @@ export const adminRoutes: RouteConfig = {
   children: [
     {
       path: "/admin",
-      element: <Dashboard />,
+      element: <AdminDashboard />,
       menuLabel: "Tổng quan hệ thống",
       menuIcon: <DashboardOutlined />,
       showInMenu: true,
@@ -157,7 +158,7 @@ export const adminRoutes: RouteConfig = {
     },
     {
       path: "/admin/dashboard",
-      element: <Dashboard />,
+      element: <AdminDashboard />,
       showInMenu: false,
     },
     {
@@ -364,7 +365,7 @@ export const studentPortalRoutes: RouteConfig = {
   children: [
     {
       path: "",
-      element: <Dashboard />,
+      element: <StudentDashboard />,
       menuLabel: "Bảng điều khiển",
       menuIcon: <HomeOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
       showInMenu: true,
@@ -374,7 +375,7 @@ export const studentPortalRoutes: RouteConfig = {
     },
     {
       path: "dashboard",
-      element: <Dashboard />,
+      element: <StudentDashboard />,
       showInMenu: false,
     },
     {

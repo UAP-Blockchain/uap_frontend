@@ -37,7 +37,9 @@ export const getTimeSlotById = async (id: string): Promise<TimeSlotDto> => {
 export const createTimeSlot = async (
   request: CreateTimeSlotRequest
 ): Promise<TimeSlotResponse> => {
-  const response = await api.post<TimeSlotResponse>("/TimeSlots", request);
+  const response = await api.post<TimeSlotResponse>("/TimeSlots", request, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -50,7 +52,9 @@ export const updateTimeSlot = async (
   id: string,
   request: UpdateTimeSlotRequest
 ): Promise<TimeSlotResponse> => {
-  const response = await api.put<TimeSlotResponse>(`/TimeSlots/${id}`, request);
+  const response = await api.put<TimeSlotResponse>(`/TimeSlots/${id}`, request, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 
@@ -60,7 +64,9 @@ export const updateTimeSlot = async (
  * Requires: Admin role
  */
 export const deleteTimeSlot = async (id: string): Promise<TimeSlotResponse> => {
-  const response = await api.delete<TimeSlotResponse>(`/TimeSlots/${id}`);
+  const response = await api.delete<TimeSlotResponse>(`/TimeSlots/${id}`, {
+    skipGlobalErrorHandler: true,
+  } as any);
   return response.data;
 };
 

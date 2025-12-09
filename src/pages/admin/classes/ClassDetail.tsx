@@ -868,7 +868,7 @@ const ClassDetail: React.FC = () => {
             <Descriptions.Item
               label={
                 <span>
-                  <Calendar size={16} /> Kỳ học
+                  <Calendar size={16} /> Học kỳ
                 </span>
               }
             >

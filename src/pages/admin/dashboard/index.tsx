@@ -1,336 +1,349 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Card,
-  Row,
-  Col,
-  Statistic,
-  Progress,
-  Table,
-  Badge,
-  Avatar,
-} from "antd";
-import {
-  UserOutlined,
-  TeamOutlined,
+  ArrowDownOutlined,
+  ArrowUpOutlined,
+  ApartmentOutlined,
   BookOutlined,
-  TrophyOutlined,
-  RiseOutlined,
-  FallOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
+  FileTextOutlined,
+  TeamOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
+import type { ColumnsType } from "antd/es/table";
+import { Card, Col, Row, Table, Tag, Typography, Spin } from "antd";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip as RechartsTooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { getDashboardStatisticsApi } from "../../../services/admin/dashboard/api";
+import type { DashboardStatistics } from "../../../services/admin/dashboard/api";
+import { fetchCredentialRequestsApi } from "../../../services/admin/credentials/api";
+import type { CredentialRequestDto } from "../../../services/admin/credentials/api";
+import { fetchClassesApi } from "../../../services/admin/classes/api";
+import type { ClassSummary } from "../../../types/Class";
+import { fetchSemestersApi } from "../../../services/admin/semesters/api";
+import dayjs from "dayjs";
 import "./index.scss";
 
+const { Title, Text } = Typography;
+
+interface StatCard {
+  id: string;
+  title: string;
+  value: string;
+  subtext: string;
+  icon: React.ReactNode;
+  accent: string;
+  trend?: {
+    value: string;
+    isPositive?: boolean;
+  };
+}
+
+interface OverviewRecord {
+  key: string;
+  item: string;
+  category: string;
+  status: "onTrack" | "warning" | "pending";
+  updated: string;
+}
+
 const Dashboard: React.FC = () => {
-  // Mock data for statistics
-  const stats = {
-    totalStudents: 1247,
-    totalTeachers: 89,
-    totalClasses: 156,
-    activeCredentials: 892,
-    studentsGrowth: 12.5,
-    teachersGrowth: 3.2,
-    classesGrowth: 8.7,
-    credentialsGrowth: 15.3,
+  const [loading, setLoading] = useState(true);
+  const [statistics, setStatistics] = useState<DashboardStatistics | null>(
+    null
+  );
+  const [pendingRequests, setPendingRequests] = useState<
+    CredentialRequestDto[]
+  >([]);
+  const [recentClasses, setRecentClasses] = useState<ClassSummary[]>([]);
+  const [semesterStats, setSemesterStats] = useState<
+    { name: string; classes: number; students: number }[]
+  >([]);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        setLoading(true);
+
+        // Load statistics
+        const stats = await getDashboardStatisticsApi();
+        setStatistics(stats);
+
+        // Load pending credential requests
+        const requestsRes = await fetchCredentialRequestsApi({
+          page: 1,
+          pageSize: 5,
+          status: "Pending",
+        });
+        setPendingRequests(requestsRes.items || []);
+
+        // Load recent classes
+        const classesRes = await fetchClassesApi({
+          page: 1,
+          pageSize: 6,
+        });
+        setRecentClasses(classesRes.items || []);
+
+        // Load semesters for chart
+        const semestersRes = await fetchSemestersApi({
+          pageNumber: 1,
+          pageSize: 6,
+        });
+        const semesters = semestersRes.data || [];
+        const statsData = semesters.map((semester) => ({
+          name: semester.name,
+          classes: Math.floor(Math.random() * 20) + 10, // Placeholder - should come from API
+          students: Math.floor(Math.random() * 200) + 100, // Placeholder
+        }));
+        setSemesterStats(statsData);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
+  }, []);
+
+  const currentDate = new Date().toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+
+  const statCards: StatCard[] = statistics
+    ? [
+        {
+          id: "specializations",
+          title: "Chuyên ngành",
+          value: statistics.activeSpecializations.toString(),
+          subtext: "Đang hoạt động",
+          icon: <ApartmentOutlined />,
+          accent: "#6366f1",
+        },
+        {
+          id: "classes",
+          title: "Lớp học",
+          value: statistics.activeClasses.toString(),
+          subtext: "Đang hoạt động",
+          icon: <BookOutlined />,
+          accent: "#22c55e",
+        },
+        {
+          id: "subjects",
+          title: "Môn học",
+          value: statistics.activeSubjects.toString(),
+          subtext: "Đang hoạt động",
+          icon: <FileTextOutlined />,
+          accent: "#0ea5e9",
+        },
+        {
+          id: "teachers",
+          title: "Giáo viên",
+          value: statistics.activeTeachers.toString(),
+          subtext: "Đang hoạt động",
+          icon: <TeamOutlined />,
+          accent: "#f97316",
+        },
+        {
+          id: "students",
+          title: "Sinh viên",
+          value: statistics.activeStudents.toString(),
+          subtext: "Đang hoạt động",
+          icon: <UserOutlined />,
+          accent: "#14b8a6",
+        },
+      ]
+    : [];
+
+  const overviewData: OverviewRecord[] = [
+    ...pendingRequests.slice(0, 3).map((req) => ({
+      key: `request-${req.id}`,
+      item: `Yêu cầu chứng chỉ - ${req.studentName || "N/A"}`,
+      category: "Chứng chỉ",
+      status: "pending" as const,
+      updated: req.requestDate
+        ? dayjs(req.requestDate).format("DD/MM/YYYY")
+        : "Chưa có ngày",
+    })),
+    ...recentClasses.slice(0, 2).map((cls) => ({
+      key: `class-${cls.id || ""}`,
+      item: `Lớp ${cls.classCode || "N/A"}`,
+      category: "Lớp học",
+      status: "onTrack" as const,
+      updated: `${cls.totalStudents} sinh viên`,
+    })),
+  ];
+
+  const statusTag = (status: OverviewRecord["status"]) => {
+    switch (status) {
+      case "onTrack":
+        return <Tag color="green">Đúng tiến độ</Tag>;
+      case "warning":
+        return <Tag color="orange">Cảnh báo</Tag>;
+      case "pending":
+        return <Tag color="blue">Đang xử lý</Tag>;
+      default:
+        return <Tag>Chưa rõ</Tag>;
+    }
   };
 
-  // Mock data for recent activities
-  const recentActivities = [
+  const columns: ColumnsType<OverviewRecord> = [
     {
-      key: "1",
-      action: "Cấp chứng chỉ  alo alo 1234",
-      student: "Nguyễn Phi Hùng",
-      time: "2 giờ trước",
-      status: "success",
+      title: "Hạng mục",
+      dataIndex: "item",
+      key: "item",
+      render: (text: string) => <Text strong>{text}</Text>,
     },
     {
-      key: "2",
-      action: "Cập nhật điểm",
-      student: "Nguyễn Trung Nam",
-      time: "3 giờ trước",
-      status: "success",
-    },
-    {
-      key: "3",
-      action: "Thêm lớp học",
-      student: "Blockchain Development",
-      time: "5 giờ trước",
-      status: "success",
-    },
-    {
-      key: "4",
-      action: "Đăng ký sinh viên",
-      student: "Huỳnh Gia Bảo",
-      time: "1 ngày trước",
-      status: "processing",
-    },
-  ];
-
-  // Mock data for top performing classes
-  const topClasses = [
-    {
-      key: "1",
-      className: "Blockchain Development",
-      students: 45,
-      completion: 87,
-      teacher: "Nguyễn Ngọc Lâm",
-    },
-    {
-      key: "2",
-      className: "Smart Contract Programming",
-      students: 38,
-      completion: 92,
-      teacher: "Trần Văn An",
-    },
-    {
-      key: "3",
-      className: "Cryptocurrency Economics",
-      students: 52,
-      completion: 78,
-      teacher: "Lê Thị Bình",
-    },
-    {
-      key: "4",
-      className: "Distributed Systems",
-      students: 41,
-      completion: 85,
-      teacher: "Phạm Minh Đức",
-    },
-  ];
-
-  const activityColumns = [
-    {
-      title: "Hoạt động",
-      dataIndex: "action",
-      key: "action",
-      render: (text: string) => (
-        <div className="activity-action">
-          <ClockCircleOutlined className="activity-icon" />
-          {text}
-        </div>
-      ),
-    },
-    {
-      title: "Đối tượng",
-      dataIndex: "student",
-      key: "student",
-      render: (text: string) => (
-        <div className="activity-student">
-          <Avatar size="small" icon={<UserOutlined />} />
-          <span className="student-name">{text}</span>
-        </div>
-      ),
-    },
-    {
-      title: "Thời gian",
-      dataIndex: "time",
-      key: "time",
+      title: "Nhóm",
+      dataIndex: "category",
+      key: "category",
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status: string) => (
-        <Badge
-          status={status === "success" ? "success" : "processing"}
-          text={status === "success" ? "Hoàn thành" : "Đang xử lý"}
-        />
-      ),
+      render: (value: OverviewRecord["status"]) => statusTag(value),
+    },
+    {
+      title: "Cập nhật",
+      dataIndex: "updated",
+      key: "updated",
+      render: (text: string) => <Text type="secondary">{text}</Text>,
     },
   ];
 
-  const classColumns = [
-    {
-      title: "Lớp học",
-      dataIndex: "className",
-      key: "className",
-      render: (text: string) => (
-        <div className="class-name">
-          <BookOutlined className="class-icon" />
-          {text}
-        </div>
-      ),
-    },
-    {
-      title: "Sinh viên",
-      dataIndex: "students",
-      key: "students",
-    },
-    {
-      title: "Tỷ lệ hoàn thành",
-      dataIndex: "completion",
-      key: "completion",
-      render: (completion: number) => (
-        <Progress
-          percent={completion}
-          size="small"
-          strokeColor={
-            completion >= 90
-              ? "#52c41a"
-              : completion >= 80
-              ? "#faad14"
-              : "#ff6b35"
-          }
-        />
-      ),
-    },
-    {
-      title: "Giảng viên",
-      dataIndex: "teacher",
-      key: "teacher",
-    },
-  ];
+  const renderTrend = (trend?: StatCard["trend"]) => {
+    if (!trend) return null;
+
+    return (
+      <div
+        className={`trend-indicator ${
+          trend.isPositive ? "positive" : "negative"
+        }`}
+      >
+        {trend.isPositive ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+        <span>{trend.value}</span>
+      </div>
+    );
+  };
 
   return (
-    <div className="dashboard">
+    <div className="student-dashboard">
       <div className="dashboard-header">
-        <h1>Dashboard - Hệ thống Quản lý Học tập Blockchain</h1>
-        <p>Tổng quan về hoạt động của hệ thống</p>
+        <div>
+          <Title level={3}>Tổng quan hệ thống</Title>
+          <Text type="secondary">Cập nhật ngày {currentDate}</Text>
+        </div>
+        <div className="header-meta">
+          <Text strong>Vai trò: Quản trị viên</Text>
+          <span className="dot" />
+          <Text type="secondary">{pendingRequests.length} đơn chờ duyệt</Text>
+        </div>
       </div>
 
-      {/* Statistics Cards */}
-      <Row gutter={[24, 24]} className="stats-row">
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="stat-card students-card">
-            <Statistic
-              title="Tổng sinh viên"
-              value={stats.totalStudents}
-              prefix={<UserOutlined />}
-              suffix={
-                <div className="growth-indicator">
-                  <RiseOutlined style={{ color: "#52c41a" }} />
-                  <span className="growth-text">+{stats.studentsGrowth}%</span>
-                </div>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="stat-card teachers-card">
-            <Statistic
-              title="Tổng giảng viên"
-              value={stats.totalTeachers}
-              prefix={<TeamOutlined />}
-              suffix={
-                <div className="growth-indicator">
-                  <RiseOutlined style={{ color: "#52c41a" }} />
-                  <span className="growth-text">+{stats.teachersGrowth}%</span>
-                </div>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="stat-card classes-card">
-            <Statistic
-              title="Lớp học đang hoạt động"
-              value={stats.totalClasses}
-              prefix={<BookOutlined />}
-              suffix={
-                <div className="growth-indicator">
-                  <RiseOutlined style={{ color: "#52c41a" }} />
-                  <span className="growth-text">+{stats.classesGrowth}%</span>
-                </div>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <Card className="stat-card credentials-card">
-            <Statistic
-              title="Chứng chỉ đã cấp"
-              value={stats.activeCredentials}
-              prefix={<TrophyOutlined />}
-              suffix={
-                <div className="growth-indicator">
-                  <RiseOutlined style={{ color: "#52c41a" }} />
-                  <span className="growth-text">
-                    +{stats.credentialsGrowth}%
-                  </span>
-                </div>
-              }
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Charts and Tables */}
-      <Row gutter={[24, 24]} className="content-row">
-        <Col xs={24} lg={14}>
-          <Card title="Hoạt động gần đây" className="activity-card">
-            <Table
-              dataSource={recentActivities}
-              columns={activityColumns}
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={10}>
-          <Card title="Lớp học hàng đầu" className="top-classes-card">
-            <Table
-              dataSource={topClasses}
-              columns={classColumns}
-              pagination={false}
-              size="small"
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Additional Statistics */}
-      <Row gutter={[24, 24]} className="additional-stats">
-        <Col xs={24} md={8}>
-          <Card className="completion-card">
-            <div className="completion-header">
-              <h3>Tỷ lệ hoàn thành khóa học</h3>
-              <CheckCircleOutlined className="completion-icon" />
-            </div>
-            <Progress
-              type="circle"
-              percent={87}
-              strokeColor="#ff6b35"
-              size={120}
-              format={(percent) => `${percent}%`}
-            />
-            <p className="completion-text">Trung bình tất cả khóa học</p>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card className="attendance-card">
-            <div className="attendance-header">
-              <h3>Tỷ lệ điểm danh</h3>
-              <ClockCircleOutlined className="attendance-icon" />
-            </div>
-            <Progress
-              type="circle"
-              percent={92}
-              strokeColor="#52c41a"
-              size={120}
-              format={(percent) => `${percent}%`}
-            />
-            <p className="attendance-text">Tháng này</p>
-          </Card>
-        </Col>
-        <Col xs={24} md={8}>
-          <Card className="blockchain-card">
-            <div className="blockchain-header">
-              <h3>Giao dịch Blockchain</h3>
-              <TrophyOutlined className="blockchain-icon" />
-            </div>
-            <div className="blockchain-stats">
-              <div className="blockchain-stat">
-                <span className="stat-number">1,247</span>
-                <span className="stat-label">Tổng giao dịch</span>
+      <Spin spinning={loading}>
+        <div className="stats-grid">
+          {statCards.map((card) => (
+            <Card className="stat-card" bordered={false} key={card.id}>
+              <div
+                className="stat-icon"
+                style={{ background: `${card.accent}15`, color: card.accent }}
+              >
+                {card.icon}
               </div>
-              <div className="blockchain-stat">
-                <span className="stat-number">99.9%</span>
-                <span className="stat-label">Độ tin cậy</span>
+              <div className="stat-info">
+                <Text className="stat-label">{card.title}</Text>
+                <div className="stat-value" style={{ color: card.accent }}>
+                  {card.value}
+                </div>
+                <Text type="secondary" className="stat-subtext">
+                  {card.subtext}
+                </Text>
               </div>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+              {renderTrend(card.trend)}
+            </Card>
+          ))}
+        </div>
+
+        <Row gutter={[24, 24]} className="dashboard-main">
+          <Col xs={24} lg={14}>
+            <Card className="section-card" bordered={false}>
+              <div className="card-title">
+                <div>
+                  <Text strong>Thống kê theo học kỳ</Text>
+                  <Text type="secondary" className="card-description">
+                    Số lớp học & Sinh viên qua từng học kỳ
+                  </Text>
+                </div>
+              </div>
+              <div className="chart-wrapper">
+                {semesterStats.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart data={semesterStats} barSize={28}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis dataKey="name" stroke="#a3a3a3" />
+                      <YAxis yAxisId="left" stroke="#a3a3a3" />
+                      <YAxis
+                        yAxisId="right"
+                        orientation="right"
+                        stroke="#a3a3a3"
+                      />
+                      <RechartsTooltip />
+                      <Bar
+                        yAxisId="left"
+                        dataKey="classes"
+                        name="Lớp học"
+                        fill="#1a94fc"
+                        radius={[6, 6, 0, 0]}
+                      />
+                      <Bar
+                        yAxisId="right"
+                        dataKey="students"
+                        name="Sinh viên"
+                        fill="#52c41a"
+                        radius={[6, 6, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div style={{ textAlign: "center", padding: "40px" }}>
+                    <Text type="secondary">Chưa có dữ liệu</Text>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </Col>
+
+          <Col xs={24} lg={10}>
+            <Card className="section-card" bordered={false}>
+              <div className="card-title">
+                <div>
+                  <Text strong>Dòng công việc nổi bật</Text>
+                  <Text type="secondary" className="card-description">
+                    Theo dõi nhanh các nhiệm vụ quan trọng
+                  </Text>
+                </div>
+              </div>
+              <Table
+                columns={columns}
+                dataSource={overviewData}
+                pagination={false}
+                size="small"
+                rowKey="key"
+                className="overview-table"
+              />
+            </Card>
+          </Col>
+        </Row>
+      </Spin>
     </div>
   );
 };

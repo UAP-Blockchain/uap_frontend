@@ -169,11 +169,18 @@ function TimeSlotsManagement() {
           result.message || "Không thể xóa ca học"
         );
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      let errorMessage = "Đã xảy ra lỗi khi xóa ca học";
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { data?: { message?: string; detail?: string } } };
+        errorMessage = axiosError.response?.data?.detail || 
+                      axiosError.response?.data?.message || 
+                      errorMessage;
+      }
       showNotification(
         "error",
-        "Lỗi xóa",
-        error?.response?.data?.message || "Đã xảy ra lỗi khi xóa ca học"
+        "Xóa thất bại",
+        errorMessage
       );
     } finally {
       setLoading(false);
@@ -272,8 +279,8 @@ function TimeSlotsManagement() {
           );
         }
       }
-    } catch (error: any) {
-      if (error.errorFields) {
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "errorFields" in error) {
         // Validation errors
         showNotification(
           "error",
@@ -282,10 +289,17 @@ function TimeSlotsManagement() {
         );
       } else {
         // API errors
+        let errorMessage = "Đã xảy ra lỗi";
+        if (error && typeof error === "object" && "response" in error) {
+          const axiosError = error as { response?: { data?: { message?: string; detail?: string } } };
+          errorMessage = axiosError.response?.data?.detail || 
+                        axiosError.response?.data?.message || 
+                        errorMessage;
+        }
         showNotification(
           "error",
           "Lỗi",
-          error?.response?.data?.message || "Đã xảy ra lỗi"
+          errorMessage
         );
       }
     } finally {
@@ -297,17 +311,20 @@ function TimeSlotsManagement() {
     <div className="admin-slots-page">
       {contextHolder}
       <Card bordered={false}>
-        <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
-          <Col>
-            <h2 style={{ margin: 0, fontSize: "24px", fontWeight: 600 }}>
-              Quản lý Ca học
-            </h2>
-            <p style={{ margin: "4px 0 0 0", color: "#999", fontSize: "14px" }}>
+        <div className="overview-header">
+          <div className="title-block">
+            <div className="title-icon">
+              <ClockCircleOutlined />
+            </div>
+            <div>
+              <p className="eyebrow">Bảng quản trị</p>
+              <h2>Quản lý Ca học</h2>
+              <span className="subtitle">
               Quản lý các khung giờ học trong hệ thống
-            </p>
-          </Col>
-          <Col>
-            <Space>
+              </span>
+            </div>
+          </div>
+          <div className="header-actions">
               <Button
                 icon={<ReloadOutlined />}
                 onClick={loadTimeSlots}
@@ -318,14 +335,13 @@ function TimeSlotsManagement() {
             <Button
               type="primary"
               icon={<PlusOutlined />}
+              className="primary-action"
               onClick={handleAddNew}
-                size="large"
             >
                 Thêm ca học mới
             </Button>
-            </Space>
-          </Col>
-        </Row>
+          </div>
+        </div>
 
         <Spin spinning={loading}>
         <Table
