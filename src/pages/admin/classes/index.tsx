@@ -1254,6 +1254,7 @@ const ClassesManagement: React.FC = () => {
           subjectOfferingId: undefined,
           teacherId: undefined,
           semesterId: undefined,
+          maxEnrollment: 40,
         }}
       >
         <Form.Item
@@ -1381,6 +1382,31 @@ const ClassesManagement: React.FC = () => {
             ))}
           </Select>
         </Form.Item>
+
+        <Form.Item
+          name="maxEnrollment"
+          label="Số lượng học sinh tối đa"
+          rules={[
+            {
+              required: true,
+              message: "Vui lòng nhập số lượng học sinh tối đa",
+            },
+            {
+              type: "number",
+              min: 1,
+              max: 500,
+              message: "Số lượng học sinh phải từ 1 đến 500",
+            },
+          ]}
+          extra="Số lượng học sinh tối đa có thể đăng ký vào lớp học này"
+        >
+          <InputNumber
+            placeholder="VD: 40"
+            min={1}
+            max={500}
+            style={{ width: "100%" }}
+          />
+        </Form.Item>
       </Form>
     </div>
   );
@@ -1397,7 +1423,10 @@ const ClassesManagement: React.FC = () => {
       <div className="auto-config">
         {selectedSemesterForStep2 ? (
           <div className="semester-info-card">
-            <Text strong style={{ display: "block", marginBottom: 4, color: "#ffffff" }}>
+            <Text
+              strong
+              style={{ display: "block", marginBottom: 4, color: "#ffffff" }}
+            >
               Học kỳ: {selectedSemesterForStep2.name}
             </Text>
             <Text style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.9)" }}>
@@ -1554,7 +1583,10 @@ const ClassesManagement: React.FC = () => {
       <div className="manual-config">
         {selectedSemesterForStep2 ? (
           <div className="semester-info-card">
-            <Text strong style={{ display: "block", marginBottom: 4, color: "#ffffff" }}>
+            <Text
+              strong
+              style={{ display: "block", marginBottom: 4, color: "#ffffff" }}
+            >
               Học kỳ: {selectedSemesterForStep2.name}
             </Text>
             <Text style={{ fontSize: 13, color: "rgba(255, 255, 255, 0.9)" }}>

@@ -110,6 +110,7 @@ export interface CreateClassRequest {
   classCode: string;
   subjectOfferingId: string;
   teacherId: string;
+  maxEnrollment?: number;
   initialSlots?: CreateClassSlotRequest[];
 }
 
