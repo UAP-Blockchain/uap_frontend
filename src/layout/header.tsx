@@ -181,12 +181,7 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             src="/image/z7310396057810_d32c375c6ada6e3edcb4bff25b5461b2.jpg"
             alt="FAP Blockchain Logo"
             className="logo-icon"
-          >
-            <path
-              d="M12 2L2 7V10C2 16.37 6.4 22.16 12 23C17.6 22.16 22 16.37 22 10V7L12 2ZM12 9C13.1 9 14 9.9 14 11S13.1 13 12 13S10 12.1 10 11S10.9 9 12 9ZM18 17H6V16C6 14 10 12.9 12 12.9S18 14 18 16V17Z"
-              fill="currentColor"
-            />
-          </svg>
+          />
           <span className="logo-text">UAP Blockchain</span>
         </Link>
       </div>
