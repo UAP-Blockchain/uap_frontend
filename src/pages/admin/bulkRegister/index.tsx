@@ -543,7 +543,6 @@ const BulkRegister: React.FC = () => {
 
       await updateUserOnChainApi(record.userId, {
         transactionHash: txHash,
-        blockNumber,
       });
 
       message.success(`Đã đăng ký on-chain. Tx: ${txHash}`);

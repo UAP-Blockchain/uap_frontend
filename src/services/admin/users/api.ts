@@ -16,6 +16,12 @@ export interface UserDto {
   fullName: string;
   email: string;
   roleName: string;
+  // Blockchain fields (optional; may be omitted by some endpoints)
+  walletAddress?: string | null;
+  blockchainTxHash?: string | null;
+  blockNumber?: number | null;
+  blockchainRegisteredAt?: string | null;
+  isOnBlockchain?: boolean;
   studentCode?: string;
   enrollmentDate?: string;
   teacherCode?: string;
@@ -45,9 +51,10 @@ export interface PagedUsersResponse {
 }
 
 export interface UpdateUserRequest {
-  fullName: string;
-  email: string;
-  roleName: string;
+  fullName?: string;
+  email?: string;
+  roleName?: string;
+  walletAddress?: string;
   studentCode?: string;
   enrollmentDate?: string;
   teacherCode?: string;
@@ -58,8 +65,6 @@ export interface UpdateUserRequest {
 
 export interface UpdateUserOnChainRequest {
   transactionHash: string;
-  blockNumber: number;
-  registeredAtUtc?: string;
 }
 
 const normalizeItems = <T>(payload: {
@@ -151,6 +156,15 @@ export const updateUserOnChainApi = async (
   payload: UpdateUserOnChainRequest
 ): Promise<void> => {
   await api.post(`/User/${id}/on-chain`, payload, {
+    skipGlobalErrorHandler: true,
+  } as any);
+};
+
+export const updateUserWalletOnChainApi = async (
+  id: string,
+  payload: UpdateUserOnChainRequest
+): Promise<void> => {
+  await api.post(`/users/${id}/wallet/on-chain`, payload, {
     skipGlobalErrorHandler: true,
   } as any);
 };

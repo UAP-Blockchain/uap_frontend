@@ -6,6 +6,7 @@ import {
   Col,
   Descriptions,
   Empty,
+  Input,
   Row,
   Space,
   Spin,
@@ -16,6 +17,7 @@ import {
 } from "antd";
 import {
   ArrowLeftOutlined,
+  BlockOutlined,
   MailOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
@@ -23,7 +25,9 @@ import type { UploadRequestOption } from "rc-upload/lib/interface";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   getUserByIdApi,
+  updateUserApi,
   uploadUserProfilePictureApi,
+  updateUserWalletOnChainApi,
 } from "../../../services/admin/users/api";
 import StudentServices from "../../../services/student/api.service";
 import type {
@@ -32,6 +36,11 @@ import type {
   StudentDetailDto,
 } from "../../../types/Student";
 import type { UserDto } from "../../../services/admin/users/api";
+import {
+  getUniversityManagementContract,
+  mapRoleToEnum,
+} from "../../../blockchain/user";
+import { updateUserOnChainApi } from "../../../services/admin/users/api";
 import dayjs from "dayjs";
 import "./detail.scss";
 
@@ -54,6 +63,20 @@ const StudentDetailPage: React.FC = () => {
   const [student, setStudent] = useState<StudentDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [onChainLoading, setOnChainLoading] = useState(false);
+  const [lastOnChainTxHash, setLastOnChainTxHash] = useState<string | null>(
+    null
+  );
+  const [walletDraft, setWalletDraft] = useState("");
+  const [walletUpdateDraft, setWalletUpdateDraft] = useState("");
+  const [walletUpdateLoading, setWalletUpdateLoading] = useState(false);
+  const [showWalletUpdate, setShowWalletUpdate] = useState(false);
+
+  const formatHash = useCallback((hash: string, left = 10, right = 8) => {
+    if (!hash) return "";
+    if (hash.length <= left + right + 3) return hash;
+    return `${hash.slice(0, left)}...${hash.slice(-right)}`;
+  }, []);
 
   const fetchDetail = useCallback(async () => {
     if (!userId) return;
@@ -95,6 +118,152 @@ const StudentDetailPage: React.FC = () => {
   useEffect(() => {
     void fetchDetail();
   }, [fetchDetail]);
+
+  const handleRegisterOnChain = async (walletOverride?: string) => {
+    if (!userId) return;
+    if (!user) return;
+    if (user.isOnBlockchain) return;
+
+    const walletAddress = (walletOverride || user.walletAddress || "").trim();
+    if (!walletAddress) {
+      message.error("User chưa có ví (walletAddress) để đăng ký on-chain.");
+      return;
+    }
+
+    setOnChainLoading(true);
+    try {
+      const contract = await getUniversityManagementContract();
+      const roleEnum = mapRoleToEnum(user.roleName);
+
+      const tx = await contract.registerUser(
+        walletAddress,
+        userId,
+        user.fullName || user.email,
+        user.email,
+        roleEnum
+      );
+
+      const receipt = await tx.wait();
+      const txHash = receipt.hash as string;
+
+      setLastOnChainTxHash(txHash);
+
+      await updateUserOnChainApi(userId, {
+        transactionHash: txHash,
+      });
+
+      message.success({
+        content: (
+          <Space size={8} wrap>
+            <Text strong>Đã đăng ký on-chain</Text>
+            <Text type="secondary">Tx:</Text>
+            <Text copyable={{ text: txHash }}>{formatHash(txHash)}</Text>
+          </Space>
+        ),
+        duration: 6,
+      });
+      await fetchDetail();
+    } catch (error: any) {
+      console.error(error);
+      message.error(error?.message || "Không thể đăng ký user on-chain");
+    } finally {
+      setOnChainLoading(false);
+    }
+  };
+
+  const handleSaveWalletAndOnChain = async () => {
+    if (!userId) return;
+    if (!user) return;
+
+    const nextWallet = walletDraft.trim();
+    if (!nextWallet) {
+      message.error("Vui lòng nhập Wallet Address");
+      return;
+    }
+    if (!nextWallet.toLowerCase().startsWith("0x") || nextWallet.length !== 42) {
+      message.error("Wallet Address không hợp lệ (cần dạng 0x... và đủ 42 ký tự)");
+      return;
+    }
+
+    setOnChainLoading(true);
+    try {
+      await updateUserApi(userId, { walletAddress: nextWallet });
+      setUser((prev) => (prev ? { ...prev, walletAddress: nextWallet } : prev));
+
+      // On-chain right after persisting wallet in DB
+      await handleRegisterOnChain(nextWallet);
+      setWalletDraft("");
+    } catch (error: any) {
+      console.error(error);
+      message.error(error?.message || "Không thể cập nhật walletAddress");
+    } finally {
+      setOnChainLoading(false);
+    }
+  };
+
+  const handleUpdateWalletOnChain = async () => {
+    if (!userId) return;
+    if (!user) return;
+
+    if (!user.isOnBlockchain) {
+      message.error("User chưa On-chain. Vui lòng thực hiện On-chain trước.");
+      return;
+    }
+
+    const oldWallet = (user.walletAddress || "").trim();
+    if (!oldWallet) {
+      message.error("User chưa có walletAddress để cập nhật.");
+      return;
+    }
+
+    const newWallet = walletUpdateDraft.trim();
+    if (!newWallet) {
+      message.error("Vui lòng nhập walletAddress mới");
+      return;
+    }
+    if (!newWallet.toLowerCase().startsWith("0x") || newWallet.length !== 42) {
+      message.error("Wallet Address mới không hợp lệ (cần dạng 0x... và đủ 42 ký tự)");
+      return;
+    }
+    if (newWallet.toLowerCase() === oldWallet.toLowerCase()) {
+      message.error("Wallet Address mới phải khác Wallet Address cũ");
+      return;
+    }
+
+    setWalletUpdateLoading(true);
+    try {
+      const contract = await getUniversityManagementContract();
+      const tx = await contract.updateUserAddress(oldWallet, newWallet);
+      const receipt = await tx.wait();
+      const txHash = receipt.hash as string;
+
+      setLastOnChainTxHash(txHash);
+
+      await updateUserWalletOnChainApi(userId, {
+        transactionHash: txHash,
+      });
+
+      message.success({
+        content: (
+          <Space size={8} wrap>
+            <Text strong>Đã cập nhật ví on-chain</Text>
+            <Text type="secondary">Tx:</Text>
+            <Text copyable={{ text: txHash }}>{formatHash(txHash)}</Text>
+          </Space>
+        ),
+        duration: 6,
+      });
+
+      setShowWalletUpdate(false);
+      setWalletUpdateDraft("");
+      await fetchDetail();
+    } catch (error: any) {
+      console.error(error);
+      message.error(error?.message || "Không thể cập nhật ví on-chain");
+    } finally {
+      setWalletUpdateLoading(false);
+    }
+  };
 
   const handleUpload = async (options: UploadRequestOption) => {
     if (!userId) return;
@@ -226,6 +395,127 @@ const StudentDetailPage: React.FC = () => {
                       {user.createdAt
                         ? dayjs(user.createdAt).format("DD/MM/YYYY HH:mm")
                         : "—"}
+                    </strong>
+                  </div>
+
+                  <div className="meta-item">
+                    <span>Wallet Address</span>
+                    <strong>
+                      {user.walletAddress ? (
+                        <Space size={8} wrap>
+                          <Text copyable={{ text: user.walletAddress }}>
+                            {formatHash(user.walletAddress, 10, 6)}
+                          </Text>
+                          {user.isOnBlockchain && (
+                            <Button
+                              size="small"
+                              shape="round"
+                              onClick={() => setShowWalletUpdate((v) => !v)}
+                            >
+                              Update Wallet Address
+                            </Button>
+                          )}
+                        </Space>
+                      ) : (
+                        <Space
+                          direction="vertical"
+                          size={10}
+                          style={{ width: "100%" }}
+                          className="wallet-save-onchain-stack"
+                        >
+                          <Text type="secondary">Chưa có ví</Text>
+                          <Input
+                            value={walletDraft}
+                            onChange={(e) => setWalletDraft(e.target.value)}
+                            placeholder="Nhập walletAddress (0x...)"
+                            size="small"
+                          />
+                          <Button
+                            type="primary"
+                            size="middle"
+                            shape="round"
+                            icon={<BlockOutlined />}
+                            loading={onChainLoading}
+                            onClick={handleSaveWalletAndOnChain}
+                            block
+                            className="wallet-save-onchain-btn"
+                          >
+                            <span className="wallet-save-onchain-label">
+                              Lưu ví & On-chain
+                            </span>
+                          </Button>
+                        </Space>
+                      )}
+                    </strong>
+                  </div>
+
+                  {user.walletAddress && user.isOnBlockchain && showWalletUpdate && (
+                    <div className="meta-item">
+                      <span>Wallet mới</span>
+                      <strong>
+                        <Space direction="vertical" size={6} style={{ width: "100%" }}>
+                          <Input
+                            value={walletUpdateDraft}
+                            onChange={(e) => setWalletUpdateDraft(e.target.value)}
+                            placeholder="Nhập walletAddress mới (0x...)"
+                            size="small"
+                          />
+                          <Space size={8} wrap>
+                            <Button
+                              type="primary"
+                              size="small"
+                              shape="round"
+                              loading={walletUpdateLoading}
+                              onClick={handleUpdateWalletOnChain}
+                            >
+                              Ký cập nhật ví
+                            </Button>
+                            <Button
+                              size="small"
+                              onClick={() => {
+                                setShowWalletUpdate(false);
+                                setWalletUpdateDraft("");
+                              }}
+                            >
+                              Hủy
+                            </Button>
+                          </Space>
+                        </Space>
+                      </strong>
+                    </div>
+                  )}
+
+                  <div className="meta-item">
+                    <span>Trạng thái</span>
+                    <strong>
+                      <Space size="small" wrap>
+                        <Tag color={user.isOnBlockchain ? "success" : "default"}>
+                          {user.isOnBlockchain ? "On-chain" : "Off-chain"}
+                        </Tag>
+                        {(user.blockchainTxHash || lastOnChainTxHash) && (
+                          <Text type="secondary" copyable={{
+                            text: (user.blockchainTxHash || lastOnChainTxHash) as string,
+                          }}>
+                            Tx: {formatHash((user.blockchainTxHash || lastOnChainTxHash) as string)}
+                          </Text>
+                        )}
+                        {!user.isOnBlockchain && (
+                          <Button
+                            type="primary"
+                            size="small"
+                            shape="round"
+                            icon={<BlockOutlined />}
+                            loading={onChainLoading}
+                            disabled={!user.walletAddress}
+                            onClick={() => void handleRegisterOnChain()}
+                            className="onchain-action-btn"
+                          >
+                            <span className="onchain-action-label">
+                              Thực hiện On-chain
+                            </span>
+                          </Button>
+                        )}
+                      </Space>
                     </strong>
                   </div>
                
