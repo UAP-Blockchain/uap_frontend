@@ -171,9 +171,9 @@ const AttendanceValidationAdminPage: React.FC = () => {
           return <Tag>Chưa có dữ liệu</Tag>;
         }
         return status.enabled ? (
-          <Tag color="green">Đang BẬT</Tag>
+          <Tag color="green">Đang Bật</Tag>
         ) : (
-          <Tag color="orange">Đang TẮT</Tag>
+          <Tag color="orange">Đang Tắt</Tag>
         );
       },
     },
