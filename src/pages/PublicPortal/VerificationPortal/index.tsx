@@ -592,23 +592,7 @@ const VerificationPortal: React.FC = () => {
     <div className="verification-portal">
       {notificationContextHolder}
       {/* Page Header */}
-      <div className="page-header" style={{ position: "relative", textAlign: "center" }}>
-        <Button
-          type="default"
-          size="large"
-          onClick={() => navigate("/")}
-          style={{
-            position: "absolute",
-            left: 16,
-            top: "50%",
-            transform: "translateY(-50%)",
-            borderRadius: 999,
-            paddingInline: 24,
-            fontWeight: 500,
-          }}
-        >
-          Trang chủ
-        </Button>
+      <div className="page-header" style={{ textAlign: "center" }}>
         <Title level={2} style={{ margin: 0, color: "#ffffff" }}>
           Cổng xác thực chứng chỉ
         </Title>

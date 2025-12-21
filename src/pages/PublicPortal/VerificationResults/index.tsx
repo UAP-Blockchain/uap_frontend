@@ -222,12 +222,7 @@ const VerificationResults: React.FC = () => {
 											: "—"}
 									</span>
 								</div>
-								<div className="info-row">
-									<span>Trạng thái</span>
-									<Tag color={certificate.verificationStatus === "Verified" ? "green" : "orange"}>
-										{certificate.verificationStatus}
-									</Tag>
-								</div>
+								
 								<div className="info-row">
 									<span>Loại</span>
 									<span>

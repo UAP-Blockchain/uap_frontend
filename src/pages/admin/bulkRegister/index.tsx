@@ -543,7 +543,6 @@ const BulkRegister: React.FC = () => {
 
       await updateUserOnChainApi(record.userId, {
         transactionHash: txHash,
-        blockNumber,
       });
 
       message.success(`Đã đăng ký on-chain. Tx: ${txHash}`);
@@ -588,7 +587,7 @@ const BulkRegister: React.FC = () => {
         title: "Email",
         dataIndex: "email",
         key: "email",
-        width: 200,
+        width: 280,
       },
       {
         title: "Họ và tên",
@@ -727,7 +726,7 @@ const BulkRegister: React.FC = () => {
         title: "Họ và tên",
         dataIndex: "fullName",
         key: "fullName",
-        width: 150,
+        width: 200,
         render: (text: string) => text || "-",
       },
       {
@@ -764,7 +763,7 @@ const BulkRegister: React.FC = () => {
     baseColumns.push({
       title: "Ngày",
       key: "date",
-      width: 120,
+      width: 150,
       render: (_: any, record: RegisterUserResponse) => {
         const date = record.enrollmentDate || record.hireDate;
         return date ? dayjs(date).format("YYYY-MM-DD") : "-";
@@ -785,7 +784,7 @@ const BulkRegister: React.FC = () => {
         title: "Chuyên ngành",
         dataIndex: "specializationIds",
         key: "specializationIds",
-        width: 200,
+        width: 280,
         render: (_: string, record: RegisterUserResponse) => {
           // Nếu có specializationIds trong original user, hiển thị từ array
           const originalUser = users.find((u) => u.email === record.email);
@@ -839,7 +838,7 @@ const BulkRegister: React.FC = () => {
       {
         title: "Thông báo",
         key: "message",
-        width: 250,
+        width: 400,
         render: (_: any, record: RegisterUserResponse) => {
           // Combine message and errors array
           const messages: string[] = [];

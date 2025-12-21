@@ -7,7 +7,6 @@ import {
   Typography,
   Space,
   Button,
-  Statistic,
   Avatar,
   Steps,
   Badge,
@@ -18,10 +17,7 @@ import {
   FileProtectOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  TrophyOutlined,
-  BookOutlined,
   GlobalOutlined,
-  TeamOutlined,
   RocketOutlined,
 } from "@ant-design/icons";
 import "./Home.scss";
@@ -30,14 +26,6 @@ const { Title, Text, Paragraph } = Typography;
 
 const PublicHome: React.FC = () => {
   const navigate = useNavigate();
-
-  // Mock statistics
-  const stats = {
-    totalVerifications: 152847,
-    activeInstitutions: 127,
-    trustedEmployers: 543,
-    verificationTime: "2.3",
-  };
 
   const steps = [
     {
@@ -86,7 +74,6 @@ const PublicHome: React.FC = () => {
     },
   ];
 
-
   return (
     <div className="public-home">
       {/* Hero Section */}
@@ -101,9 +88,10 @@ const PublicHome: React.FC = () => {
                   <span className="highlight">Tức thì & An toàn</span>
                 </Title>
                 <Paragraph className="hero-description">
-                  Tin tưởng nhưng phải xác minh. Nền tảng blockchain của chúng tôi
-                  giúp nhà tuyển dụng xác thực chứng chỉ học thuật trong vài giây,
-                  loại bỏ gian lận và tiết kiệm thời gian trong quy trình tuyển dụng.
+                  Tin tưởng nhưng phải xác minh. Nền tảng blockchain của chúng
+                  tôi giúp nhà tuyển dụng xác thực chứng chỉ học thuật trong vài
+                  giây, loại bỏ gian lận và tiết kiệm thời gian trong quy trình
+                  tuyển dụng.
                 </Paragraph>
               </div>
 
@@ -117,42 +105,10 @@ const PublicHome: React.FC = () => {
                 >
                   Bắt đầu xác thực
                 </Button>
-                <Button
-                  size="large"
-                  onClick={() => navigate("/help")}
-                >
+                <Button size="large" onClick={() => navigate("/help")}>
                   Tìm hiểu cách hoạt động
                 </Button>
               </Space>
-
-              <div className="hero-stats">
-                <Space size="large" wrap>
-                  <div className="stat-item">
-                    <Text strong style={{ fontSize: 24, color: "#1890ff" }}>
-                      {stats.totalVerifications.toLocaleString()}+
-                    </Text>
-                    <Text type="secondary" style={{ display: "block" }}>
-                      Chứng chỉ đã xác thực
-                    </Text>
-                  </div>
-                  <div className="stat-item">
-                    <Text strong style={{ fontSize: 24, color: "#1890ff" }}>
-                      {stats.verificationTime}s
-                    </Text>
-                    <Text type="secondary" style={{ display: "block" }}>
-                      Thời gian trung bình
-                    </Text>
-                  </div>
-                  <div className="stat-item">
-                    <Text strong style={{ fontSize: 24, color: "#1890ff" }}>
-                      100%
-                    </Text>
-                    <Text type="secondary" style={{ display: "block" }}>
-                      Tỷ lệ chính xác
-                    </Text>
-                  </div>
-                </Space>
-              </div>
             </Space>
           </Col>
 
@@ -184,48 +140,6 @@ const PublicHome: React.FC = () => {
         </Row>
       </Card>
 
-      {/* Statistics Section */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 48 }}>
-        <Col xs={12} sm={6}>
-          <Card hoverable>
-            <Statistic
-              title="Tổng số xác thực"
-              value={stats.totalVerifications}
-              prefix={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
-              suffix="+"
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card hoverable>
-            <Statistic
-              title="Tổ chức đối tác"
-              value={stats.activeInstitutions}
-              prefix={<BookOutlined style={{ color: "#1890ff" }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card hoverable>
-            <Statistic
-              title="Nhà tuyển dụng tin cậy"
-              value={stats.trustedEmployers}
-              prefix={<TeamOutlined style={{ color: "#1890ff" }} />}
-            />
-          </Card>
-        </Col>
-        <Col xs={12} sm={6}>
-          <Card hoverable>
-            <Statistic
-              title="Thời gian phản hồi TB"
-              value={stats.verificationTime}
-              prefix={<ClockCircleOutlined style={{ color: "#36cfc9" }} />}
-              suffix="s"
-            />
-          </Card>
-        </Col>
-      </Row>
-
       {/* How It Works Section */}
       <Card className="section-card" style={{ marginBottom: 48 }}>
         <Title level={2} style={{ textAlign: "center", marginBottom: 32 }}>
@@ -243,7 +157,7 @@ const PublicHome: React.FC = () => {
             type="primary"
             size="large"
             icon={<RocketOutlined />}
-            onClick={() => navigate("/public-portal/verify")}
+            onClick={() => navigate("/verify")}
           >
             Thử ngay
           </Button>
@@ -275,7 +189,6 @@ const PublicHome: React.FC = () => {
           ))}
         </Row>
       </Card>
-
     </div>
   );
 };

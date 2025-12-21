@@ -286,10 +286,7 @@ const CurriculumDetailPage: React.FC = () => {
               <Tag color="blue">{curriculum.totalCredits} tín chỉ</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="Số môn học">
-              <Tag color="geekblue">{curriculum.subjectCount} môn</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Số sinh viên">
-              <Tag color="green">{curriculum.studentCount || 0} sinh viên</Tag>
+              <Tag color="geekblue">{curriculum.subjects?.length || 0} môn</Tag>
             </Descriptions.Item>
             {curriculum.description && (
               <Descriptions.Item label="Mô tả" span={2}>

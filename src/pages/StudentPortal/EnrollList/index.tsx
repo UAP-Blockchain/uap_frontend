@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import {
   Alert,
-  Badge,
   Button,
   Card,
   Col,
   Empty,
   notification,
-  Progress,
   Row,
   Space,
   Spin,
@@ -18,7 +16,6 @@ import {
   ArrowLeftOutlined,
   CalendarOutlined,
   ClockCircleOutlined,
-  TeamOutlined,
   UserOutlined,
   CheckCircleOutlined,
 } from "@ant-design/icons";
@@ -446,23 +443,12 @@ const EnrollList: React.FC = () => {
         ) : (
           <div className="classes-container">
             {classes.map((cls) => {
-              const seatsPercent = cls.maxEnrollment
-                ? Math.round((cls.enrolledCount / cls.maxEnrollment) * 100)
-                : 0;
               const isFull = cls.maxEnrollment
                 ? cls.enrolledCount >= cls.maxEnrollment
                 : false;
-              const availableSeats = cls.maxEnrollment
-                ? cls.maxEnrollment - cls.enrolledCount
-                : 0;
 
               return (
-                <Badge.Ribbon
-                  text={isFull ? "Đã đầy" : "Còn chỗ"}
-                  color={isFull ? "volcano" : "cyan"}
-                  key={cls.id}
-                >
-                  <Card className="class-card">
+                  <Card className="class-card" key={cls.id}>
                     <Row gutter={[24, 24]}>
                       <Col xs={24} lg={16}>
                         <Space
@@ -494,70 +480,78 @@ const EnrollList: React.FC = () => {
                             </Space>
                           </div>
 
-                          <div className="info-row">
-                            <UserOutlined
-                              style={{ color: "#1a94fc", fontSize: "16px" }}
-                            />
-                            <div>
-                              <Text
-                                type="secondary"
-                                style={{ fontSize: "13px" }}
-                              >
-                                Giảng viên
-                              </Text>
-                              <div>
-                                <Text strong>{cls.teacherName}</Text>
-                                {cls.teacherCode && (
+                          <Row gutter={[16, 16]}>
+                            <Col xs={24} sm={8}>
+                              <div className="info-row">
+                                <UserOutlined
+                                  style={{ color: "#1a94fc", fontSize: "16px" }}
+                                />
+                                <div>
                                   <Text
                                     type="secondary"
-                                    style={{ marginLeft: 8 }}
+                                    style={{ fontSize: "13px" }}
                                   >
-                                    ({cls.teacherCode})
+                                    Giảng viên
                                   </Text>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="info-row">
-                            <CalendarOutlined
-                              style={{ color: "#1a94fc", fontSize: "16px" }}
-                            />
-                            <div>
-                              <Text
-                                type="secondary"
-                                style={{ fontSize: "13px" }}
-                              >
-                                Lịch học
-                              </Text>
-                              <div>
-                                <Text>
-                                  {cls.scheduleText || "Chưa có lịch học"}
-                                </Text>
-                              </div>
-                            </div>
-                          </div>
-
-                          {cls.slots.length > 0 && (
-                            <div className="info-row">
-                              <ClockCircleOutlined
-                                style={{ color: "#1a94fc", fontSize: "16px" }}
-                              />
-                              <div>
-                                <Text
-                                  type="secondary"
-                                  style={{ fontSize: "13px" }}
-                                >
-                                  Số ca học
-                                </Text>
-                                <div>
-                                  <Text style={{ fontSize: "13px" }}>
-                                    {cls.slots.length} Slot
-                                  </Text>
+                                  <div>
+                                    <Text strong>{cls.teacherName}</Text>
+                                    {cls.teacherCode && (
+                                      <Text
+                                        type="secondary"
+                                        style={{ marginLeft: 8 }}
+                                      >
+                                        ({cls.teacherCode})
+                                      </Text>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            </Col>
+
+                            <Col xs={24} sm={8}>
+                              <div className="info-row">
+                                <CalendarOutlined
+                                  style={{ color: "#1a94fc", fontSize: "16px" }}
+                                />
+                                <div>
+                                  <Text
+                                    type="secondary"
+                                    style={{ fontSize: "13px" }}
+                                  >
+                                    Lịch học
+                                  </Text>
+                                  <div>
+                                    <Text>
+                                      {cls.scheduleText || "Chưa có lịch học"}
+                                    </Text>
+                                  </div>
+                                </div>
+                              </div>
+                            </Col>
+
+                            {cls.slots.length > 0 && (
+                              <Col xs={24} sm={8}>
+                                <div className="info-row">
+                                  <ClockCircleOutlined
+                                    style={{ color: "#1a94fc", fontSize: "16px" }}
+                                  />
+                                  <div>
+                                    <Text
+                                      type="secondary"
+                                      style={{ fontSize: "13px" }}
+                                    >
+                                      Số ca học
+                                    </Text>
+                                    <div>
+                                      <Text style={{ fontSize: "13px" }}>
+                                        {cls.slots.length} Slot
+                                      </Text>
+                                    </div>
+                                  </div>
+                                </div>
+                              </Col>
+                            )}
+                          </Row>
                         </Space>
                       </Col>
 
@@ -567,52 +561,6 @@ const EnrollList: React.FC = () => {
                           size={16}
                           style={{ width: "100%" }}
                         >
-                          <div className="enrollment-info">
-                            <TeamOutlined
-                              style={{ color: "#1a94fc", fontSize: "20px" }}
-                            />
-                            <div style={{ flex: 1 }}>
-                              <Text
-                                type="secondary"
-                                style={{
-                                  fontSize: "13px",
-                                  display: "block",
-                                  marginBottom: 4,
-                                }}
-                              >
-                                Sức chứa
-                              </Text>
-                              <Text
-                                strong
-                                style={{ fontSize: "18px", color: "#1a94fc" }}
-                              >
-                                {cls.enrolledCount}/{cls.maxEnrollment || "N/A"}{" "}
-                                sinh viên
-                              </Text>
-                              <Progress
-                                percent={seatsPercent}
-                                status={isFull ? "exception" : "active"}
-                                strokeColor={{
-                                  "0%": "#1a94fc",
-                                  "100%": "#0ea5e9",
-                                }}
-                                style={{ marginTop: 8 }}
-                              />
-                              <Text
-                                type={isFull ? "danger" : "success"}
-                                style={{
-                                  fontSize: "13px",
-                                  display: "block",
-                                  marginTop: 4,
-                                }}
-                              >
-                                {isFull
-                                  ? "Lớp đã đầy"
-                                  : `Còn ${availableSeats} chỗ trống`}
-                              </Text>
-                            </div>
-                          </div>
-
                           {cls.isEnrolled ? (
                             <Button
                               type="default"
@@ -676,7 +624,6 @@ const EnrollList: React.FC = () => {
                       </Col>
                     </Row>
                   </Card>
-                </Badge.Ribbon>
               );
             })}
           </div>

@@ -21,6 +21,7 @@ import {
   TeamOutlined,
   TrophyOutlined,
   UserOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import { lazy } from "react";
 import { Navigate, Outlet } from "react-router-dom";
@@ -66,11 +67,9 @@ const SemesterDetail = lazy(
   () => import("../pages/admin/semesters/SemesterDetail")
 );
 const TimeSlotsManagement = lazy(() => import("../pages/admin/slots"));
+const ActionLogsPage = lazy(() => import("../pages/admin/actionLogs"));
 const AboutHelp = lazy(() => import("../pages/PublicPortal/AboutHelp"));
 const PublicHome = lazy(() => import("../pages/PublicPortal/Home"));
-const VerificationHistory = lazy(
-  () => import("../pages/PublicPortal/VerificationHistory")
-);
 const VerificationPortal = lazy(
   () => import("../pages/PublicPortal/VerificationPortal")
 );
@@ -93,7 +92,6 @@ const EnrollList = lazy(() => import("../pages/StudentPortal/EnrollList"));
 const CredentialDetail = lazy(
   () => import("../pages/StudentPortal/CredentialDetail")
 );
-const StudentDashboard = lazy(() => import("../pages/StudentPortal/Dashboard"));
 const AdminDashboard = lazy(() => import("../pages/admin/dashboard"));
 const GradeReport = lazy(() => import("../pages/StudentPortal/GradeReport"));
 const InstructorDetail = lazy(
@@ -283,6 +281,16 @@ export const adminRoutes: RouteConfig = {
       allowedRoles: [ROLE_CODES.ADMIN],
       requiredPermissions: [PERMISSIONS.MANAGE_CREDENTIALS],
     },
+    {
+      path: "/admin/action-logs",
+      element: <ActionLogsPage />,
+      menuLabel: "Nhật ký hoạt động",
+      menuIcon: <HistoryOutlined />,
+      showInMenu: true,
+      allowedRoles: [ROLE_CODES.ADMIN],
+      menuIndex: 1,
+      menuSection: "tools",
+    },
     // {
     //   path: "/admin/blockchain",
     //   element: <ReportsManagement />,
@@ -364,17 +372,7 @@ export const studentPortalRoutes: RouteConfig = {
   children: [
     {
       path: "",
-      element: <StudentDashboard />,
-      menuLabel: "Bảng điều khiển",
-      menuIcon: <HomeOutlined style={{ color: "rgba(0, 0, 0, 0.5)" }} />,
-      showInMenu: true,
-      allowedRoles: [ROLE_CODES.STUDENT], // Only students
-      menuIndex: 5,
-      menuSection: "main",
-    },
-    {
-      path: "dashboard",
-      element: <StudentDashboard />,
+      element: <Navigate to="roadmap" replace />,
       showInMenu: false,
     },
     {
@@ -573,10 +571,6 @@ export const publicPortalRoutes: RouteConfig = {
     {
       path: "certificates/verify/:credentialId",
       element: <VerificationResults />,
-    },
-    {
-      path: "history",
-      element: <VerificationHistory />,
     },
     {
       path: "help",

@@ -29,9 +29,6 @@ const VerificationPortal = lazy(
 const VerificationResults = lazy(
   () => import("./pages/PublicPortal/VerificationResults")
 );
-const VerificationHistory = lazy(
-  () => import("./pages/PublicPortal/VerificationHistory")
-);
 const AboutHelp = lazy(() => import("./pages/PublicPortal/AboutHelp"));
 
 // Loading fallback component
@@ -149,10 +146,6 @@ function App() {
             {
               path: "certificates/verify/:credentialId",
               element: wrapWithSuspense(<VerificationResults />),
-            },
-            {
-              path: "history",
-              element: wrapWithSuspense(<VerificationHistory />),
             },
             {
               path: "help",

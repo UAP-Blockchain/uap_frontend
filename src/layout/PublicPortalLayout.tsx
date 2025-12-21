@@ -4,7 +4,6 @@ import { Layout, Menu, Button, Space, Typography, Drawer } from "antd";
 import {
   HomeOutlined,
   SafetyCertificateOutlined,
-  HistoryOutlined,
   QuestionCircleOutlined,
   LoginOutlined,
   MenuOutlined,
@@ -35,11 +34,6 @@ const PublicPortalLayout: React.FC = () => {
       key: "results",
       icon: <SafetyCertificateOutlined />,
       label: "Kết quả xác thực",
-    },
-    {
-      key: "history",
-      icon: <HistoryOutlined />,
-      label: "Lịch sử",
     },
     {
       key: "help",

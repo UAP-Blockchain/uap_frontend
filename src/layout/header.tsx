@@ -181,7 +181,6 @@ const HeaderComponent: React.FC<HeaderProps> = ({
             src="/image/z7310396057810_d32c375c6ada6e3edcb4bff25b5461b2.jpg"
             alt="FAP Blockchain Logo"
             className="logo-icon"
-            style={{ width: "32px", height: "32px", objectFit: "contain" }}
           />
           <span className="logo-text">UAP Blockchain</span>
         </Link>

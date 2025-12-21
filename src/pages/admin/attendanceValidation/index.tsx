@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Card,
   Space,
@@ -43,6 +43,8 @@ const AttendanceValidationAdminPage: React.FC = () => {
   const [tamperFileUrl, setTamperFileUrl] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const hasFetchedRef = useRef(false);
+
   const loadStatus = async () => {
     setLoadingStatus(true);
     setError(null);
@@ -73,8 +75,16 @@ const AttendanceValidationAdminPage: React.FC = () => {
   };
 
   useEffect(() => {
-    void loadStatus();
-    void loadCredentials();
+    if (hasFetchedRef.current) {
+      return;
+    }
+    hasFetchedRef.current = true;
+
+    const loadAll = async () => {
+      await Promise.allSettled([loadStatus(), loadCredentials()]);
+    };
+
+    void loadAll();
   }, []);
 
   const handleUpdate = async (enabled: boolean) => {

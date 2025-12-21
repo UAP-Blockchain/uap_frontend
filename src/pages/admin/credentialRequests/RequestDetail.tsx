@@ -38,6 +38,7 @@ import {
 } from "../../../services/admin/certificateTemplates/api";
 import { getCredentialManagementContract } from "../../../blockchain/credential";
 import { saveCredentialOnChainApi } from "../../../services/admin/credentials/api";
+import { ethers } from "ethers";
 import "./RequestDetail.scss";
 
 const { Text } = Typography;
@@ -172,7 +173,15 @@ const CredentialRequestDetailAdmin: React.FC = () => {
     }
     try {
       setIsSigningOnChain(true);
-      const payload: any = (approvedCredential as any).onChainPayload;
+      const payload = approvedCredential.onChainPayload as
+        | {
+            studentWalletAddress: string;
+            credentialType: string;
+            credentialDataJson: string;
+            expiresAtUnix: number;
+            verificationHash: string;
+          }
+        | null;
 
       if (!payload) {
         throw new Error("Backend không gửi OnChainPayload cho credential.");
@@ -182,10 +191,36 @@ const CredentialRequestDetailAdmin: React.FC = () => {
 
       const expiresAtBigInt = BigInt(payload.expiresAtUnix ?? 0);
 
+      let verificationHashBytes32 = ethers.ZeroHash;
+      if (payload.verificationHash) {
+        try {
+          const binary = atob(payload.verificationHash);
+          const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+          if (bytes.length !== 32) {
+            throw new Error(
+              `VerificationHash không hợp lệ, độ dài ${bytes.length} thay vì 32 bytes`
+            );
+          }
+          const hex =
+            "0x" +
+            Array.from(bytes)
+              .map((b) => b.toString(16).padStart(2, "0"))
+              .join("");
+          verificationHashBytes32 = hex as `0x${string}`;
+        } catch (e) {
+          // eslint-disable-next-line no-console
+          console.warn("Không decode được verificationHash base64:", e);
+          throw new Error(
+            "VerificationHash trong payload không hợp lệ, không thể ký on-chain."
+          );
+        }
+      }
+
       const tx = await contract.issueCredential(
         payload.studentWalletAddress,
         payload.credentialType,
         payload.credentialDataJson,
+        verificationHashBytes32,
         expiresAtBigInt
       );
 

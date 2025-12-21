@@ -4,7 +4,7 @@ import { getSigner } from "./index";
 // Địa chỉ GradeManagement trên Quorum, khớp với backend
 export const GRADE_MANAGEMENT_ADDRESS =
   import.meta.env.VITE_GRADE_MANAGEMENT_ADDRESS ||
-  "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318";
+  "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9";
 
 export const GRADE_MANAGEMENT_ABI = [
   {
