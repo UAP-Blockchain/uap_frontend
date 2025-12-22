@@ -8,6 +8,7 @@ import {
   Button,
   Typography,
   Spin,
+  Table,
   message,
   Modal,
   Form,
@@ -26,11 +27,13 @@ import dayjs from "dayjs";
 import type {
   CredentialRequestDto,
   CredentialDetailDto,
+  CredentialRequestPreIssueVerifyDto,
 } from "../../../services/admin/credentials/api";
 import {
   getCredentialRequestByIdApi,
   approveCredentialRequestApi,
   rejectCredentialRequestApi,
+  getCredentialRequestPreIssueVerifyApi,
 } from "../../../services/admin/credentials/api";
 import {
   getCertificateTemplatesApi,
@@ -51,6 +54,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
   const [request, setRequest] = useState<CredentialRequestDto | null>(null);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyData, setVerifyData] = useState<CredentialRequestPreIssueVerifyDto | null>(null);
   const [approveModalVisible, setApproveModalVisible] = useState(false);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [approvedCredential, setApprovedCredential] =
@@ -71,6 +76,23 @@ const CredentialRequestDetailAdmin: React.FC = () => {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadVerify = async () => {
+    if (!requestId) return;
+    setVerifyLoading(true);
+    try {
+      const data = await getCredentialRequestPreIssueVerifyApi(requestId);
+      setVerifyData(data);
+    } catch (error: any) {
+      message.error(
+        error?.response?.data?.detail ||
+          error?.response?.data?.message ||
+          "Không thể tải dữ liệu xác minh trước khi cấp"
+      );
+    } finally {
+      setVerifyLoading(false);
     }
   };
 
@@ -310,6 +332,16 @@ const CredentialRequestDetailAdmin: React.FC = () => {
 
   const disabledActions = !request || request.status !== "Pending" || processing;
 
+  const attendanceAllVerified =
+    (verifyData?.attendance?.length ?? 0) > 0 &&
+    (verifyData?.attendance ?? []).every((x) => x.verified);
+
+  const gradesAllVerified =
+    (verifyData?.grades?.length ?? 0) > 0 &&
+    (verifyData?.grades ?? []).every((x) => x.verified);
+
+  const canProceedAfterVerify = attendanceAllVerified && gradesAllVerified;
+
   return (
     <div className="credential-request-detail-page">
       {contextHolder}
@@ -328,25 +360,30 @@ const CredentialRequestDetailAdmin: React.FC = () => {
           </div>
         </div>
         <Space>
-          <Button
-            type="primary"
-            icon={<CheckCircleOutlined />}
-            disabled={disabledActions}
-            loading={processing && request?.status === "Pending"}
-            onClick={openApproveModalOnChain}
-          >
-            Duyệt nội bộ
-          </Button>
-          <Button
-            type="primary"
-            ghost
-            icon={<CheckCircleOutlined />}
-            disabled={!approvedCredential || isSigningOnChain}
-            loading={isSigningOnChain}
-            onClick={handleSignOnChain}
-          >
-            Ký & lưu on-chain
-          </Button>
+          {canProceedAfterVerify ? (
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              disabled={disabledActions}
+              loading={processing && request?.status === "Pending"}
+              onClick={openApproveModalOnChain}
+            >
+              Duyệt nội bộ
+            </Button>
+          ) : null}
+
+          {canProceedAfterVerify && approvedCredential ? (
+            <Button
+              type="primary"
+              ghost
+              icon={<CheckCircleOutlined />}
+              disabled={isSigningOnChain}
+              loading={isSigningOnChain}
+              onClick={handleSignOnChain}
+            >
+              Ký & lưu on-chain
+            </Button>
+          ) : null}
           <Button
             danger
             icon={<CloseCircleOutlined />}
@@ -408,6 +445,135 @@ const CredentialRequestDetailAdmin: React.FC = () => {
                 </Descriptions.Item>
               )}
             </Descriptions>
+          )}
+        </Spin>
+      </Card>
+
+      <Card
+        style={{ marginTop: 16 }}
+        title="Xác minh trước khi cấp (DB ↔ Blockchain)"
+        extra={
+          <Button onClick={loadVerify} loading={verifyLoading}>
+            Tải xác minh
+          </Button>
+        }
+      >
+        <Spin spinning={verifyLoading}>
+          {!verifyData ? (
+            <Text type="secondary">
+              Nhấn “Tải xác minh” để xem danh sách attendance/grade đã đối chiếu.
+            </Text>
+          ) : (
+            <>
+              <Space wrap style={{ marginBottom: 12 }}>
+                {verifyData.classCode ? (
+                  <Tag>Class: {verifyData.classCode}</Tag>
+                ) : (
+                  <Tag>Class: -</Tag>
+                )}
+                {verifyData.onChainClassId != null ? (
+                  <Tag>On-chain ClassId: {verifyData.onChainClassId}</Tag>
+                ) : (
+                  <Tag>On-chain ClassId: -</Tag>
+                )}
+
+                <Tag color={attendanceAllVerified ? "green" : "red"}>
+                  Attendance: {attendanceAllVerified ? "Verified" : "Not verified"}
+                </Tag>
+                <Tag color={gradesAllVerified ? "green" : "red"}>
+                  Grades: {gradesAllVerified ? "Verified" : "Not verified"}
+                </Tag>
+
+                {verifyData.message ? (
+                  <Tag color="gold">{verifyData.message}</Tag>
+                ) : null}
+              </Space>
+
+              <div style={{ marginBottom: 16 }}>
+                <Text strong>Attendance</Text>
+                <Table
+                  size="small"
+                  rowKey={(r) => r.attendance.id}
+                  pagination={{ pageSize: 5 }}
+                  dataSource={verifyData.attendance ?? []}
+                  columns={[
+                    {
+                      title: "Ngày",
+                      render: (_, r) => dayjs(r.attendance.date).format("DD/MM/YYYY"),
+                    },
+                    {
+                      title: "Ca",
+                      dataIndex: ["attendance", "timeSlotName"],
+                    },
+                    {
+                      title: "Có mặt",
+                      render: (_, r) =>
+                        r.attendance.isPresent ? (
+                          <Tag color="green">Có</Tag>
+                        ) : (
+                          <Tag color="red">Không</Tag>
+                        ),
+                    },
+                    {
+                      title: "Verified",
+                      render: (_, r) =>
+                        r.verified ? (
+                          <Tag color="green">OK</Tag>
+                        ) : (
+                          <Tag color="red">FAIL</Tag>
+                        ),
+                    },
+                    {
+                      title: "Message",
+                      dataIndex: "message",
+                      ellipsis: true,
+                    },
+                  ]}
+                />
+              </div>
+
+              <div>
+                <Text strong>Grades</Text>
+                <Table
+                  size="small"
+                  rowKey={(r) => r.grade.id}
+                  pagination={{ pageSize: 5 }}
+                  dataSource={verifyData.grades ?? []}
+                  columns={[
+                    {
+                      title: "Component",
+                      dataIndex: ["grade", "componentName"],
+                    },
+                    {
+                      title: "Weight",
+                      dataIndex: ["grade", "componentWeight"],
+                    },
+                    {
+                      title: "Score",
+                      dataIndex: ["grade", "score"],
+                    },
+                    {
+                      title: "Letter",
+                      dataIndex: ["grade", "letterGrade"],
+                    },
+                    {
+                      title: "Verified",
+                      render: (_, r) =>
+                        r.verified ? (
+                          <Tag color="green">OK</Tag>
+                        ) : (
+                          <Tag color="red">FAIL</Tag>
+                        ),
+                    },
+                    {
+                      title: "Message",
+                      dataIndex: "message",
+                      ellipsis: true,
+                    },
+                  ]}
+                />
+              </div>
+            </>
           )}
         </Spin>
       </Card>

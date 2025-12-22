@@ -180,6 +180,72 @@ export interface CredentialShareDto {
   qrCodeData: string;
 }
 
+// ==================== PRE-ISSUE VERIFICATION (Admin) ====================
+
+export interface AttendanceDto {
+  id: string;
+  slotId: string;
+  studentId: string;
+  studentCode: string;
+  studentName: string;
+  subjectId: string;
+  subjectName: string;
+  date: string;
+  timeSlotName: string;
+  classCode: string;
+  isPresent: boolean;
+  notes?: string | null;
+  isExcused: boolean;
+  excuseReason?: string | null;
+  recordedAt: string;
+  profileImageUrl?: string | null;
+}
+
+export interface AttendanceVerifyItemDto {
+  attendance: AttendanceDto;
+  verified: boolean;
+  message?: string | null;
+}
+
+export interface GradeDto {
+  id: string;
+  studentId: string;
+  studentCode: string;
+  studentName: string;
+  subjectId: string;
+  subjectCode: string;
+  subjectName: string;
+  gradeComponentId: string;
+  componentName: string;
+  componentWeight: number;
+  score: number;
+  letterGrade: string;
+  updatedAt: string;
+}
+
+export interface GradeVerifyItemDto {
+  grade: GradeDto;
+  verified: boolean;
+  message: string;
+}
+
+export interface CredentialRequestPreIssueVerifyDto {
+  requestId: string;
+  studentId: string;
+  certificateType: string;
+  subjectId?: string;
+  semesterId?: string;
+  studentRoadmapId?: string;
+  classId?: string | null;
+  classCode?: string | null;
+  onChainClassId?: number | null;
+  attendance: AttendanceVerifyItemDto[];
+  grades: GradeVerifyItemDto[];
+  attendanceAllVerified?: boolean;
+  gradesAllVerified?: boolean;
+  message?: string | null;
+}
+
 // On-chain related DTOs
 export interface IssueCredentialRequest {
   templateId?: string;
@@ -433,6 +499,19 @@ export const getCredentialRequestByIdApi = async (
     { skipGlobalErrorHandler: true } as any
   );
   return response.data;
+};
+
+// GET /api/credential-requests/{id}/verify-preissue - Pre-issue verification (Admin)
+export const getCredentialRequestPreIssueVerifyApi = async (
+  id: string
+): Promise<CredentialRequestPreIssueVerifyDto> => {
+  const response = await api.get<{
+    success: boolean;
+    data: CredentialRequestPreIssueVerifyDto;
+  }>(`/credential-requests/${id}/verify-preissue`, {
+    skipGlobalErrorHandler: true,
+  } as any);
+  return response.data.data;
 };
 
 // POST /api/credential-requests - Create request (Student)
