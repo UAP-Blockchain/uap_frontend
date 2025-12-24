@@ -159,7 +159,7 @@ export interface ReviewCredentialRequest {
 }
 
 export interface RevokeCredentialRequest {
-  reason: string;
+  revocationReason: string;
 }
 
 export interface VerifyCredentialRequest {

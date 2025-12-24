@@ -253,7 +253,7 @@ const CredentialsManagement: React.FC = () => {
       if (revokingCredential) {
         setLoading(true);
         await revokeCredentialApi(revokingCredential.id, {
-          reason: values.reason,
+          revocationReason: values.reason,
         });
         message.success(
           "Thu hồi chứng chỉ thành công! Đã cập nhật trên blockchain."

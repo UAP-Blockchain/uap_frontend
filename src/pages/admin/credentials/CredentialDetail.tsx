@@ -8,7 +8,9 @@ import {
   Col,
   Descriptions,
   Divider,
-  message,
+  Input,
+  Modal,
+  notification,
   QRCode,
   Row,
   Space,
@@ -21,6 +23,7 @@ import {
   ArrowLeftOutlined,
   BlockOutlined,
   CalendarOutlined,
+  CloseCircleOutlined,
   CopyOutlined,
   DownloadOutlined,
   LinkOutlined,
@@ -34,11 +37,15 @@ import {
   getCredentialByIdApi,
   getCredentialQRCodeApi,
   type CredentialVerificationDto,
+  revokeCredentialApi,
   verifyCredentialApi,
 } from "../../../services/admin/credentials/api";
+import { CREDENTIAL_MANAGEMENT_ADDRESS, getCredentialManagementContract } from "../../../blockchain/credential";
+import { ensureCorrectNetwork, getBrowserProvider } from "../../../blockchain";
 import "./CredentialDetail.scss";
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 const statusBadgeColors: Record<string, "success" | "warning" | "error" | "default"> = {
   issued: "success",
@@ -65,9 +72,58 @@ const formatDateDisplay = (date?: string | null, fallback = "—") => {
   return parsed.isValid() ? parsed.format("DD/MM/YYYY") : fallback;
 };
 
+const getEthersErrorMessage = (err: unknown) => {
+  const anyErr = err as any;
+  return (
+    anyErr?.shortMessage ||
+    anyErr?.reason ||
+    anyErr?.data?.message ||
+    anyErr?.info?.error?.message ||
+    anyErr?.message ||
+    "Không thể thực hiện giao dịch"
+  );
+};
+
+const getErrorMessage = (err: unknown, fallback = "Có lỗi xảy ra") => {
+  const anyErr = err as any;
+  return (
+    anyErr?.response?.data?.detail ||
+    anyErr?.response?.data?.message ||
+    getEthersErrorMessage(err) ||
+    fallback
+  );
+};
+
+const shortenTxHash = (hash?: string | null) => {
+  if (!hash) return "-";
+  const h = String(hash);
+  if (h.length <= 18) return h;
+  return `${h.slice(0, 10)}...${h.slice(-8)}`;
+};
+
+const parseBigIntSafe = (value: unknown): bigint | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "bigint") return value;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || !Number.isInteger(value)) return null;
+    return BigInt(value);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    try {
+      return BigInt(trimmed);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
 const CredentialDetail: React.FC = () => {
   const { credentialId } = useParams<{ credentialId: string }>();
   const navigate = useNavigate();
+  const [notificationApi, notificationContextHolder] = notification.useNotification();
   const [credential, setCredential] = useState<CredentialDetailDto | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -76,37 +132,42 @@ const CredentialDetail: React.FC = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyResult, setVerifyResult] = useState<CredentialVerificationDto | null>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [isRevokingDb, setIsRevokingDb] = useState(false);
+  const [isRevokingOnChain, setIsRevokingOnChain] = useState(false);
+  const [revokeModalOpen, setRevokeModalOpen] = useState(false);
+  const [revocationReason, setRevocationReason] = useState("");
+  const [revokeDbSaved, setRevokeDbSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const qrRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  const fetchDetail = async () => {
     if (!credentialId) {
       setError("Thiếu mã chứng chỉ");
       setLoading(false);
       return;
     }
 
-    const fetchDetail = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await getCredentialByIdApi(credentialId);
-        setCredential({
-          ...result,
-          issueDate: result.issueDate || (result as Record<string, any>).issuedDate || "",
-        });
-      } catch (err) {
-        const messageText =
-          (err as { response?: { data?: { detail?: string; message?: string } } })
-            ?.response?.data?.detail ||
-          (err as { message?: string }).message ||
-          "Không thể tải thông tin chứng chỉ";
-        setError(messageText);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await getCredentialByIdApi(credentialId);
+      setCredential({
+        ...result,
+        issueDate: result.issueDate || (result as Record<string, any>).issuedDate || "",
+      });
+    } catch (err) {
+      const messageText =
+        (err as { response?: { data?: { detail?: string; message?: string } } })
+          ?.response?.data?.detail ||
+        (err as { message?: string }).message ||
+        "Không thể tải thông tin chứng chỉ";
+      setError(messageText);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     void fetchDetail();
   }, [credentialId]);
 
@@ -209,27 +270,192 @@ const CredentialDetail: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      message.success("Đã tải xuống chứng chỉ");
+      notificationApi.success({ message: "Đã tải xuống chứng chỉ", placement: "topRight" });
     } catch (err) {
-      message.error(
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
-        "Không thể tải xuống chứng chỉ"
-      );
+      notificationApi.error({
+        message: "Không thể tải xuống chứng chỉ",
+        description:
+          (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
+          "Không thể tải xuống chứng chỉ",
+        placement: "topRight",
+      });
     } finally {
       setActionLoading(false);
     }
   };
 
+  const handleOpenRevokeModal = () => {
+    const status = (credential?.status || "").toLowerCase();
+    if (status === "revoked") {
+      notificationApi.info({
+        message: "Chứng chỉ đã bị thu hồi",
+        description: "Trạng thái hiện tại là Revoked nên không thể thu hồi thêm.",
+        placement: "topRight",
+      });
+      return;
+    }
+    setRevocationReason("");
+    setRevokeDbSaved(false);
+    setRevokeModalOpen(true);
+  };
+
+  const handleRevokeDbOnly = async () => {
+    if (!credential) return;
+
+    const status = (credential.status || "").toLowerCase();
+    if (status === "revoked") {
+      notificationApi.info({
+        message: "Chứng chỉ đã bị thu hồi",
+        description: "Trạng thái hiện tại là Revoked.",
+        placement: "topRight",
+      });
+      return;
+    }
+
+    const reason = (revocationReason || "").trim();
+    if (!reason) {
+      notificationApi.error({ message: "Vui lòng nhập lý do thu hồi.", placement: "topRight" });
+      return;
+    }
+
+    setIsRevokingDb(true);
+    try {
+      await revokeCredentialApi(credential.id, { revocationReason: reason });
+      setRevokeDbSaved(true);
+      notificationApi.success({
+        message: "Thu hồi DB thành công (1/2)",
+        description: "Đã thu hồi trên hệ thống (DB). Tiếp theo bấm 'Ký on-chain' để MetaMask ký giao dịch.",
+        placement: "topRight",
+        duration: 4,
+      });
+    } catch (err) {
+      const msg = getErrorMessage(err, "Không thể thu hồi chứng chỉ");
+      notificationApi.error({ message: "Thu hồi DB thất bại", description: msg, placement: "topRight" });
+    } finally {
+      setIsRevokingDb(false);
+    }
+  };
+
+  const handleRevokeOnChain = async () => {
+    if (!credential) return;
+
+    if (!revokeDbSaved) {
+      notificationApi.warning({ message: "Vui lòng bấm 'Thu hồi (DB)' trước.", placement: "topRight" });
+      return;
+    }
+
+    const status = (credential.status || "").toLowerCase();
+    if (status === "revoked") {
+      notificationApi.info({
+        message: "Chứng chỉ đã bị thu hồi",
+        description: "Trạng thái hiện tại là Revoked.",
+        placement: "topRight",
+      });
+      return;
+    }
+
+    const isOnBlockchain = !!(credential as any).isOnBlockchain;
+    const blockchainCredentialId = (credential as any).blockchainCredentialId;
+
+    if (!isOnBlockchain || blockchainCredentialId === null || blockchainCredentialId === undefined) {
+      notificationApi.error({
+        message: "Không thể thu hồi on-chain",
+        description:
+          "Đã thu hồi trên hệ thống (DB) nhưng không thể thu hồi on-chain vì chứng chỉ chưa có BlockchainCredentialId.",
+        placement: "topRight",
+      });
+      return;
+    }
+
+    setIsRevokingOnChain(true);
+    try {
+      // Preflight: ensure MetaMask is on the expected chain (default Quorum chainId 1337)
+      const expectedChainIdHex = import.meta.env.VITE_CHAIN_ID_HEX || "0x539";
+      await ensureCorrectNetwork(expectedChainIdHex);
+
+      // Preflight: ensure contract exists on current network
+      const provider = await getBrowserProvider();
+      const code = await provider.getCode(CREDENTIAL_MANAGEMENT_ADDRESS);
+      if (!code || code === "0x") {
+        notificationApi.error({
+          message: "Không tìm thấy contract trên mạng hiện tại",
+          description: `Không tìm thấy CredentialManagement tại ${CREDENTIAL_MANAGEMENT_ADDRESS}. Kiểm tra lại mạng MetaMask và VITE_CREDENTIAL_MANAGEMENT_ADDRESS.`,
+          placement: "topRight",
+          duration: 6,
+        });
+        return;
+      }
+
+      const credentialIdBigInt = parseBigIntSafe(blockchainCredentialId);
+      if (credentialIdBigInt === null) {
+        notificationApi.error({
+          message: "BlockchainCredentialId không hợp lệ",
+          description: `Giá trị: ${String(blockchainCredentialId)}`,
+          placement: "topRight",
+        });
+        return;
+      }
+
+      const contract = await getCredentialManagementContract();
+
+      // Preflight: simulate to surface authorization/revert errors (prevents "click but no MetaMask")
+      try {
+        await contract.revokeCredential.staticCall(credentialIdBigInt);
+      } catch (err) {
+        const msg = getEthersErrorMessage(err);
+        notificationApi.error({
+          message: "Không thể thu hồi on-chain (mô phỏng thất bại)",
+          description: `${msg}. (Gợi ý: ví hiện tại có thể không có quyền thu hồi; hãy đổi sang ví quản trị/issuer đã deploy hoặc được cấp quyền trên contract.)`,
+          placement: "topRight",
+          duration: 6,
+        });
+        return;
+      }
+
+      const tx = await contract.revokeCredential(credentialIdBigInt);
+      notificationApi.info({
+        message: "Đã gửi giao dịch thu hồi on-chain",
+        description: `Tx: ${shortenTxHash(tx.hash)}`,
+        placement: "topRight",
+        duration: 4,
+      });
+
+      const receipt = await tx.wait();
+      if ((receipt as any)?.status === 0) {
+        throw new Error("Giao dịch thu hồi on-chain thất bại (receipt.status=0)");
+      }
+
+      notificationApi.success({
+        message: "Thu hồi thành công (2/2)",
+        description: `Đã cập nhật DB và đã thu hồi trên blockchain. Tx: ${shortenTxHash(receipt?.hash || tx.hash)}`,
+        placement: "topRight",
+        duration: 4,
+      });
+      setRevokeModalOpen(false);
+      await fetchDetail();
+    } catch (err) {
+      const msg = getErrorMessage(err, "Không thể thu hồi chứng chỉ");
+      notificationApi.error({
+        message: "Thu hồi on-chain thất bại",
+        description: `${msg}. (Lưu ý: DB có thể đã cập nhật thu hồi, nhưng giao dịch on-chain có thể chưa thành công.)`,
+        placement: "topRight",
+        duration: 6,
+      });
+    } finally {
+      setIsRevokingOnChain(false);
+    }
+  };
+
   const copyToClipboard = async (value?: string | null, success = "Đã sao chép") => {
     if (!value) {
-      message.warning("Không có giá trị để sao chép");
+      notificationApi.warning({ message: "Không có giá trị để sao chép", placement: "topRight" });
       return;
     }
     try {
       await navigator.clipboard.writeText(value);
-      message.success(success);
+      notificationApi.success({ message: success, placement: "topRight" });
     } catch {
-      message.error("Không thể sao chép vào clipboard");
+      notificationApi.error({ message: "Không thể sao chép vào clipboard", placement: "topRight" });
     }
   };
 
@@ -275,13 +501,13 @@ const CredentialDetail: React.FC = () => {
 
   const handleDownloadQr = () => {
     if (!qrValue || !qrRef.current) {
-      message.warning("Không có mã QR để tải xuống");
+      notificationApi.warning({ message: "Không có mã QR để tải xuống", placement: "topRight" });
       return;
     }
 
     const canvas = qrRef.current.querySelector("canvas");
     if (!canvas) {
-      message.error("Không tìm thấy hình ảnh QR để tải xuống");
+      notificationApi.error({ message: "Không tìm thấy hình ảnh QR để tải xuống", placement: "topRight" });
       return;
     }
 
@@ -296,6 +522,64 @@ const CredentialDetail: React.FC = () => {
 
   return (
     <div className="admin-credential-detail">
+      {notificationContextHolder}
+      <Modal
+        open={revokeModalOpen}
+        title="Thu hồi chứng chỉ"
+        footer={[
+          <Button
+            key="cancel"
+            onClick={() => {
+              if (!isRevokingDb && !isRevokingOnChain) {
+                setRevokeModalOpen(false);
+              }
+            }}
+            disabled={isRevokingDb || isRevokingOnChain}
+          >
+            Hủy
+          </Button>,
+          !revokeDbSaved ? (
+            <Button
+              key="revoke-db"
+              danger
+              type="primary"
+              loading={isRevokingDb}
+              disabled={isRevokingOnChain}
+              onClick={handleRevokeDbOnly}
+            >
+              Thu hồi (DB)
+            </Button>
+          ) : (
+            <Button
+              key="revoke-chain"
+              type="primary"
+              ghost
+              danger
+              loading={isRevokingOnChain}
+              disabled={isRevokingDb}
+              onClick={handleRevokeOnChain}
+            >
+              Ký on-chain
+            </Button>
+          ),
+        ]}
+        onCancel={() => {
+          if (!isRevokingDb && !isRevokingOnChain) {
+            setRevokeModalOpen(false);
+          }
+        }}
+      >
+        <div style={{ marginBottom: 8 }}>
+          Nhập lý do thu hồi (bắt buộc). Hệ thống sẽ lưu DB trước, sau đó bạn bấm "Ký on-chain" để MetaMask ký giao dịch thu hồi.
+        </div>
+        <TextArea
+          rows={3}
+          placeholder="Ví dụ: Phát hiện giả mạo / sai dữ liệu / yêu cầu thu hồi..."
+          value={revocationReason}
+          onChange={(e) => setRevocationReason(e.target.value)}
+        />
+      </Modal>
+
       <div className="detail-header">
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/admin/credentials")}>
           Quay lại danh sách
@@ -420,6 +704,21 @@ const CredentialDetail: React.FC = () => {
                   description={verifyError}
                 />
               ) : null}
+
+              {verifyResult && !verifyResult.isValid && (
+                (credential.status || "").toLowerCase() !== "revoked"
+              ) && (
+                <Button
+                  danger
+                  type="primary"
+                  icon={<CloseCircleOutlined />}
+                  onClick={handleOpenRevokeModal}
+                  loading={isRevokingDb || isRevokingOnChain}
+                  disabled={actionLoading || loading}
+                >
+                  Thu hồi
+                </Button>
+              )}
             </Space>
           </Card>
         </Col>

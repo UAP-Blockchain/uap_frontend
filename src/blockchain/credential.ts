@@ -2,6 +2,7 @@ import { Contract, Interface } from "ethers";
 import { getSigner } from "./index";
 
 export const CREDENTIAL_MANAGEMENT_ADDRESS =
+  import.meta.env.VITE_CREDENTIAL_MANAGEMENT_ADDRESS ||
   "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 
 export const CREDENTIAL_MANAGEMENT_ABI = [
@@ -372,6 +373,9 @@ export type CredentialManagementContract = Contract & {
     verificationHash: string,
     expiresAt: bigint
   ) => Promise<any>;
+  revokeCredential: ((credentialId: bigint) => Promise<any>) & {
+    staticCall: (credentialId: bigint) => Promise<any>;
+  };
 };
 
 export const getCredentialManagementContract = async (): Promise<CredentialManagementContract> => {
