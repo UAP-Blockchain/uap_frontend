@@ -13,6 +13,11 @@
 
   h2 {
     margin: 0;
-    color: $primary-color;
+    color: #3674B5; // Blue color to match web theme
+    
+    .anticon {
+      color: #3674B5; // Blue color for icon
+      margin-right: 8px;
+    }
   }
 }

@@ -11,6 +11,7 @@ import {
   Descriptions,
   Alert,
   Modal,
+  Select,
 } from "antd";
 import { toast } from "react-toastify";
 import {
@@ -22,6 +23,7 @@ import {
 import AttendanceValidationAdminService, {
   type AttendanceValidationStatus,
   type CredentialInfo,
+  type GradeInfo,
 } from "../../../services/admin/attendanceValidation/api";
 import "./index.scss";
 
@@ -34,6 +36,11 @@ const AttendanceValidationAdminPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
 
+  // Tampering Type Selection
+  const [tamperType, setTamperType] = useState<"credential" | "grade">(
+    "credential"
+  );
+
   // Credential Tampering State
   const [credentials, setCredentials] = useState<CredentialInfo[]>([]);
   const [loadingCredentials, setLoadingCredentials] = useState(false);
@@ -42,6 +49,14 @@ const AttendanceValidationAdminPage: React.FC = () => {
   const [tampering, setTampering] = useState(false);
   const [tamperFileUrl, setTamperFileUrl] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Grade Tampering State
+  const [grades, setGrades] = useState<GradeInfo[]>([]);
+  const [loadingGrades, setLoadingGrades] = useState(false);
+  const [selectedGrade, setSelectedGrade] = useState<GradeInfo | null>(null);
+  const [tamperingGrade, setTamperingGrade] = useState(false);
+  const [tamperScoreValue, setTamperScoreValue] = useState<number>(0);
+  const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
 
   const hasFetchedRef = useRef(false);
 
@@ -74,6 +89,19 @@ const AttendanceValidationAdminPage: React.FC = () => {
     }
   };
 
+  const loadGrades = async () => {
+    setLoadingGrades(true);
+    try {
+      const data = await AttendanceValidationAdminService.getGrades();
+      setGrades(data);
+    } catch (err) {
+      console.error("Không thể tải danh sách điểm số:", err);
+      toast.error("Không thể tải danh sách điểm số.");
+    } finally {
+      setLoadingGrades(false);
+    }
+  };
+
   useEffect(() => {
     if (hasFetchedRef.current) {
       return;
@@ -86,6 +114,14 @@ const AttendanceValidationAdminPage: React.FC = () => {
 
     void loadAll();
   }, []);
+
+  // Load grades when tamper type changes to "grade"
+  useEffect(() => {
+    if (tamperType === "grade" && grades.length === 0) {
+      void loadGrades();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tamperType]);
 
   const handleUpdate = async (enabled: boolean) => {
     setUpdating(true);
@@ -153,6 +189,46 @@ const AttendanceValidationAdminPage: React.FC = () => {
     }
   };
 
+  const handleOpenGradeTamperModal = (record: GradeInfo) => {
+    setSelectedGrade(record);
+    setTamperScoreValue(record.score);
+    setIsGradeModalOpen(true);
+  };
+
+  const handleCloseGradeTamperModal = () => {
+    setIsGradeModalOpen(false);
+    setSelectedGrade(null);
+    setTamperScoreValue(0);
+  };
+
+  const handleTamperGrade = async () => {
+    if (!selectedGrade) {
+      toast.warning("Vui lòng chọn điểm số cần giả mạo.");
+      return;
+    }
+    if (tamperScoreValue < 0 || tamperScoreValue > 10) {
+      toast.warning("Điểm số phải trong khoảng 0-10.");
+      return;
+    }
+
+    setTamperingGrade(true);
+    try {
+      await AttendanceValidationAdminService.tamperGrade(
+        selectedGrade.id,
+        tamperScoreValue
+      );
+      // Reload lại danh sách để đảm bảo dữ liệu đầy đủ và cập nhật
+      await loadGrades();
+      toast.success("Đã giả mạo dữ liệu điểm số thành công!");
+      handleCloseGradeTamperModal();
+    } catch (err) {
+      console.error("Lỗi khi giả mạo điểm số:", err);
+      toast.error("Không thể giả mạo điểm số.");
+    } finally {
+      setTamperingGrade(false);
+    }
+  };
+
   const configurationColumns = [
     {
       title: "Trạng thái",
@@ -171,9 +247,9 @@ const AttendanceValidationAdminPage: React.FC = () => {
           return <Tag>Chưa có dữ liệu</Tag>;
         }
         return status.enabled ? (
-          <Tag color="green">Đang BẬT</Tag>
+          <Tag color="green">Đang Bật</Tag>
         ) : (
-          <Tag color="orange">Đang TẮT</Tag>
+          <Tag color="orange">Đang Tắt</Tag>
         );
       },
     },
@@ -243,143 +319,374 @@ const AttendanceValidationAdminPage: React.FC = () => {
           title={
             <Space align="center">
               <FileProtectOutlined />
-              <span>Giả mạo dữ liệu chứng chỉ (Test Verification)</span>
+              <span>Giả mạo dữ liệu (Test Verification)</span>
             </Space>
           }
         >
-          <Alert
-            message="Cảnh báo"
-            description="Chức năng này dùng để thay đổi đường dẫn file trong Database NHƯNG KHÔNG cập nhật Blockchain. Điều này sẽ khiến quá trình xác thực chứng chỉ thất bại (do hash file không khớp với hash trên blockchain)."
-            type="warning"
-            showIcon
-            icon={<WarningOutlined />}
-            style={{ marginBottom: 24 }}
-          />
+          <Space direction="vertical" style={{ width: "100%" }} size="middle">
+            <div>
+              <Text strong style={{ marginRight: 8 }}>
+                Loại giả mạo:
+              </Text>
+              <Select
+                value={tamperType}
+                onChange={setTamperType}
+                style={{ width: 200 }}
+                options={[
+                  { label: "Giả mạo chứng chỉ", value: "credential" },
+                  { label: "Giả mạo điểm số", value: "grade" },
+                ]}
+              />
+            </div>
 
-          <Table
-            dataSource={credentials}
-            rowKey="id"
-            loading={loadingCredentials}
-            pagination={{ pageSize: 10 }}
-            className="tamper-table"
-            columns={[
-              {
-                title: "Sinh viên",
-                key: "student",
-                render: (_, record) => (
-                  <Space direction="vertical" size={0}>
-                    <Text strong>{record.studentName}</Text>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      {record.studentCode}
-                    </Text>
-                  </Space>
-                ),
-              },
-              {
-                title: "Chứng chỉ",
-                dataIndex: "certificateName",
-                key: "certificateName",
-              },
-              {
-                title: "Ngày cấp",
-                dataIndex: "issuedDate",
-                key: "issuedDate",
-                render: (d: string) => new Date(d).toLocaleDateString("vi-VN"),
-                width: 120,
-              },
-              {
-                title: "File URL",
-                dataIndex: "fileUrl",
-                key: "fileUrl",
-                ellipsis: true,
-              },
-              {
-                title: "Thao tác",
-                key: "action",
-                width: 100,
-                align: "center",
-                render: (_, record) => (
-                  <Button
-                    size="small"
-                    type="primary"
-                    danger
-                    onClick={() => handleOpenTamperModal(record)}
-                  >
-                    Giả mạo
-                  </Button>
-                ),
-              },
-            ]}
-          />
-
-          <Modal
-            title="Giả mạo dữ liệu chứng chỉ"
-            open={isModalOpen}
-            onCancel={handleCloseTamperModal}
-            className="tamper-modal"
-            footer={[
-              <Button key="cancel" onClick={handleCloseTamperModal}>
-                Hủy
-              </Button>,
-              <Button
-                key="submit"
-                type="primary"
-                danger
-                loading={tampering}
-                onClick={() => void handleTamper()}
-              >
-                Cập nhật Database
-              </Button>,
-            ]}
-          >
-            {selectedCredential && (
-              <Space
-                direction="vertical"
-                style={{ width: "100%" }}
-                size="middle"
-              >
+            {tamperType === "credential" && (
+              <>
                 <Alert
-                  message="Hành động này sẽ làm sai lệch dữ liệu giữa Database và Blockchain."
-                  type="error"
+                  message="Cảnh báo"
+                  description="Chức năng này dùng để thay đổi đường dẫn file trong Database NHƯNG KHÔNG cập nhật Blockchain. Điều này sẽ khiến quá trình xác thực chứng chỉ thất bại (do hash file không khớp với hash trên blockchain)."
+                  type="warning"
                   showIcon
+                  icon={<WarningOutlined />}
                 />
 
-                <Descriptions bordered size="small" column={1}>
-                  <Descriptions.Item label="Sinh viên">
-                    {selectedCredential.studentName} (
-                    {selectedCredential.studentCode})
-                  </Descriptions.Item>
-                  <Descriptions.Item label="Chứng chỉ">
-                    {selectedCredential.certificateName}
-                  </Descriptions.Item>
-                  <Descriptions.Item label="File URL hiện tại">
-                    <Text copyable ellipsis>
-                      {selectedCredential.fileUrl}
-                    </Text>
-                  </Descriptions.Item>
-                  <Descriptions.Item label="IPFS Hash">
-                    <Text copyable ellipsis>
-                      {selectedCredential.ipfsHash}
-                    </Text>
-                  </Descriptions.Item>
-                </Descriptions>
+                <Table
+                  dataSource={credentials}
+                  rowKey="id"
+                  loading={loadingCredentials}
+                  pagination={{ pageSize: 10 }}
+                  className="tamper-table"
+                  columns={[
+                    {
+                      title: "Sinh viên",
+                      key: "student",
+                      render: (_, record) => (
+                        <Space direction="vertical" size={0}>
+                          <Text strong>{record.studentName}</Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {record.studentCode}
+                          </Text>
+                        </Space>
+                      ),
+                    },
+                    {
+                      title: "Chứng chỉ",
+                      dataIndex: "certificateName",
+                      key: "certificateName",
+                    },
+                    {
+                      title: "Ngày cấp",
+                      dataIndex: "issuedDate",
+                      key: "issuedDate",
+                      render: (d: string) =>
+                        new Date(d).toLocaleDateString("vi-VN"),
+                      width: 120,
+                    },
+                    {
+                      title: "File URL",
+                      dataIndex: "fileUrl",
+                      key: "fileUrl",
+                      ellipsis: true,
+                    },
+                    {
+                      title: "Thao tác",
+                      key: "action",
+                      width: 100,
+                      align: "center",
+                      render: (_, record) => (
+                        <Button
+                          size="small"
+                          type="primary"
+                          danger
+                          onClick={() => handleOpenTamperModal(record)}
+                        >
+                          Giả mạo
+                        </Button>
+                      ),
+                    },
+                  ]}
+                />
 
-                <div>
-                  <Text strong>URL File Giả mạo:</Text>
-                  <Input
-                    style={{ marginTop: 8 }}
-                    value={tamperFileUrl}
-                    onChange={(e) => setTamperFileUrl(e.target.value)}
-                    placeholder="Nhập URL file giả mạo..."
-                  />
-                  <Text type="secondary" style={{ fontSize: 12 }}>
-                    Nhập đường dẫn file mới (ví dụ: file đã bị chỉnh sửa nội
-                    dung)
-                  </Text>
-                </div>
-              </Space>
+                <Modal
+                  title="Giả mạo dữ liệu chứng chỉ"
+                  open={isModalOpen}
+                  onCancel={handleCloseTamperModal}
+                  className="tamper-modal"
+                  footer={[
+                    <Button key="cancel" onClick={handleCloseTamperModal}>
+                      Hủy
+                    </Button>,
+                    <Button
+                      key="submit"
+                      type="primary"
+                      danger
+                      loading={tampering}
+                      onClick={() => void handleTamper()}
+                    >
+                      Cập nhật Database
+                    </Button>,
+                  ]}
+                >
+                  {selectedCredential && (
+                    <Space
+                      direction="vertical"
+                      style={{ width: "100%" }}
+                      size="middle"
+                    >
+                      <Alert
+                        message="Hành động này sẽ làm sai lệch dữ liệu giữa Database và Blockchain."
+                        type="error"
+                        showIcon
+                      />
+
+                      <Descriptions bordered size="small" column={1}>
+                        <Descriptions.Item label="Sinh viên">
+                          {selectedCredential.studentName} (
+                          {selectedCredential.studentCode})
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Chứng chỉ">
+                          {selectedCredential.certificateName}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="File URL hiện tại">
+                          <Text copyable ellipsis>
+                            {selectedCredential.fileUrl}
+                          </Text>
+                        </Descriptions.Item>
+                        <Descriptions.Item label="IPFS Hash">
+                          <Text copyable ellipsis>
+                            {selectedCredential.ipfsHash}
+                          </Text>
+                        </Descriptions.Item>
+                      </Descriptions>
+
+                      <div>
+                        <Text strong>URL File Giả mạo:</Text>
+                        <Input
+                          style={{ marginTop: 8 }}
+                          value={tamperFileUrl}
+                          onChange={(e) => setTamperFileUrl(e.target.value)}
+                          placeholder="Nhập URL file giả mạo..."
+                        />
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          Nhập đường dẫn file mới (ví dụ: file đã bị chỉnh sửa
+                          nội dung)
+                        </Text>
+                      </div>
+                    </Space>
+                  )}
+                </Modal>
+              </>
             )}
-          </Modal>
+
+            {tamperType === "grade" && (
+              <>
+                <Alert
+                  message="Cảnh báo"
+                  description="Chức năng này dùng để thay đổi điểm số trong Database NHƯNG KHÔNG cập nhật Blockchain. Điều này sẽ khiến quá trình xác thực điểm số thất bại (do hash không khớp với hash trên blockchain)."
+                  type="warning"
+                  showIcon
+                  icon={<WarningOutlined />}
+                />
+
+                <Table
+                  dataSource={grades}
+                  rowKey="id"
+                  loading={loadingGrades}
+                  pagination={{ pageSize: 10 }}
+                  className="tamper-table"
+                  scroll={{ x: 1000 }}
+                  columns={[
+                    {
+                      title: "Sinh viên",
+                      key: "student",
+                      width: 180,
+                      render: (_, record) => (
+                        <Space direction="vertical" size={0}>
+                          <Text strong>{record.studentName}</Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {record.studentCode}
+                          </Text>
+                        </Space>
+                      ),
+                    },
+                    {
+                      title: "Môn học",
+                      key: "subject",
+                      width: 220,
+                      render: (_, record) => (
+                        <Space direction="vertical" size={0}>
+                          <Text strong>{record.subjectName}</Text>
+                          <Text type="secondary" style={{ fontSize: 12 }}>
+                            {record.subjectCode}
+                          </Text>
+                        </Space>
+                      ),
+                    },
+                    {
+                      title: "Thành phần",
+                      key: "gradeComponent",
+                      width: 180,
+                      render: (_, record) => (
+                        <Text>{record.gradeComponentName || "—"}</Text>
+                      ),
+                    },
+                    {
+                      title: "Điểm số",
+                      key: "score",
+                      width: 120,
+                      align: "center" as const,
+                      render: (_, record) => (
+                        <Space direction="vertical" size={0} align="center">
+                          <Text strong style={{ fontSize: 16 }}>
+                            {record.score}
+                          </Text>
+                          {record.letterGrade && (
+                            <Tag color="blue" style={{ margin: 0 }}>
+                              {record.letterGrade}
+                            </Tag>
+                          )}
+                        </Space>
+                      ),
+                    },
+                    {
+                      title: "Cập nhật",
+                      key: "updatedAt",
+                      width: 150,
+                      render: (_, record) => (
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          {new Date(record.updatedAt).toLocaleString("vi-VN")}
+                        </Text>
+                      ),
+                    },
+                    {
+                      title: "Blockchain",
+                      key: "blockchain",
+                      width: 100,
+                      align: "center" as const,
+                      render: (_, record) => (
+                        <Tag color={record.onChainTxHash ? "green" : "default"}>
+                          {record.onChainTxHash ? "Đã lưu" : "Chưa lưu"}
+                        </Tag>
+                      ),
+                    },
+                    {
+                      title: "Thao tác",
+                      key: "action",
+                      width: 100,
+                      align: "center" as const,
+                      fixed: "right" as const,
+                      render: (_, record) => (
+                        <Button
+                          size="small"
+                          type="primary"
+                          danger
+                          onClick={() => handleOpenGradeTamperModal(record)}
+                        >
+                          Giả mạo
+                        </Button>
+                      ),
+                    },
+                  ]}
+                />
+
+                <Modal
+                  title="Giả mạo dữ liệu điểm số"
+                  open={isGradeModalOpen}
+                  onCancel={handleCloseGradeTamperModal}
+                  className="tamper-modal"
+                  footer={[
+                    <Button key="cancel" onClick={handleCloseGradeTamperModal}>
+                      Hủy
+                    </Button>,
+                    <Button
+                      key="submit"
+                      type="primary"
+                      danger
+                      loading={tamperingGrade}
+                      onClick={() => void handleTamperGrade()}
+                    >
+                      Cập nhật Database
+                    </Button>,
+                  ]}
+                >
+                  {selectedGrade && (
+                    <Space
+                      direction="vertical"
+                      style={{ width: "100%" }}
+                      size="middle"
+                    >
+                      <Alert
+                        message="Hành động này sẽ làm sai lệch dữ liệu giữa Database và Blockchain."
+                        type="error"
+                        showIcon
+                      />
+
+                      <Descriptions bordered size="small" column={1}>
+                        <Descriptions.Item label="Sinh viên">
+                          {selectedGrade.studentName} (
+                          {selectedGrade.studentCode})
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Môn học">
+                          {selectedGrade.subjectName} (
+                          {selectedGrade.subjectCode})
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Thành phần điểm">
+                          {selectedGrade.gradeComponentName || "—"}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Điểm số hiện tại">
+                          <Space>
+                            <Text strong style={{ fontSize: 16 }}>
+                              {selectedGrade.score}
+                            </Text>
+                            {selectedGrade.letterGrade && (
+                              <Tag color="blue">
+                                {selectedGrade.letterGrade}
+                              </Tag>
+                            )}
+                          </Space>
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Cập nhật lần cuối">
+                          {new Date(selectedGrade.updatedAt).toLocaleString(
+                            "vi-VN"
+                          )}
+                        </Descriptions.Item>
+                        <Descriptions.Item label="Trạng thái Blockchain">
+                          <Tag
+                            color={
+                              selectedGrade.onChainTxHash ? "green" : "default"
+                            }
+                          >
+                            {selectedGrade.onChainTxHash
+                              ? "Đã lưu trên Blockchain"
+                              : "Chưa lưu trên Blockchain"}
+                          </Tag>
+                        </Descriptions.Item>
+                      </Descriptions>
+
+                      <div>
+                        <Text strong>Điểm số giả mạo:</Text>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10}
+                          step={0.1}
+                          style={{ marginTop: 8 }}
+                          value={tamperScoreValue}
+                          onChange={(e) =>
+                            setTamperScoreValue(Number(e.target.value))
+                          }
+                          placeholder="Nhập điểm số giả mạo (0-10)..."
+                        />
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          Nhập điểm số mới (ví dụ: 9.5). Chỉ có điểm số sẽ được
+                          cập nhật vào Database.
+                        </Text>
+                      </div>
+                    </Space>
+                  )}
+                </Modal>
+              </>
+            )}
+          </Space>
         </Card>
       ),
     },

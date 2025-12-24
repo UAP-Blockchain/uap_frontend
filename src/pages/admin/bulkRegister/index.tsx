@@ -972,7 +972,7 @@ const BulkRegister: React.FC = () => {
       <Card>
         <div className="bulk-register-header">
           <Title level={2}>
-            <UserAddOutlined /> Đăng ký hàng loạt người dùng
+            <UserAddOutlined style={{ color: "#3674B5", marginRight: 8 }} /> Đăng ký hàng loạt người dùng
           </Title>
         </div>
 
