@@ -18,6 +18,26 @@ export interface CredentialInfo {
   isOnBlockchain: boolean;
 }
 
+export interface GradeInfo {
+  id: string;
+  studentId: string;
+  studentName: string;
+  studentCode: string;
+  subjectId: string;
+  subjectCode: string;
+  subjectName: string;
+  gradeComponentId: string;
+  gradeComponentName: string;
+  score: number;
+  letterGrade: string;
+  updatedAt: string;
+  onChainGradeId?: string | null;
+  onChainTxHash?: string | null;
+  onChainBlockNumber?: string | null;
+  onChainChainId?: string | null;
+  onChainContractAddress?: string | null;
+}
+
 interface AttendanceValidationApiResponse {
   success: boolean;
   message?: string;
@@ -36,6 +56,18 @@ interface CredentialListApiResponse {
   success: boolean;
   message?: string;
   data: CredentialInfo[];
+}
+
+interface GradeListApiResponse {
+  success: boolean;
+  message?: string;
+  data: GradeInfo[];
+}
+
+interface GradeApiResponse {
+  success: boolean;
+  message?: string;
+  data: GradeInfo;
 }
 
 export class AttendanceValidationAdminService {
@@ -106,6 +138,32 @@ export class AttendanceValidationAdminService {
     const response = await api.put<CredentialApiResponse>(
       `/validation/tamper_credential/${id}`,
       { fileUrl, ipfsHash }
+    );
+    return response.data.data;
+  }
+
+  /**
+   * Lấy danh sách điểm số
+   * Backend: GET /api/validation/grades
+   */
+  static async getGrades(): Promise<GradeInfo[]> {
+    const response = await api.get<GradeListApiResponse>(
+      "/validation/grades"
+    );
+    return response.data.data;
+  }
+
+  /**
+   * Giả mạo điểm số theo ID
+   * Backend: PUT /api/validation/tamper_grade/{id}
+   */
+  static async tamperGrade(
+    id: string,
+    score: number
+  ): Promise<GradeInfo> {
+    const response = await api.put<GradeApiResponse>(
+      `/validation/tamper_grade/${id}`,
+      { score }
     );
     return response.data.data;
   }

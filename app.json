@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "1a9e7139-3633-48db-a44d-c13e3523d2d9"
+      }
+    },
+    "android": {
+      "package": "com.giabao1204.fapfrontend"
+    }
+  }
+}
