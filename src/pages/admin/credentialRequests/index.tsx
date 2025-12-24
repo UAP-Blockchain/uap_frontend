@@ -35,7 +35,11 @@ import {
   rejectCredentialRequestApi,
 } from "../../../services/admin/credentials/api";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import "./index.scss";
+
+// Cấu hình dayjs UTC plugin
+dayjs.extend(utc);
 
 const { Search } = Input;
 const { Option } = Select;
@@ -70,11 +74,7 @@ const CredentialRequestsPage: React.FC = () => {
       };
 
       const response = await fetchCredentialRequestsApi(params);
-      const items = (response.items || []).map((item) => ({
-        ...item,
-        requestDate: (item as any).requestDate || (item as any).createdAt,
-      }));
-      setRequests(items);
+      setRequests(response.items || []);
       setPagination({
         current: response.page || page,
         pageSize: response.pageSize || pageSize,
@@ -89,15 +89,16 @@ const CredentialRequestsPage: React.FC = () => {
     }
   };
 
+  // Gộp 2 useEffect thành 1 để tránh gọi API nhiều lần
   useEffect(() => {
-    fetchRequests(pagination.current, pagination.pageSize);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    // Debounce cho search term
+    const timer = setTimeout(
+      () => {
+        fetchRequests(1, pagination.pageSize);
+      },
+      searchTerm ? 500 : 0
+    ); // Chỉ debounce khi có search term
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchRequests(1, pagination.pageSize);
-    }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, statusFilter, typeFilter]);
@@ -126,7 +127,8 @@ const CredentialRequestsPage: React.FC = () => {
 
   const formatDate = (value?: string) => {
     if (!value) return "-";
-    const d = dayjs(value);
+    // Parse UTC time từ ISO string và convert sang GMT+7 (+7 giờ)
+    const d = dayjs.utc(value).utcOffset(7);
     return d.isValid() ? d.format("DD/MM/YYYY HH:mm") : value;
   };
 
@@ -232,15 +234,15 @@ const CredentialRequestsPage: React.FC = () => {
     },
     {
       title: "Ngày yêu cầu",
-      dataIndex: "requestDate",
-      key: "requestDate",
+      dataIndex: "createdAt",
+      key: "createdAt",
       width: 180,
       render: (value: string) => formatDate(value),
     },
     {
       title: "Ngày xử lý",
-      dataIndex: "processedDate",
-      key: "processedDate",
+      dataIndex: "processedAt",
+      key: "processedAt",
       width: 180,
       render: (value?: string) => formatDate(value),
     },

@@ -27,7 +27,11 @@ import { fetchClassesApi } from "../../../services/admin/classes/api";
 import type { ClassSummary } from "../../../types/Class";
 import { fetchSemestersApi } from "../../../services/admin/semesters/api";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import "./index.scss";
+
+// Cấu hình dayjs UTC plugin
+dayjs.extend(utc);
 
 const { Title, Text } = Typography;
 
@@ -168,8 +172,8 @@ const Dashboard: React.FC = () => {
       item: `Yêu cầu chứng chỉ - ${req.studentName || "N/A"}`,
       category: "Chứng chỉ",
       status: "pending" as const,
-      updated: req.requestDate
-        ? dayjs(req.requestDate).format("DD/MM/YYYY")
+      updated: req.createdAt
+        ? dayjs.utc(req.createdAt).utcOffset(7).format("DD/MM/YYYY")
         : "Chưa có ngày",
     })),
     ...recentClasses.slice(0, 2).map((cls) => ({

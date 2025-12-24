@@ -24,6 +24,10 @@ import {
   FileTextOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+// Cấu hình dayjs UTC plugin
+dayjs.extend(utc);
 import type {
   CredentialRequestDto,
   CredentialDetailDto,
@@ -55,7 +59,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
-  const [verifyData, setVerifyData] = useState<CredentialRequestPreIssueVerifyDto | null>(null);
+  const [verifyData, setVerifyData] =
+    useState<CredentialRequestPreIssueVerifyDto | null>(null);
   const [approveModalVisible, setApproveModalVisible] = useState(false);
   const [rejectModalVisible, setRejectModalVisible] = useState(false);
   const [approvedCredential, setApprovedCredential] =
@@ -117,7 +122,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
 
   const formatDate = (value?: string) => {
     if (!value) return "-";
-    const d = dayjs(value);
+    // Parse UTC time từ ISO string và convert sang GMT+7 (+7 giờ)
+    const d = dayjs.utc(value).utcOffset(7);
     return d.isValid() ? d.format("DD/MM/YYYY HH:mm") : value;
   };
 
@@ -128,11 +134,15 @@ const CredentialRequestDetailAdmin: React.FC = () => {
         return <Tag color="gold">Đang chờ</Tag>;
       case "approved":
         return (
-          <Tag color="green" icon={<CheckCircleOutlined />}>Đã duyệt</Tag>
+          <Tag color="green" icon={<CheckCircleOutlined />}>
+            Đã duyệt
+          </Tag>
         );
       case "rejected":
         return (
-          <Tag color="red" icon={<CloseCircleOutlined />}>Đã từ chối</Tag>
+          <Tag color="red" icon={<CloseCircleOutlined />}>
+            Đã từ chối
+          </Tag>
         );
       default:
         return <Tag>{status}</Tag>;
@@ -152,7 +162,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
       setApprovedCredential(approved);
       notificationApi.success({
         message: "Phê duyệt nội bộ thành công (1/2)",
-        description: "Đã phê duyệt đơn yêu cầu nội bộ. Tiếp theo, bấm “Ký & lưu on-chain” để hoàn tất.",
+        description:
+          "Đã phê duyệt đơn yêu cầu nội bộ. Tiếp theo, bấm “Ký & lưu on-chain” để hoàn tất.",
         placement: "topRight",
         duration: 4,
       });
@@ -195,15 +206,13 @@ const CredentialRequestDetailAdmin: React.FC = () => {
     }
     try {
       setIsSigningOnChain(true);
-      const payload = approvedCredential.onChainPayload as
-        | {
-            studentWalletAddress: string;
-            credentialType: string;
-            credentialDataJson: string;
-            expiresAtUnix: number;
-            verificationHash: string;
-          }
-        | null;
+      const payload = approvedCredential.onChainPayload as {
+        studentWalletAddress: string;
+        credentialType: string;
+        credentialDataJson: string;
+        expiresAtUnix: number;
+        verificationHash: string;
+      } | null;
 
       if (!payload) {
         throw new Error("Backend không gửi OnChainPayload cho credential.");
@@ -276,7 +285,9 @@ const CredentialRequestDetailAdmin: React.FC = () => {
       await saveCredentialOnChainApi(approvedCredential.id, {
         transactionHash: receipt.hash,
         blockchainCredentialId,
-        blockNumber: receipt.blockNumber ? Number(receipt.blockNumber) : undefined,
+        blockNumber: receipt.blockNumber
+          ? Number(receipt.blockNumber)
+          : undefined,
         chainId: receipt.chainId ? Number(receipt.chainId) : undefined,
         contractAddress: (contract.target as any)?.toString?.(),
       });
@@ -288,7 +299,11 @@ const CredentialRequestDetailAdmin: React.FC = () => {
 
       notificationApi.success({
         message: "Hoàn tất ký & lưu on-chain (2/2)",
-        description: `Đã phát hành chứng chỉ on-chain và lưu trạng thái vào hệ thống. Tx: ${shortTxHash}${blockchainCredentialId ? ` | CredentialId: ${blockchainCredentialId}` : ""}`,
+        description: `Đã phát hành chứng chỉ on-chain và lưu trạng thái vào hệ thống. Tx: ${shortTxHash}${
+          blockchainCredentialId
+            ? ` | CredentialId: ${blockchainCredentialId}`
+            : ""
+        }`,
         placement: "topRight",
         duration: 5,
       });
@@ -330,7 +345,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
     }
   };
 
-  const disabledActions = !request || request.status !== "Pending" || processing;
+  const disabledActions =
+    !request || request.status !== "Pending" || processing;
 
   const attendanceAllVerified =
     (verifyData?.attendance?.length ?? 0) > 0 &&
@@ -434,10 +450,10 @@ const CredentialRequestDetailAdmin: React.FC = () => {
                 </Descriptions.Item>
               )}
               <Descriptions.Item label="Ngày yêu cầu">
-                {formatDate((request as any).requestDate || (request as any).createdAt)}
+                {formatDate(request.createdAt)}
               </Descriptions.Item>
               <Descriptions.Item label="Ngày xử lý">
-                {formatDate(request.processedDate)}
+                {formatDate(request.processedAt)}
               </Descriptions.Item>
               {request.rejectionReason && (
                 <Descriptions.Item label="Lý do từ chối" span={2}>
@@ -461,7 +477,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
         <Spin spinning={verifyLoading}>
           {!verifyData ? (
             <Text type="secondary">
-              Nhấn “Tải xác minh” để xem danh sách attendance/grade đã đối chiếu.
+              Nhấn “Tải xác minh” để xem danh sách attendance/grade đã đối
+              chiếu.
             </Text>
           ) : (
             <>
@@ -478,7 +495,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
                 )}
 
                 <Tag color={attendanceAllVerified ? "green" : "red"}>
-                  Attendance: {attendanceAllVerified ? "Verified" : "Not verified"}
+                  Attendance:{" "}
+                  {attendanceAllVerified ? "Verified" : "Not verified"}
                 </Tag>
                 <Tag color={gradesAllVerified ? "green" : "red"}>
                   Grades: {gradesAllVerified ? "Verified" : "Not verified"}
@@ -499,7 +517,8 @@ const CredentialRequestDetailAdmin: React.FC = () => {
                   columns={[
                     {
                       title: "Ngày",
-                      render: (_, r) => dayjs(r.attendance.date).format("DD/MM/YYYY"),
+                      render: (_, r) =>
+                        dayjs(r.attendance.date).format("DD/MM/YYYY"),
                     },
                     {
                       title: "Ca",
