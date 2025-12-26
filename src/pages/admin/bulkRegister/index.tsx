@@ -726,7 +726,7 @@ const BulkRegister: React.FC = () => {
         title: "Họ và tên",
         dataIndex: "fullName",
         key: "fullName",
-        width: 200,
+        width: 280,
         render: (text: string) => text || "-",
       },
       {
@@ -743,7 +743,7 @@ const BulkRegister: React.FC = () => {
         title: "Khung chương trình",
         dataIndex: "curriculumId",
         key: "curriculumId",
-        width: 200,
+        width: 280,
         render: (_: any, record: RegisterUserResponse) =>
           record.roleName === "Student"
             ? getCurriculumLabel(record.curriculumId)
@@ -763,7 +763,7 @@ const BulkRegister: React.FC = () => {
     baseColumns.push({
       title: "Ngày",
       key: "date",
-      width: 150,
+      width: 180,
       render: (_: any, record: RegisterUserResponse) => {
         const date = record.enrollmentDate || record.hireDate;
         return date ? dayjs(date).format("YYYY-MM-DD") : "-";
@@ -838,7 +838,7 @@ const BulkRegister: React.FC = () => {
       {
         title: "Thông báo",
         key: "message",
-        width: 400,
+        width: 550,
         render: (_: any, record: RegisterUserResponse) => {
           // Combine message and errors array
           const messages: string[] = [];
@@ -876,7 +876,7 @@ const BulkRegister: React.FC = () => {
       {
         title: "Hành động on-chain",
         key: "onchain_action",
-        width: 200,
+        width: 350,
         render: (_: any, record: RegisterUserResponse) => {
           if (!record.success) {
             return <Text type="secondary">Đăng ký off-chain thất bại</Text>;
@@ -884,11 +884,30 @@ const BulkRegister: React.FC = () => {
 
           if (record.isOnBlockchain) {
             if (record.blockchainTxHash) {
+              // Chia transaction hash thành 2 phần để hiển thị trên 2 dòng
+              const txHash = record.blockchainTxHash;
+              const midPoint = Math.ceil(txHash.length / 2);
+              const firstPart = txHash.substring(0, midPoint);
+              const secondPart = txHash.substring(midPoint);
+              
               return (
-                <div>
-                  <Text type="success">Đã on-chain</Text>
-                  <br />
-                  <Text type="secondary">Tx: {record.blockchainTxHash}</Text>
+                <div style={{ lineHeight: "1.5" }}>
+                  <Text type="success" style={{ display: "block", marginBottom: "4px" }}>
+                    Đã on-chain
+                  </Text>
+                  <Text
+                    type="secondary"
+                    style={{
+                      fontSize: "10px",
+                      display: "block",
+                      wordBreak: "break-all",
+                      maxWidth: "330px",
+                      lineHeight: "1.4",
+                    }}
+                  >
+                    <span style={{ display: "block" }}>Tx: {firstPart}</span>
+                    <span style={{ display: "block" }}>{secondPart}</span>
+                  </Text>
                 </div>
               );
             }
@@ -972,7 +991,7 @@ const BulkRegister: React.FC = () => {
       <Card>
         <div className="bulk-register-header">
           <Title level={2}>
-            <UserAddOutlined style={{ color: "#3674B5", marginRight: 8 }} /> Đăng ký hàng loạt người dùng
+            <UserAddOutlined style={{ color: "#1a94fc", marginRight: 8 }} /> Đăng ký hàng loạt người dùng
           </Title>
         </div>
 
@@ -1190,9 +1209,14 @@ const BulkRegister: React.FC = () => {
                     </Form.Item>
                   </Form>
 
-                  <Divider>Danh sách người dùng ({users.length})</Divider>
+                  <div style={{ margin: "24px 0 16px 0" }}>
+                    <Title level={4} style={{ margin: 0, color: "#0f172a", fontWeight: 600 }}>
+                      Danh sách người dùng ({users.length})
+                    </Title>
+                  </div>
 
                   <Table
+                    className="custom-table"
                     dataSource={users}
                     columns={userColumns}
                     pagination={false}
@@ -1271,6 +1295,10 @@ const BulkRegister: React.FC = () => {
                         TeacherCode, HireDate, Specialization, PhoneNumber
                       </li>
                       <li>
+                        <strong>Cột tùy chọn cho tất cả:</strong>{" "}
+                        WalletAddress (địa chỉ ví Ethereum, định dạng: 0x...)
+                      </li>
+                      <li>
                         <strong>Giá trị vai trò:</strong> "Student" hoặc
                         "Teacher"
                       </li>
@@ -1291,9 +1319,9 @@ const BulkRegister: React.FC = () => {
                         onClick={() => {
                           // Download sample CSV template
                           const csvContent =
-                            "Email,FullName,Password,Role,StudentCode,EnrollmentDate,TeacherCode,HireDate,Specialization,PhoneNumber,CurriculumCode\n" +
-                            "student1@example.com,John Doe,password123,Student,SE001,2024-01-15,,,,0944056171,CURR-IT01\n" +
-                            "teacher1@example.com,Jane Smith,password123,Teacher,,,TE001,2024-01-15,Computer Science,0123456789,";
+                            "Email,FullName,Password,Role,StudentCode,EnrollmentDate,TeacherCode,HireDate,Specialization,PhoneNumber,CurriculumCode,WalletAddress\n" +
+                            "student1@example.com,John Doe,password123,Student,SE001,2024-01-15,,,,0944056171,CURR-IT01,0x1234567890123456789012345678901234567890\n" +
+                            "teacher1@example.com,Jane Smith,password123,Teacher,,,TE001,2024-01-15,Computer Science,0123456789,,0xabcdefabcdefabcdefabcdefabcdefabcdefabcd";
                           const blob = new Blob([csvContent], {
                             type: "text/csv",
                           });
@@ -1328,6 +1356,7 @@ const BulkRegister: React.FC = () => {
                               "Specialization",
                               "PhoneNumber",
                               "CurriculumCode",
+                              "WalletAddress",
                             ],
                             [
                               "student1@example.com",
@@ -1341,6 +1370,7 @@ const BulkRegister: React.FC = () => {
                               "",
                               "0944056171",
                               "CURR-IT01",
+                              "0x1234567890123456789012345678901234567890",
                             ],
                             [
                               "teacher1@example.com",
@@ -1354,6 +1384,7 @@ const BulkRegister: React.FC = () => {
                               "Computer Science",
                               "0944036171",
                               "",
+                              "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
                             ],
                           ];
 
@@ -1372,6 +1403,7 @@ const BulkRegister: React.FC = () => {
                             { wch: 20 }, // Specialization
                             { wch: 15 }, // PhoneNumber
                             { wch: 18 }, // CurriculumCode
+                            { wch: 42 }, // WalletAddress
                           ];
 
                           XLSX.utils.book_append_sheet(wb, ws, "Users");
@@ -1461,6 +1493,23 @@ const BulkRegister: React.FC = () => {
                                     | "Teacher",
                                   key: `user-${Date.now()}-${Math.random()}-${i}`,
                                 };
+
+                                // Handle WalletAddress
+                                if (user.WalletAddress) {
+                                  const walletAddress = String(
+                                    user.WalletAddress
+                                  ).trim();
+                                  // Validate format (0x followed by 40 hex characters)
+                                  if (
+                                    walletAddress.match(/^0x[a-fA-F0-9]{40}$/)
+                                  ) {
+                                    newUser.walletAddress = walletAddress;
+                                  } else if (walletAddress) {
+                                    console.warn(
+                                      `Invalid wallet address format for ${user.Email}: ${walletAddress}`
+                                    );
+                                  }
+                                }
 
                                 if (user.Role === "Student") {
                                   if (user.StudentCode)
@@ -1685,6 +1734,23 @@ const BulkRegister: React.FC = () => {
                                   key: `user-${Date.now()}-${Math.random()}-${i}`,
                                 };
 
+                                // Handle WalletAddress
+                                if (user.WalletAddress) {
+                                  const walletAddress = String(
+                                    user.WalletAddress
+                                  ).trim();
+                                  // Validate format (0x followed by 40 hex characters)
+                                  if (
+                                    walletAddress.match(/^0x[a-fA-F0-9]{40}$/)
+                                  ) {
+                                    newUser.walletAddress = walletAddress;
+                                  } else if (walletAddress) {
+                                    console.warn(
+                                      `Invalid wallet address format for ${user.Email}: ${walletAddress}`
+                                    );
+                                  }
+                                }
+
                                 if (user.Role === "Student") {
                                   if (user.StudentCode)
                                     newUser.studentCode = user.StudentCode;
@@ -1865,11 +1931,14 @@ const BulkRegister: React.FC = () => {
                     </p>
                   </Upload.Dragger>
 
-                  <Divider>
-                    Danh sách người dùng đã nhập ({users.length})
-                  </Divider>
+                  <div style={{ margin: "24px 0 16px 0" }}>
+                    <Title level={4} style={{ margin: 0, color: "#0f172a", fontWeight: 600 }}>
+                      Danh sách người dùng đã nhập ({users.length})
+                    </Title>
+                  </div>
 
                   <Table
+                    className="custom-table"
                     dataSource={users}
                     columns={userColumns}
                     pagination={{ pageSize: 10 }}
@@ -1919,18 +1988,23 @@ const BulkRegister: React.FC = () => {
 
         {result && (
           <div style={{ marginTop: 24 }}>
-            <Divider>Kết quả</Divider>
+            <div style={{ marginBottom: 16 }}>
+              <Title level={4} style={{ margin: 0, color: "#0f172a", fontWeight: 600 }}>
+                Kết quả
+              </Title>
+            </div>
             <Alert
               message={`Tổng: ${result.statistics.total} | Thành công: ${result.statistics.success} | Thất bại: ${result.statistics.failed}`}
               type={result.statistics.failed === 0 ? "success" : "warning"}
               style={{ marginBottom: 16 }}
             />
             <Table
+              className="custom-table"
               dataSource={result.results}
               columns={resultColumns}
               pagination={{ pageSize: 10 }}
               rowKey={(record, index) => `${record.email}-${index}`}
-              scroll={{ x: 1550 }}
+              scroll={{ x: 2030 }}
             />
           </div>
         )}

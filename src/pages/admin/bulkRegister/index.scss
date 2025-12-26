@@ -1,10 +1,11 @@
 @use "../../../styles/variables" as *;
 
 .bulk-register-container {
-  padding: 24px;
+  padding: 16px;
 
   .ant-card {
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
   }
 }
 
@@ -13,11 +14,44 @@
 
   h2 {
     margin: 0;
-    color: #3674B5; // Blue color to match web theme
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
     
     .anticon {
-      color: #3674B5; // Blue color for icon
+      color: #1a94fc;
       margin-right: 8px;
+    }
+  }
+}
+
+// Style tables to match admin pages
+.bulk-register-container {
+  .ant-table {
+    .ant-table-thead > tr > th {
+      background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 16px;
+      border: none;
+    }
+
+    .ant-table-tbody > tr {
+      transition: all 0.3s ease;
+
+      &:hover > td {
+        background-color: #e6f7ff;
+      }
+
+      > td {
+        padding: 16px;
+        border-bottom: 1px solid #f0f0f0;
+      }
+    }
+
+    .ant-table-tbody > tr:last-child > td {
+      border-bottom: none;
     }
   }
 }
