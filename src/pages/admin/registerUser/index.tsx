@@ -79,13 +79,65 @@ const RegisterUser: React.FC = () => {
     pageSize: DEFAULT_PAGE_SIZE,
     totalCount: 0,
   });
+  const [allUsersStats, setAllUsersStats] = useState({
+    totalUsers: 0,
+    totalStudents: 0,
+    totalTeachers: 0,
+  });
 
+  // Fetch overall statistics (all users, students, teachers counts)
+  const fetchAllUsersStatistics = useCallback(async () => {
+    try {
+      // Fetch total users (all roles, no filter)
+      const allUsersRes = await fetchUsersApi({
+        page: 1,
+        pageSize: 1, // Just to get totalCount
+      });
+      
+      // Fetch students count
+      const studentsRes = await fetchUsersApi({
+        roleName: "Student",
+        page: 1,
+        pageSize: 1,
+      });
+      
+      // Fetch teachers count
+      const teachersRes = await fetchUsersApi({
+        roleName: "Teacher",
+        page: 1,
+        pageSize: 1,
+      });
+
+      setAllUsersStats({
+        totalUsers: allUsersRes.totalCount || 0,
+        totalStudents: studentsRes.totalCount || 0,
+        totalTeachers: teachersRes.totalCount || 0,
+      });
+    } catch (error) {
+      console.error("Error fetching all users statistics:", error);
+    }
+  }, []);
+
+  // Calculate stats based on current filter and API data
   const stats = useMemo(() => {
+    // Total: based on current filter (roleFilter) - accurate from API
     const total = pagination.totalCount;
+    
+    // Students/Teachers: use API stats when available, otherwise use current filter
+    // When viewing a specific role, show that role's count from current filter
+    // When not viewing that role, show from allUsersStats
+    const students = roleFilter === "Student" 
+      ? total 
+      : (allUsersStats.totalStudents || 0);
+    const teachers = roleFilter === "Teacher" 
+      ? total 
+      : (allUsersStats.totalTeachers || 0);
+    
+    // Active/Inactive: Only count from current page (not accurate for entire dataset)
+    // These are approximate values for the current page only
     const active = users.filter((u) => u.isActive).length;
     const inactive = users.filter((u) => !u.isActive).length;
-    const students = users.filter((u) => u.roleName === "Student").length;
-    const teachers = users.filter((u) => u.roleName === "Teacher").length;
+    
     return {
       total,
       active,
@@ -93,7 +145,7 @@ const RegisterUser: React.FC = () => {
       students,
       teachers,
     };
-  }, [pagination.totalCount, users]);
+  }, [pagination.totalCount, users, roleFilter, allUsersStats]);
 
   const fetchData = useCallback(
     async (
@@ -133,6 +185,7 @@ const RegisterUser: React.FC = () => {
 
   useEffect(() => {
     fetchData(1, DEFAULT_PAGE_SIZE, "", roleFilter);
+    fetchAllUsersStatistics();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -393,28 +446,30 @@ const RegisterUser: React.FC = () => {
 
   const statsCards = [
     {
-      label: "Tổng người dùng",
+      label: roleFilter === "Student" ? "Tổng sinh viên" : roleFilter === "Teacher" ? "Tổng giảng viên" : "Tổng người dùng",
       value: stats.total,
       accent: "total",
       icon: <UserOutlined />,
-    },
-    {
-      label: "Đang hoạt động",
-      value: stats.active,
-      accent: "active",
-      icon: <CheckCircleOutlined />,
-    },
-    {
-      label: "Vô hiệu hóa",
-      value: stats.inactive,
-      accent: "inactive",
-      icon: <CloseCircleOutlined />,
     },
     {
       label: roleFilter === "Student" ? "Sinh viên" : "Giảng viên",
       value: roleFilter === "Student" ? stats.students : stats.teachers,
       accent: "role",
       icon: roleFilter === "Student" ? <BookOutlined /> : <TeamOutlined />,
+    },
+    {
+      label: "Đang hoạt động",
+      value: stats.active,
+      accent: "active",
+      icon: <CheckCircleOutlined />,
+      tooltip: "Số lượng trong trang hiện tại",
+    },
+    {
+      label: "Vô hiệu hóa",
+      value: stats.inactive,
+      accent: "inactive",
+      icon: <CloseCircleOutlined />,
+      tooltip: "Số lượng trong trang hiện tại",
     },
   ];
 
@@ -435,10 +490,12 @@ const RegisterUser: React.FC = () => {
 
         <div className="stats-compact">
           {statsCards.map((stat) => (
-            <div key={stat.label} className={`stat-chip ${stat.accent}`}>
-              <span className="value">{stat.value}</span>
-              <span className="label">{stat.label}</span>
-            </div>
+            <Tooltip key={stat.label} title={(stat as any).tooltip || ""}>
+              <div className={`stat-chip ${stat.accent}`}>
+                <span className="value">{stat.value}</span>
+                <span className="label">{stat.label}</span>
+              </div>
+            </Tooltip>
           ))}
         </div>
 

@@ -7,25 +7,19 @@ import {
   FileTextOutlined,
   TeamOutlined,
   UserOutlined,
+  CalendarOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import { Card, Col, Row, Table, Tag, Typography, Spin } from "antd";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { getDashboardStatisticsApi } from "../../../services/admin/dashboard/api";
 import type { DashboardStatistics } from "../../../services/admin/dashboard/api";
 import { fetchCredentialRequestsApi } from "../../../services/admin/credentials/api";
 import type { CredentialRequestDto } from "../../../services/admin/credentials/api";
 import { fetchClassesApi } from "../../../services/admin/classes/api";
 import type { ClassSummary } from "../../../types/Class";
-import { fetchSemestersApi } from "../../../services/admin/semesters/api";
+import { fetchActionLogsApi } from "../../../services/admin/actionLogs/api";
+import type { ActionLogDto } from "../../../types/ActionLog";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import "./index.scss";
@@ -48,13 +42,6 @@ interface StatCard {
   };
 }
 
-interface OverviewRecord {
-  key: string;
-  item: string;
-  category: string;
-  status: "onTrack" | "warning" | "pending";
-  updated: string;
-}
 
 const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
@@ -65,9 +52,7 @@ const Dashboard: React.FC = () => {
     CredentialRequestDto[]
   >([]);
   const [recentClasses, setRecentClasses] = useState<ClassSummary[]>([]);
-  const [semesterStats, setSemesterStats] = useState<
-    { name: string; classes: number; students: number }[]
-  >([]);
+  const [actionLogs, setActionLogs] = useState<ActionLogDto[]>([]);
 
   useEffect(() => {
     const loadDashboardData = async () => {
@@ -93,18 +78,12 @@ const Dashboard: React.FC = () => {
         });
         setRecentClasses(classesRes.items || []);
 
-        // Load semesters for chart
-        const semestersRes = await fetchSemestersApi({
-          pageNumber: 1,
-          pageSize: 6,
+        // Load recent action logs
+        const logsRes = await fetchActionLogsApi({
+          page: 1,
+          pageSize: 10, // Show latest 10 action logs
         });
-        const semesters = semestersRes.data || [];
-        const statsData = semesters.map((semester) => ({
-          name: semester.name,
-          classes: Math.floor(Math.random() * 20) + 10, // Placeholder - should come from API
-          students: Math.floor(Math.random() * 200) + 100, // Placeholder
-        }));
-        setSemesterStats(statsData);
+        setActionLogs(logsRes.items || []);
       } catch (error) {
         console.error("Error loading dashboard data:", error);
       } finally {
@@ -166,61 +145,103 @@ const Dashboard: React.FC = () => {
       ]
     : [];
 
-  const overviewData: OverviewRecord[] = [
-    ...pendingRequests.slice(0, 3).map((req) => ({
-      key: `request-${req.id}`,
-      item: `Yêu cầu chứng chỉ - ${req.studentName || "N/A"}`,
-      category: "Chứng chỉ",
-      status: "pending" as const,
-      updated: req.createdAt
-        ? dayjs.utc(req.createdAt).utcOffset(7).format("DD/MM/YYYY")
-        : "Chưa có ngày",
-    })),
-    ...recentClasses.slice(0, 2).map((cls) => ({
-      key: `class-${cls.id || ""}`,
-      item: `Lớp ${cls.classCode || "N/A"}`,
-      category: "Lớp học",
-      status: "onTrack" as const,
-      updated: `${cls.totalStudents} sinh viên`,
-    })),
-  ];
+  const getActionTag = (action: string) => {
+    const colorMap: Record<string, string> = {
+      ISSUE_CREDENTIAL: "green",
+      SUBMIT_GRADE: "blue",
+      UPDATE_GRADE: "orange",
+      DELETE_GRADE: "red",
+      USER_LOGIN: "cyan",
+      USER_LOGOUT: "default",
+      USER_CREATED: "purple",
+      PASSWORD_RESET: "volcano",
+      CREATE_CLASS: "geekblue",
+      UPDATE_SCHEDULE: "lime",
+      CANCEL_SLOT: "red",
+      VERIFY_CREDENTIAL: "success",
+      REVOKE_CREDENTIAL: "error",
+      BLOCKCHAIN_STORE: "processing",
+    };
 
-  const statusTag = (status: OverviewRecord["status"]) => {
-    switch (status) {
-      case "onTrack":
-        return <Tag color="green">Đúng tiến độ</Tag>;
-      case "warning":
-        return <Tag color="orange">Cảnh báo</Tag>;
-      case "pending":
-        return <Tag color="blue">Đang xử lý</Tag>;
-      default:
-        return <Tag>Chưa rõ</Tag>;
-    }
+    return (
+      <Tag color={colorMap[action] || "default"} style={{ fontWeight: 500 }}>
+        {action.replace(/_/g, " ")}
+      </Tag>
+    );
   };
 
-  const columns: ColumnsType<OverviewRecord> = [
+  const actionLogColumns: ColumnsType<ActionLogDto> = [
     {
-      title: "Hạng mục",
-      dataIndex: "item",
-      key: "item",
-      render: (text: string) => <Text strong>{text}</Text>,
+      title: "Thời gian",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 180,
+      render: (date: string) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <CalendarOutlined style={{ color: "#8c8c8c", fontSize: 12 }} />
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            {dayjs.utc(date).add(7, "hour").format("DD/MM/YYYY HH:mm")}
+          </Text>
+        </div>
+      ),
     },
     {
-      title: "Nhóm",
-      dataIndex: "category",
-      key: "category",
+      title: "Hành động",
+      dataIndex: "action",
+      key: "action",
+      width: 200,
+      render: (action: string) => getActionTag(action),
     },
     {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (value: OverviewRecord["status"]) => statusTag(value),
+      title: "Người thực hiện",
+      key: "user",
+      width: 220,
+      render: (_, record) => (
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <UserOutlined style={{ color: "#8c8c8c" }} />
+          <div>
+            <div style={{ fontWeight: 500, fontSize: 13 }}>
+              {record.userName || "N/A"}
+            </div>
+            <div style={{ fontSize: 12, color: "#8c8c8c" }}>
+              {record.userEmail || ""}
+            </div>
+          </div>
+        </div>
+      ),
     },
     {
-      title: "Cập nhật",
-      dataIndex: "updated",
-      key: "updated",
-      render: (text: string) => <Text type="secondary">{text}</Text>,
+      title: "Chi tiết",
+      dataIndex: "detail",
+      key: "detail",
+      ellipsis: true,
+      render: (detail: string | null | undefined) => {
+        if (!detail) {
+          return (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Không có chi tiết
+            </Text>
+          );
+        }
+        try {
+          const parsed = JSON.parse(detail);
+          const summary = Object.entries(parsed)
+            .slice(0, 2)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ");
+          return (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {summary || detail.substring(0, 50)}
+            </Text>
+          );
+        } catch {
+          return (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              {detail.substring(0, 50)}...
+            </Text>
+          );
+        }
+      },
     },
   ];
 
@@ -278,70 +299,25 @@ const Dashboard: React.FC = () => {
                 </div>
 
         <Row gutter={[24, 24]} className="dashboard-main">
-          <Col xs={24} lg={14}>
+          <Col xs={24} lg={24}>
             <Card className="section-card" bordered={false}>
               <div className="card-title">
                 <div>
-                  <Text strong>Thống kê theo học kỳ</Text>
-                  <Text type="secondary" className="card-description">
-                    Số lớp học & Sinh viên qua từng học kỳ
+                  <Text strong>
+                    <HistoryOutlined style={{ marginRight: 8 }} />
+                    Nhật ký hoạt động
                   </Text>
-                </div>
-              </div>
-              <div className="chart-wrapper">
-                {semesterStats.length > 0 ? (
-                  <ResponsiveContainer width="100%" height={240}>
-                    <BarChart data={semesterStats} barSize={28}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="name" stroke="#a3a3a3" />
-                      <YAxis yAxisId="left" stroke="#a3a3a3" />
-                      <YAxis
-                        yAxisId="right"
-                        orientation="right"
-                        stroke="#a3a3a3"
-                      />
-                      <RechartsTooltip />
-                      <Bar
-                        yAxisId="left"
-                        dataKey="classes"
-                        name="Lớp học"
-                        fill="#1a94fc"
-                        radius={[6, 6, 0, 0]}
-                      />
-                      <Bar
-                        yAxisId="right"
-                        dataKey="students"
-                        name="Sinh viên"
-                        fill="#52c41a"
-                        radius={[6, 6, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div style={{ textAlign: "center", padding: "40px" }}>
-                    <Text type="secondary">Chưa có dữ liệu</Text>
-                  </div>
-                )}
-              </div>
-          </Card>
-        </Col>
-
-          <Col xs={24} lg={10}>
-            <Card className="section-card" bordered={false}>
-              <div className="card-title">
-                <div>
-                  <Text strong>Dòng công việc nổi bật</Text>
                   <Text type="secondary" className="card-description">
-                    Theo dõi nhanh các nhiệm vụ quan trọng
+                    Các hoạt động gần đây trong hệ thống
                   </Text>
                 </div>
               </div>
             <Table
-                columns={columns}
-                dataSource={overviewData}
+                columns={actionLogColumns}
+                dataSource={actionLogs}
               pagination={false}
               size="small"
-                rowKey="key"
+                rowKey="id"
                 className="overview-table"
             />
           </Card>
