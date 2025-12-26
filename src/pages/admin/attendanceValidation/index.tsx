@@ -195,14 +195,12 @@ const AttendanceValidationAdminPage: React.FC = () => {
 
     setTampering(true);
     try {
-      const updated = await AttendanceValidationAdminService.tamperCredential(
+      await AttendanceValidationAdminService.tamperCredential(
         selectedCredential.id,
         tamperFileUrl
       );
-      setCredentials((prev) =>
-        prev.map((c) => (c.id === updated.id ? updated : c))
-      );
-      setSelectedCredential(updated);
+      // Reload lại danh sách để đảm bảo dữ liệu đầy đủ và cập nhật
+      await loadCredentials();
       toast.success("Đã giả mạo dữ liệu chứng chỉ thành công!");
       handleCloseTamperModal();
     } catch (err) {
