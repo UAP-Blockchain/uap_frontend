@@ -48,7 +48,6 @@ const VerificationPortal: React.FC = () => {
     };
   }, []);
 
-  // Parse QR payload (URL hoặc plain credentialNumber)
   const parseQrPayload = (input: string) => {
     const qrText = input.trim();
     if (!qrText) {
@@ -115,17 +114,8 @@ const VerificationPortal: React.FC = () => {
           credential?: { credentialId?: string; id?: string };
         };
 
-      if (isValid === false || !credential) {
-        notificationApi.error({
-          message: "Không thể xác thực chứng chỉ",
-          description:
-            backendMessage || "Chứng chỉ không hợp lệ hoặc đã bị thu hồi.",
-        });
-        return;
-      }
-
       const credentialNumberFromResult =
-        credential.credentialId || credential.id || credentialNumber || verificationHash;
+        credential?.credentialId || credential?.id || credentialNumber || verificationHash;
 
       if (!credentialNumberFromResult) {
         notificationApi.warning({
@@ -135,17 +125,24 @@ const VerificationPortal: React.FC = () => {
         return;
       }
 
-      notificationApi.success({
-        message: "Xác thực thành công",
-        description: "Đang mở chứng chỉ...",
-      });
+      if (isValid === false) {
+        notificationApi.info({
+          message: "Kết quả xác thực",
+          description:
+            backendMessage || "Đang mở trang kết quả xác thực...",
+        });
+      } else {
+        notificationApi.success({
+          message: "Xác thực thành công",
+          description: "Đang mở chứng chỉ...",
+        });
+      }
       navigate(
         `/certificates/verify/${encodeURIComponent(
             credentialNumberFromResult
           )}`
       );
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(err);
       notificationApi.error({
         message: "Lỗi xác thực",
@@ -192,7 +189,6 @@ const VerificationPortal: React.FC = () => {
     }
   };
 
-  // Decode QR từ file ảnh (tạm thời yêu cầu user đọc text QR và dán)
   const handleQrImageUploaded = async (file: File) => {
     const qrText = await decodeQrFromFile(file);
     if (!qrText) {
@@ -205,7 +201,6 @@ const VerificationPortal: React.FC = () => {
     return false;
   };
 
-  // Bắt Ctrl+V để dán text QR (hoặc hash / URL)
   useEffect(() => {
     const handlePaste = (event: ClipboardEvent) => {
       if (!event.clipboardData) return;
@@ -214,7 +209,6 @@ const VerificationPortal: React.FC = () => {
         event.clipboardData.getData("text") ||
         event.clipboardData.getData("text/plain");
       if (text) {
-        // Nếu đang ở tab QR thì coi như dán nội dung QR
         if (activeTab === "qr") {
           event.preventDefault();
           void handleQRScanResult(text.trim());
@@ -228,7 +222,6 @@ const VerificationPortal: React.FC = () => {
     };
   }, [activeTab]);
 
-  // Nút quét QR giờ chỉ là hướng dẫn sử dụng Ctrl+V hoặc upload
   const handleQRScan = () => {
     notificationApi.info({
       message: "Hướng dẫn quét QR",
@@ -237,7 +230,6 @@ const VerificationPortal: React.FC = () => {
     });
   };
 
-  // Manual ID verification (dùng verify API)
   const handleManualVerification = async () => {
     const trimmed = credentialId.trim();
     if (!trimmed) {
@@ -248,8 +240,6 @@ const VerificationPortal: React.FC = () => {
       return;
     }
 
-    // Đoán đây là mã chứng chỉ (SUB-YYYY-XXXXXX..., GRAD-YYYY-XXXXXX..., ...)
-    // Lưu ý: suffix số có thể không cố định 6 chữ số (tuỳ data seed / bug cũ), nên cho phép >= 1.
     const looksLikeCredentialNumber =
       /^([A-Z]{3,10})-\d{4}-\d+$/.test(trimmed) ||
       /^deg_\d+$/i.test(trimmed) ||
@@ -279,7 +269,6 @@ const VerificationPortal: React.FC = () => {
           credential?: { credentialId?: string; id?: string };
         };
 
-      // Fallback: if we guessed wrong (credentialNumber vs verificationHash)
       if ((isValid === false || !credential) && backendMessage === "Certificate not found") {
         verifyResult = await runVerify(fallbackPayload);
       }
@@ -290,29 +279,36 @@ const VerificationPortal: React.FC = () => {
         credential?: { credentialId?: string; id?: string };
       };
 
-      if (final.isValid === false || !final.credential) {
+      const credentialNumberFromResult =
+        final.credential?.credentialId || final.credential?.id || trimmed;
+
+      if (!credentialNumberFromResult) {
         notificationApi.error({
-          message: "Không thể xác thực chứng chỉ",
-          description:
-            final.message || "Chứng chỉ không hợp lệ hoặc đã bị thu hồi.",
+          message: "Không thể mở trang kết quả",
+          description: "Không tìm thấy mã chứng chỉ để hiển thị kết quả.",
         });
         return;
       }
 
-      const credentialNumberFromResult =
-        final.credential.credentialId || final.credential.id || trimmed;
+      if (final.isValid === false) {
+        notificationApi.info({
+          message: "Kết quả xác thực",
+          description:
+            final.message || "Đang mở trang kết quả xác thực...",
+        });
+      } else {
+        notificationApi.success({
+          message: "Xác thực thành công",
+          description: "Đang mở chứng chỉ...",
+        });
+      }
 
-      notificationApi.success({
-        message: "Xác thực thành công",
-        description: "Đang mở chứng chỉ...",
-      });
       navigate(
         `/certificates/verify/${encodeURIComponent(
             credentialNumberFromResult
           )}`
       );
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(err);
       notificationApi.error({
         message: "Lỗi xác thực",
