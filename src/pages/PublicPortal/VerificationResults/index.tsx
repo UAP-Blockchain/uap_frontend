@@ -34,6 +34,64 @@ const certificateLabels: Record<string, string> = {
 	RoadmapCompletion: "Chứng chỉ hoàn thành lộ trình",
 };
 
+// Hàm dịch message từ tiếng Anh sang tiếng Việt
+const translateVerificationMessage = (message: string | null | undefined): string => {
+	if (!message) return "";
+
+	const trimmedMessage = message.trim();
+
+	// Xử lý message có pattern "Certificate has been revoked. Reason: {reason}"
+	if (trimmedMessage.includes("Certificate has been revoked")) {
+		let translated = "Chứng chỉ đã bị thu hồi";
+		
+		// Tìm pattern "Reason: {reason}" - có thể có dấu chấm trước hoặc không, và có thể kết thúc bằng bất kỳ ký tự nào
+		const reasonPattern = /Reason:\s*(.+)/i;
+		const reasonMatch = trimmedMessage.match(reasonPattern);
+		if (reasonMatch && reasonMatch[1]) {
+			const reason = reasonMatch[1].trim();
+			// Loại bỏ dấu chấm ở cuối nếu có
+			const cleanReason = reason.replace(/\.$/, "");
+			translated += `. Lý do: ${cleanReason}`;
+			return translated;
+		}
+		
+		// Xử lý "Certificate has been revoked on {date}"
+		if (trimmedMessage.includes("on ")) {
+			const datePattern = /on\s+(.+)/i;
+			const dateMatch = trimmedMessage.match(datePattern);
+			if (dateMatch && dateMatch[1]) {
+				const date = dateMatch[1].trim().replace(/\.$/, "");
+				return `Chứng chỉ đã bị thu hồi vào ngày ${date}`;
+			}
+		}
+		
+		return translated;
+	}
+
+	const translations: Record<string, string> = {
+		"Certificate is valid and authentic": "Chứng chỉ hợp lệ và xác thực",
+		"On-chain verification failed": "Xác minh on-chain thất bại",
+		"On-chain record is revoked or expired": "Bản ghi on-chain đã bị thu hồi hoặc hết hạn",
+		"Data does not match blockchain record (hash mismatch)": "Dữ liệu không khớp với bản ghi blockchain (hash không khớp)",
+		"Error verifying certificate": "Lỗi khi xác minh chứng chỉ",
+	};
+
+	// Kiểm tra exact match
+	if (translations[trimmedMessage]) {
+		return translations[trimmedMessage];
+	}
+
+	// Kiểm tra partial match cho các message có thể chứa thông tin động
+	for (const [key, value] of Object.entries(translations)) {
+		if (trimmedMessage.includes(key)) {
+			return trimmedMessage.replace(key, value);
+		}
+	}
+
+	// Nếu không tìm thấy translation, trả về message gốc
+	return trimmedMessage;
+};
+
 const VerificationResults: React.FC = () => {
 	const { credentialId } = useParams<{ credentialId: string }>();
 	const [searchParams] = useSearchParams();
@@ -220,7 +278,11 @@ const VerificationResults: React.FC = () => {
 								? "Xác thực: Hợp lệ"
 								: "Xác thực: Không hợp lệ"
 						}
-						description={verifyResult.message}
+						description={
+							verifyResult.message
+								? translateVerificationMessage(verifyResult.message)
+								: ""
+						}
 					/>
 				</div>
 			) : verifyError ? (
@@ -229,7 +291,9 @@ const VerificationResults: React.FC = () => {
 						showIcon
 						type="warning"
 						message="Không thể xác thực on-chain"
-						description={verifyError}
+						description={
+							verifyError ? translateVerificationMessage(verifyError) : ""
+						}
 					/>
 				</div>
 			) : null}

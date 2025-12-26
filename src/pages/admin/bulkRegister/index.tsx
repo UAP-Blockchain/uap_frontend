@@ -1933,7 +1933,7 @@ const BulkRegister: React.FC = () => {
 
                   <div style={{ margin: "24px 0 16px 0" }}>
                     <Title level={4} style={{ margin: 0, color: "#0f172a", fontWeight: 600 }}>
-                      Danh sách người dùng đã nhập ({users.length})
+                    Danh sách người dùng đã nhập ({users.length})
                     </Title>
                   </div>
 

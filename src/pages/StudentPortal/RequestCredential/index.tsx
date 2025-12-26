@@ -258,11 +258,11 @@ const RequestCredential: React.FC = () => {
           </Tag>
         );
       case "rejected":
-        return (
+    return (
           <Tag color="red" icon={<CloseCircleOutlined />}>
             Đã từ chối
-          </Tag>
-        );
+      </Tag>
+    );
       default:
         return <Tag>{status}</Tag>;
     }

@@ -492,9 +492,9 @@ const RegisterUser: React.FC = () => {
           {statsCards.map((stat) => (
             <Tooltip key={stat.label} title={(stat as any).tooltip || ""}>
               <div className={`stat-chip ${stat.accent}`}>
-                <span className="value">{stat.value}</span>
-                <span className="label">{stat.label}</span>
-              </div>
+              <span className="value">{stat.value}</span>
+              <span className="label">{stat.label}</span>
+            </div>
             </Tooltip>
           ))}
         </div>

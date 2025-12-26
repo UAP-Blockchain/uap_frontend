@@ -358,6 +358,50 @@ const CredentialRequestDetailAdmin: React.FC = () => {
 
   const canProceedAfterVerify = attendanceAllVerified && gradesAllVerified;
 
+  // Hàm dịch message từ tiếng Anh sang tiếng Việt
+  const translateMessage = (message: string | null | undefined): string => {
+    if (!message) return "";
+
+    const translations: Record<string, string> = {
+      "Pre-issue verification is currently supported for SubjectCompletion only.":
+        "Xác minh trước khi cấp hiện chỉ hỗ trợ cho loại SubjectCompletion.",
+      "Missing SubjectId on credential request.":
+        "Thiếu SubjectId trong yêu cầu chứng chỉ.",
+      "Cannot resolve a class for this request (student not enrolled or subject/semester mismatch).":
+        "Không thể xác định lớp học cho yêu cầu này (sinh viên chưa đăng ký hoặc không khớp môn học/học kỳ).",
+      "Could not verify attendance list.":
+        "Không thể xác minh danh sách điểm danh.",
+      "Could not verify grade list.": "Không thể xác minh danh sách điểm số.",
+      "Class has no OnChainClassId": "Lớp học chưa có OnChainClassId",
+      "Student has no wallet address": "Sinh viên chưa có địa chỉ ví",
+      "Attendance has no OnChainRecordId": "Điểm danh chưa có OnChainRecordId",
+      "Attendance has no OnChainTransactionHash":
+        "Điểm danh chưa có OnChainTransactionHash",
+      "Grade has no OnChainRecordId": "Điểm số chưa có OnChainRecordId",
+      "Grade has no OnChainTransactionHash":
+        "Điểm số chưa có OnChainTransactionHash",
+      Verified: "Đã xác minh",
+      "Not verified": "Chưa xác minh",
+      OK: "Đã xác minh",
+      FAIL: "Thất bại",
+    };
+
+    // Kiểm tra exact match trước
+    if (translations[message]) {
+      return translations[message];
+    }
+
+    // Kiểm tra partial match cho các message có thể chứa thông tin động
+    for (const [key, value] of Object.entries(translations)) {
+      if (message.includes(key)) {
+        return message.replace(key, value);
+      }
+    }
+
+    // Nếu không tìm thấy translation, trả về message gốc
+    return message;
+  };
+
   return (
     <div className="credential-request-detail-page">
       {contextHolder}
@@ -477,38 +521,33 @@ const CredentialRequestDetailAdmin: React.FC = () => {
         <Spin spinning={verifyLoading}>
           {!verifyData ? (
             <Text type="secondary">
-              Nhấn “Tải xác minh” để xem danh sách attendance/grade đã đối
+              Nhấn "Tải xác minh" để xem danh sách điểm danh/điểm số đã đối
               chiếu.
             </Text>
           ) : (
             <>
               <Space wrap style={{ marginBottom: 12 }}>
                 {verifyData.classCode ? (
-                  <Tag>Class: {verifyData.classCode}</Tag>
+                  <Tag>Lớp: {verifyData.classCode}</Tag>
                 ) : (
-                  <Tag>Class: -</Tag>
-                )}
-                {verifyData.onChainClassId != null ? (
-                  <Tag>On-chain ClassId: {verifyData.onChainClassId}</Tag>
-                ) : (
-                  <Tag>On-chain ClassId: -</Tag>
+                  <Tag>Lớp: -</Tag>
                 )}
 
                 <Tag color={attendanceAllVerified ? "green" : "red"}>
-                  Attendance:{" "}
-                  {attendanceAllVerified ? "Verified" : "Not verified"}
+                  Điểm danh:{" "}
+                  {attendanceAllVerified ? "Đã xác minh" : "Chưa xác minh"}
                 </Tag>
                 <Tag color={gradesAllVerified ? "green" : "red"}>
-                  Grades: {gradesAllVerified ? "Verified" : "Not verified"}
+                  Điểm số: {gradesAllVerified ? "Đã xác minh" : "Chưa xác minh"}
                 </Tag>
 
                 {verifyData.message ? (
-                  <Tag color="gold">{verifyData.message}</Tag>
+                  <Tag color="gold">{translateMessage(verifyData.message)}</Tag>
                 ) : null}
               </Space>
 
               <div style={{ marginBottom: 16 }}>
-                <Text strong>Attendance</Text>
+                <Text strong>Điểm danh</Text>
                 <Table
                   size="small"
                   rowKey={(r) => r.attendance.id}
@@ -534,25 +573,27 @@ const CredentialRequestDetailAdmin: React.FC = () => {
                         ),
                     },
                     {
-                      title: "Verified",
+                      title: "Trạng thái",
                       render: (_, r) =>
                         r.verified ? (
-                          <Tag color="green">OK</Tag>
+                          <Tag color="green">Đã xác minh</Tag>
                         ) : (
-                          <Tag color="red">FAIL</Tag>
+                          <Tag color="red">Thất bại</Tag>
                         ),
                     },
                     {
-                      title: "Message",
+                      title: "Thông báo",
                       dataIndex: "message",
                       ellipsis: true,
+                      render: (message: string | null | undefined) =>
+                        translateMessage(message),
                     },
                   ]}
                 />
               </div>
 
               <div>
-                <Text strong>Grades</Text>
+                <Text strong>Điểm số</Text>
                 <Table
                   size="small"
                   rowKey={(r) => r.grade.id}
@@ -560,34 +601,36 @@ const CredentialRequestDetailAdmin: React.FC = () => {
                   dataSource={verifyData.grades ?? []}
                   columns={[
                     {
-                      title: "Component",
+                      title: "Thành phần",
                       dataIndex: ["grade", "componentName"],
                     },
                     {
-                      title: "Weight",
+                      title: "Trọng số",
                       dataIndex: ["grade", "componentWeight"],
                     },
                     {
-                      title: "Score",
+                      title: "Điểm",
                       dataIndex: ["grade", "score"],
                     },
                     {
-                      title: "Letter",
+                      title: "Xếp loại",
                       dataIndex: ["grade", "letterGrade"],
                     },
                     {
-                      title: "Verified",
+                      title: "Trạng thái",
                       render: (_, r) =>
                         r.verified ? (
-                          <Tag color="green">OK</Tag>
+                          <Tag color="green">Đã xác minh</Tag>
                         ) : (
-                          <Tag color="red">FAIL</Tag>
+                          <Tag color="red">Thất bại</Tag>
                         ),
                     },
                     {
-                      title: "Message",
+                      title: "Thông báo",
                       dataIndex: "message",
                       ellipsis: true,
+                      render: (message: string | null | undefined) =>
+                        translateMessage(message),
                     },
                   ]}
                 />

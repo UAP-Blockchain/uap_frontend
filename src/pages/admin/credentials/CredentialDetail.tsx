@@ -120,6 +120,52 @@ const parseBigIntSafe = (value: unknown): bigint | null => {
   return null;
 };
 
+// Hàm dịch message từ tiếng Anh sang tiếng Việt
+const translateVerificationMessage = (message: string | null | undefined): string => {
+  if (!message) return "";
+
+  // Xử lý message có pattern "Certificate has been revoked. Reason: {reason}"
+  if (message.includes("Certificate has been revoked")) {
+    let translated = "Chứng chỉ đã bị thu hồi";
+    if (message.includes("Reason:")) {
+      const reasonMatch = message.match(/Reason:\s*(.+)/i);
+      if (reasonMatch) {
+        translated += `. Lý do: ${reasonMatch[1]}`;
+      }
+    } else if (message.includes("on ")) {
+      // Xử lý "Certificate has been revoked on {date}"
+      const dateMatch = message.match(/on\s+(.+)/i);
+      if (dateMatch) {
+        translated = `Chứng chỉ đã bị thu hồi vào ngày ${dateMatch[1]}`;
+      }
+    }
+    return translated;
+  }
+
+  const translations: Record<string, string> = {
+    "Certificate is valid and authentic": "Chứng chỉ hợp lệ và xác thực",
+    "On-chain verification failed": "Xác minh on-chain thất bại",
+    "On-chain record is revoked or expired": "Bản ghi on-chain đã bị thu hồi hoặc hết hạn",
+    "Data does not match blockchain record (hash mismatch)": "Dữ liệu không khớp với bản ghi blockchain (hash không khớp)",
+    "Error verifying certificate": "Lỗi khi xác minh chứng chỉ",
+  };
+
+  // Kiểm tra exact match
+  if (translations[message]) {
+    return translations[message];
+  }
+
+  // Kiểm tra partial match cho các message có thể chứa thông tin động
+  for (const [key, value] of Object.entries(translations)) {
+    if (message.includes(key)) {
+      return message.replace(key, value);
+    }
+  }
+
+  // Nếu không tìm thấy translation, trả về message gốc
+  return message;
+};
+
 const CredentialDetail: React.FC = () => {
   const { credentialId } = useParams<{ credentialId: string }>();
   const navigate = useNavigate();
@@ -694,14 +740,14 @@ const CredentialDetail: React.FC = () => {
                       ? "Xác thực: Hợp lệ"
                       : "Xác thực: Không hợp lệ"
                   }
-                  description={verifyResult.message}
+                  description={translateVerificationMessage(verifyResult.message)}
                 />
               ) : verifyError ? (
                 <Alert
                   type="warning"
                   showIcon
                   message="Không thể xác thực"
-                  description={verifyError}
+                  description={translateVerificationMessage(verifyError)}
                 />
               ) : null}
 
