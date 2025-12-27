@@ -356,6 +356,14 @@ const CredentialRequestDetailAdmin: React.FC = () => {
     (verifyData?.grades?.length ?? 0) > 0 &&
     (verifyData?.grades ?? []).every((x) => x.verified);
 
+  const attendanceHasFailure =
+    (verifyData?.attendance?.length ?? 0) > 0 &&
+    (verifyData?.attendance ?? []).some((x) => !x.verified);
+
+  const gradesHasFailure =
+    (verifyData?.grades?.length ?? 0) > 0 &&
+    (verifyData?.grades ?? []).some((x) => !x.verified);
+
   const canProceedAfterVerify = attendanceAllVerified && gradesAllVerified;
 
   // Hàm dịch message từ tiếng Anh sang tiếng Việt
@@ -535,10 +543,19 @@ const CredentialRequestDetailAdmin: React.FC = () => {
 
                 <Tag color={attendanceAllVerified ? "green" : "red"}>
                   Điểm danh:{" "}
-                  {attendanceAllVerified ? "Đã xác minh" : "Chưa xác minh"}
+                  {attendanceAllVerified
+                    ? "Đã xác minh"
+                    : attendanceHasFailure
+                    ? "Thất bại"
+                    : "Chưa xác minh"}
                 </Tag>
                 <Tag color={gradesAllVerified ? "green" : "red"}>
-                  Điểm số: {gradesAllVerified ? "Đã xác minh" : "Chưa xác minh"}
+                  Điểm số:{" "}
+                  {gradesAllVerified
+                    ? "Đã xác minh"
+                    : gradesHasFailure
+                    ? "Thất bại"
+                    : "Chưa xác minh"}
                 </Tag>
 
                 {verifyData.message ? (

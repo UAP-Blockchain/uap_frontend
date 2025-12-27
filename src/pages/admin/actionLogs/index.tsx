@@ -430,6 +430,8 @@ const ActionLogsPage: React.FC = () => {
         footer={null}
         width={800}
         wrapClassName="action-log-detail-modal"
+        style={{ top: 20 }}
+        bodyStyle={{ maxHeight: "calc(100vh - 100px)", overflowY: "auto" }}
       >
         {viewingLog && (
           <Descriptions
@@ -437,7 +439,17 @@ const ActionLogsPage: React.FC = () => {
             column={1}
             className="action-log-detail-descriptions"
           >
-            <Descriptions.Item label="ID">{viewingLog.id}</Descriptions.Item>
+            <Descriptions.Item label="ID">
+              <Text
+                style={{
+                  wordBreak: "break-all",
+                  display: "block",
+                  maxWidth: "100%",
+                }}
+              >
+                {viewingLog.id}
+              </Text>
+            </Descriptions.Item>
             <Descriptions.Item label="Thời gian">
               {dayjs(viewingLog.createdAt).format("DD/MM/YYYY HH:mm:ss")}
             </Descriptions.Item>
@@ -462,6 +474,9 @@ const ActionLogsPage: React.FC = () => {
                   fontSize: 12,
                   maxHeight: 300,
                   overflow: "auto",
+                  wordBreak: "break-all",
+                  whiteSpace: "pre-wrap",
+                  margin: 0,
                 }}
               >
                 {viewingLog.detail ? (
@@ -484,7 +499,15 @@ const ActionLogsPage: React.FC = () => {
             {viewingLog.transactionHash && (
               <>
                 <Descriptions.Item label="Transaction Hash">
-                  <Text code copyable>
+                  <Text
+                    code
+                    copyable
+                    style={{
+                      wordBreak: "break-all",
+                      display: "block",
+                      maxWidth: "100%",
+                    }}
+                  >
                     {viewingLog.transactionHash}
                   </Text>
                 </Descriptions.Item>
@@ -495,17 +518,41 @@ const ActionLogsPage: React.FC = () => {
                   {viewingLog.eventName}
                 </Descriptions.Item>
                 <Descriptions.Item label="From">
-                  <Text code copyable>
+                  <Text
+                    code
+                    copyable
+                    style={{
+                      wordBreak: "break-all",
+                      display: "block",
+                      maxWidth: "100%",
+                    }}
+                  >
                     {viewingLog.txFrom}
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="To">
-                  <Text code copyable>
+                  <Text
+                    code
+                    copyable
+                    style={{
+                      wordBreak: "break-all",
+                      display: "block",
+                      maxWidth: "100%",
+                    }}
+                  >
                     {viewingLog.txTo}
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Contract Address">
-                  <Text code copyable>
+                  <Text
+                    code
+                    copyable
+                    style={{
+                      wordBreak: "break-all",
+                      display: "block",
+                      maxWidth: "100%",
+                    }}
+                  >
                     {viewingLog.contractAddress}
                   </Text>
                 </Descriptions.Item>

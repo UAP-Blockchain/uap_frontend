@@ -293,6 +293,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
         if (subPaths.length >= 2 && subPaths[0] === "activity") {
           subPaths = subPaths.slice(0, 1);
         }
+
+        // Special case: /student-portal/credentials/:id
+        // Breadcrumb chỉ hiển thị "Quản lý Chứng chỉ", không thêm ID
+        if (subPaths.length >= 2 && subPaths[0] === "credentials") {
+          subPaths = subPaths.slice(0, 1);
+        }
+
         subPaths.forEach((path, index) => {
           const href = "/" + paths.slice(0, index + 2).join("/");
           const displayName =
